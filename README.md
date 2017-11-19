@@ -17,11 +17,11 @@ import (
 )
 
 func main() {
-	e := element.New  // to keep things unobtrusive
-	animals := []string{"cat", "mouse", "dog"}  // just an ordinary Go slice
+    e := element.New  // to keep things unobtrusive
+    animals := []string{"cat", "mouse", "dog"}  // just an ordinary Go slice
 
-	str := e("html").R(
-		e("head").R(
+    str := e("html").R(
+        e("head").R(
             e("style").R(`
                 #page-container {
                     padding: 4rem; height: 100vh; background-color: rgb(232, 230, 228);
@@ -42,7 +42,7 @@ func main() {
                 e("h1").R("This is my heading"),
                 e("div", "class", "intro").R(
                     e("p").R(
-                    	"I've got plenty to say here ",
+                        "I've got plenty to say here ",
                         e("span", "class", "highlight").R("important phrase!"),
                         " More intro text",
                     ),
