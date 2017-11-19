@@ -2,7 +2,6 @@ package element
 
 import (
 	"strings"
-	"fmt"
 )
 
 type Element struct {
@@ -16,23 +15,11 @@ func New(el string, attrs ...string ) (Element) {
 	return Element{El: strings.ToLower(el), Attr: stringlistToMap(attrs...)}
 }
 
-// Generate a map from a list of key values
-// Even number of items required or results may be fatal
-// Candidate for a general utilities collection
-func stringlistToMap(list ...string) map[string]string {
-	m := map[string]string{}
-	if len(list) % 2 != 0 {
-		fmt.Println("Bad number of items to stringListToMap. Dropping:", list[len(list) - 1:])
+func (e Element) IsSingleTag() bool {
+	if _, ok := singleTags[e.El]; ok {
+		return true
 	}
-	key := ""
-	for i, item := range list {
-		if i % 2 == 0 {
-			key = item
-		} else {
-			m[key] = item
-		}
-	}
-	return m
+	return false
 }
 
 // Render with `inner` as the innerHTML
@@ -43,7 +30,7 @@ func (e Element) R(inner ...string) (str string) {
 		str += " " + k + "=" + `"` + v + `"`
 	}
 
-	if !e.Single{ // todo keep an internal map of single elements
+	if !e.IsSingleTag() {
 		str += ">"
 		for _, r := range inner {
 			str += r
