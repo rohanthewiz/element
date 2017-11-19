@@ -6,8 +6,8 @@ import (
 )
 
 func main() {
-	e := element.New  // to keep things unobtrusive
-	animals := []string{"cat", "mouse", "dog"}  // just an ordinary Go slice
+	e := element.New                           // to keep things unobtrusive
+	animals := []string{"cat", "mouse", "dog"} // just an ordinary Go slice
 
 	str := e("html").R(
 		e("head").R(
@@ -21,16 +21,17 @@ func main() {
                 .highlight {
                     background-color: yellow;
                 }
-				.footer {
-					text-align: center; font-size: 0.8rem; border-top: 1px solid #ccc; padding: 1em;
-				}
-			`),
+                .footer {
+                    text-align: center; font-size: 0.8rem; border-top: 1px solid #ccc; padding: 1em;
+                }
+            `),
 		),
 		e("body").R(
 			e("div", "id", "page-container").R(
 				e("h1").R("This is my heading"),
 				e("div", "class", "intro").R(
-					e("p").R("I've got plenty to say here ",
+					e("p").R(
+						"I've got plenty to say here ",
 						e("span", "class", "highlight").R("important phrase!"),
 						" More intro text",
 					),
@@ -45,6 +46,6 @@ func main() {
 		),
 	)
 
-	fmt.Println(str)  // Use a good html viewer to see formatted result
+	fmt.Println(str) // Use a good html viewer to see formatted result
 	// -- I suggest JetBrains Goland ( Code | Reformat Code)
 }
