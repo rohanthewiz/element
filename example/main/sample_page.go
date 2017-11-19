@@ -8,6 +8,7 @@ import (
 func main() {
 	e := element.New                           // to keep things unobtrusive
 	animals := []string{"cat", "mouse", "dog"} // just an ordinary Go slice
+	food := []string{"chicken", "bread", "cheese"}
 
 	str := e("html").R(
 		e("head").R(
@@ -40,7 +41,9 @@ func main() {
 					"Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum ",
 					e("p").R("Finally..."),
 				),
-				e("ul", "class", "list").I(animals, e("li")), // Iterate my slice - move over Angular!
+				e("ul", "class", "list").For(animals, "li"), // Iterate my slice - move over Angular!
+				e("ul", "class", "conditional-list-false").ForIf(false, food, "li"),
+				e("ul", "class", "conditional-list-true").ForIf(true, food, "li"),
 				e("div", "class", "footer").R("About | Privacy | Logout"),
 			),
 		),

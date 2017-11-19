@@ -3,6 +3,7 @@ package element
 import (
 	"testing"
 )
+var testAnimals = []string{"cat", "mouse", "dog"}
 
 func TestRender(t *testing.T) {
 	str := New("span").R()
@@ -19,13 +20,60 @@ func TestRender(t *testing.T) {
 	}
 }
 
-func TestIterate(t *testing.T) {
+func TestRenderIf(t *testing.T) {
+	str := New("span").RIf(false, "This is some inner text")
+	if str != "" {
+		t.Error("False condition to RIf should yield empty string")
+	}
+	str = New("span").RIf(true, "This is some inner text")
+	if str != `<span>This is some inner text</span>` {
+		t.Error("True condition to RIf should yield the rendered element")
+	}
+}
+
+func TestRenderOddNumOfAttributes(t *testing.T) {
+	str := New("img", "src", "http://example.com/test.png", "enable").R()
+	expected := `<img src="http://example.com/test.png"></img>`
+	if str != expected {
+		t.Error("With odd number of attributes, element should drop the last:",
+		"\nExpected:", expected, "\nGot:", str)
+	}
+}
+
+func TestFor(t *testing.T) {
+	str := New("div").R(
+		New("ul", "class", "list").For(testAnimals, "li"), // build a list
+	)
+	expect := `<div><ul class="list"><li>cat</li><li>mouse</li><li>dog</li></ul></div>`
+	if str != expect {
+		t.Error("Iteration failed. Expected:", expect, "\nGot:", str)
+	}
+}
+
+// Todo - Single tag elements
+func TestForWithInterpolation(t *testing.T) {
+	str := New("div", "class", "form-group").For(testAnimals, "input", "class", "text-input", "value", "{{$1}}")
+	expect := `<div class="form-group"><input class="text-input" value="cat"></input><input class="text-input" value="mouse"></input><input class="text-input" value="dog"></input></div>`
+	if len(str) != len(expect) {  // map ordering is random so test lengths as a compromise
+		t.Error("Iteration failed. Expected similar to:", expect, "\nGot:", str)
+	}
+}
+
+func TestForIf(t *testing.T) {
 	animals := []string{"cat", "mouse", "dog"}
 
 	str := New("div").R(
-		New("ul", "class", "list").I(animals, New("li")), // build a list
+		New("ul", "class", "list").ForIf(false, animals, "li"),
 	)
-	expect := `<div><ul class="list"><li>cat</li><li>mouse</li><li>dog</li></ul></div>`
+	expect := `<div></div>`
+	if str != expect {
+		t.Error("Iteration failed. Expected:", expect, "\nGot:", str)
+	}
+
+	str = New("div").R(
+		New("ul", "class", "list").ForIf(true, animals, "li"),
+	)
+	expect = `<div><ul class="list"><li>cat</li><li>mouse</li><li>dog</li></ul></div>`
 	if str != expect {
 		t.Error("Iteration failed. Expected:", expect, "\nGot:", str)
 	}

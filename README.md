@@ -51,7 +51,7 @@ func main() {
                     "Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum ",
                     e("p").R("Finally..."),
                 ),
-                e("ul", "class", "list").I(animals, e("li")), // Iterate my slice - move over Angular!
+                e("ul", "class", "list").For(animals, "li"), // Iterate my slice - move over Angular!
                 e("div", "class", "footer").R("About | Privacy | Logout"),
             ),
         ),
@@ -130,3 +130,4 @@ e("div", "class", "wrapper").R(
 ## Contributing
 Give me some ideas, code, and time :-) if you'd like to see this become better.
 The idea is to keep this as **light** and unobtrusive as possible. Thanks!
+Also, if possible try to maintain 100% coverage -- again Goland has all the tools needed for test coverage

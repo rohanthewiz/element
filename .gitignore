@@ -1,3 +1,5 @@
 .idea/
 
+# Ignore binaries
 element
+example/main
