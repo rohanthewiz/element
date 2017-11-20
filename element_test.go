@@ -22,6 +22,16 @@ func TestRender(t *testing.T) {
 	}
 }
 
+func TestAddAttributes(t *testing.T) {
+	el := New("span")
+	el.AddAttributes("id", "my-span", "class", "special-span")
+	str := el.R()
+	expected := `<span id="my-span" class="special-span"></span>`
+	if str != expected {
+		t.Error("Failed to add attributes to an element", "\nExpected:", expected, "\nGot:", str)
+	}
+}
+
 func TestRenderIf(t *testing.T) {
 	str := New("span").RIf(false, "This is some inner text")
 	if str != "" {

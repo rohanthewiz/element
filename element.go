@@ -22,6 +22,14 @@ func (e Element) IsSingleTag() bool {
 	return false
 }
 
+// Add attributes after element creation
+func (e Element) AddAttributes(attrs ...string) {
+	m := stringlistToMap(attrs...)
+	for k, v := range m {
+		e.Attr[k] = v
+	}
+}
+
 // Render with `inner` as the innerHTML
 func (e Element) R(inner ...string) (str string) {
 	str = "<" + e.El

@@ -114,7 +114,7 @@ Here's what the formatted output looks like:
 ```
 
 ## Style Hints
-It's Go code man `go fmt` as you please. I do suggest a couple things though.
+It's Go code man, `go fmt` as you please. I do suggest a couple things though.
 
 * If you are rendering a short inner text for the element, keep that on one line: `e("span").R("please note")`
 * If you are rendering multiple items, especially nested elements, break the render into multiple lines
