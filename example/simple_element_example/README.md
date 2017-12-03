@@ -1,6 +1,6 @@
 ## Example project for Element
 
-We'll use the wonderfully simple Echo framework for routing
+We'll use the wonderfully simple Echo framework for routing.
 
 ### To Get Going
 1. Please get and install the glide dependency manager -- it is worth it! https://github.com/Masterminds/glide

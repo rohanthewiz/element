@@ -6,7 +6,7 @@ Though I may have 100% test coverage, this is alpha, so you probably shouldn't d
 ## Usage
 Simply create an element and render it: `e("span").R("Inner text")`
 We use short method names to keep the code as unobtrusive as possible.
-See the example (example/simple_element_example) for an example app using element
+See the example https://github.com/rohanthewiz/element/tree/master/example/simple_element_example for an example app using element
 
 ```go
 package main
