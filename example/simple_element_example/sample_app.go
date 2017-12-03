@@ -1,13 +1,24 @@
 package main
 
 import (
-	"fmt"
+	"github.com/labstack/echo"
 	"github.com/rohanthewiz/element"
 )
 
 func main() {
-	e := element.New                           // to keep things unobtrusive
+	router := echo.New()
+	router.GET("/", rootHandler)
+	router.Logger.Fatal(router.Start(":8000"))
+}
+
+func rootHandler(c echo.Context) error {
 	animals := []string{"cat", "mouse", "dog"} // just an ordinary Go slice
+	c.HTMLBlob(200, generateTemplate(animals))
+	return nil
+}
+
+func generateTemplate(animals []string) []byte {
+	e := element.New                           // to keep things unobtrusive
 	food := []string{"chicken", "bread", "cheese"}
 
 	str := e("html").R(
@@ -49,6 +60,5 @@ func main() {
 		),
 	)
 
-	fmt.Println(str) // Use a good html viewer to see formatted result
-	// -- I suggest JetBrains Goland ( Code | Reformat Code)
+	return []byte(str)
 }
