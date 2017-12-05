@@ -13,11 +13,12 @@ func main() {
 
 func rootHandler(c echo.Context) error {
 	animals := []string{"cat", "mouse", "dog"} // just an ordinary Go slice
-	c.HTMLBlob(200, generateTemplate(animals))
+	colors := []string{"red", "blue", "green", "indigo", "violet"}
+	c.HTMLBlob(200, generateTemplate(animals, colors))
 	return nil
 }
 
-func generateTemplate(animals []string) []byte {
+func generateTemplate(animals []string, colors []string) []byte {
 	e := element.New                           // to keep things unobtrusive
 	food := []string{"chicken", "bread", "cheese"}
 
@@ -52,9 +53,25 @@ func generateTemplate(animals []string) []byte {
 					"Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum ",
 					e("p").R("Finally..."),
 				),
-				e("ul", "class", "list").For(animals, "li"), // Iterate my slice - move over Angular!
+				// Iterate over a slice with some built-in functions
+				e("ul", "class", "list").For(animals, "li"),
 				e("ul", "class", "conditional-list-false").ForIf(false, food, "li"),
 				e("ul", "class", "conditional-list-true").ForIf(true, food, "li"),
+				// Iterate over a slice with an anonymous function - this is very versatile!
+				e("select").R(
+					func() string {
+						out := ""
+						for _, color := range colors {
+							el :=  e("option", "value", color)
+							if color == "blue" {
+								el.AddAttributes("selected", "selected")
+							}
+							out += el.R(color)
+						}
+						return out
+					}(),
+				),
+				e("p").R(), // quick spacer :-)
 				e("div", "class", "footer").R("About | Privacy | Logout"),
 			),
 		),
