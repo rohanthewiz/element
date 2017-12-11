@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/labstack/echo"
 	"github.com/rohanthewiz/element"
+	"strconv"
 )
 
 func main() {
@@ -48,6 +49,15 @@ func generateTemplate(animals []string, colors []string) []byte {
 						e("span", "class", "highlight").R("important phrase!"),
 						" More intro text",
 					),
+				),
+				e("p").R(
+					"ABC Company", "<br>",
+					func() (out string) {
+						for i := 0; i < 10; i++ {
+							out += strconv.Itoa(i) + ","
+						}
+						return
+					}(),
 				),
 				e("div").R(
 					"Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum ",
