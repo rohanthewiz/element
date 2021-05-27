@@ -12,7 +12,7 @@ type Element struct {
 	sb         *strings.Builder
 }
 
-// Create a new element
+// New creates a new element
 func New(t *strings.Builder, el string, attrs ...string) (ele Element) {
 	if t == nil {
 		log.Println("Please supply a pointer to a strings builder to element.New():", el)
@@ -26,23 +26,23 @@ func New(t *strings.Builder, el string, attrs ...string) (ele Element) {
 		ele.attrs = stringlistToMap(attrs...)
 	}
 
-	ele.writeOpenTag() // write opening tag right away
+	ele.writeOpeningTag() // write opening tag right away
 
 	return ele
 }
 
-// Render Elements - well kind of, as the language will run inner functions first
+// R renders Elements - well kind of, as the language will run inner functions first
 // 	we don't have to do anything for children
-// This element Ancestors will be already in the tree (string builder) as New() is called before R (Render)
+// This element's Ancestors will be already in the tree (string builder) bc New() is called before R (Render)
 // So, essentially this is just to let us know to add our ending tag if applicable
-func (e Element) R(children ...Element) Element {
+func (e Element) R(_ ...Element) Element {
 	if !e.IsSingleTag() {
 		e.sb.WriteString("</" + e.El + ">")
 	}
 	return e
 }
 
-func (e Element) writeOpenTag() {
+func (e Element) writeOpeningTag() {
 	if e.sb != nil {
 		if e.El == "t" { // "t" is a pseudo element representing a list of strings
 			for _, a := range e.arrayAttrs {
@@ -56,4 +56,18 @@ func (e Element) writeOpenTag() {
 			e.sb.WriteString(">")
 		}
 	}
+}
+
+// For renders a slice of items wrapped in the Element el
+// with everything nested within the parent element e
+// Attrs is a key, value list.
+// Note that the use of an inline anonymous function gives more flexibility
+// This function is just for convenience
+func (e Element) For(items []string, ele string, attrs ...string) Element {
+	for _, item := range items {
+		New(e.sb, ele, attrs...).R(
+			New(e.sb, "t", item),
+		)
+	}
+	return e
 }

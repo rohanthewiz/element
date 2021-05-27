@@ -45,11 +45,3 @@ func stringlistToMap(list ...string) map[string]string {
 	}
 	return m
 }
-
-// Add / Overwrite attributes after element creation
-func (e Element) AddAttributes(attrs ...string) {
-	m := stringlistToMap(attrs...)
-	for k, v := range m {
-		e.attrs[k] = v
-	}
-}
