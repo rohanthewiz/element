@@ -13,22 +13,35 @@ type Element struct {
 }
 
 // New creates a new element
-func New(t *strings.Builder, el string, attrs ...string) (ele Element) {
-	if t == nil {
-		log.Println("Please supply a pointer to a strings builder to element.New():", el)
+func New(s *strings.Builder, el string, attrs ...string) (e Element) {
+	if s == nil {
+		log.Println("Please supply a pointer to a string builder to element.New():", el)
 	}
 
-	ele = Element{sb: t, El: strings.ToLower(el)}
+	e = Element{sb: s, El: strings.ToLower(el)}
 
-	if ele.IsText() {
-		ele.arrayAttrs = attrs // plain text will use the original list
+	if e.IsText() {
+		e.arrayAttrs = attrs // plain text will use the original list
 	} else {
-		ele.attrs = stringlistToMap(attrs...)
+		e.attrs = stringlistToMap(attrs...)
 	}
 
-	ele.writeOpeningTag() // write opening tag right away
+	e.writeOpeningTag() // write opening tag right away
 
-	return ele
+	return e
+}
+
+// Text creates a new text element
+func Text(s *strings.Builder, texts ...string) (e Element) {
+	if s == nil {
+		log.Println("Please supply a pointer to a string builder to element.Text()")
+	}
+
+	e = Element{sb: s, El: "t"}
+	e.arrayAttrs = texts
+	e.writeOpeningTag() // write opening tag right away
+
+	return e
 }
 
 // R renders Elements - well kind of, as the language will run inner functions first

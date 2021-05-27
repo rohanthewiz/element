@@ -20,7 +20,7 @@ func TestRender(t *testing.T) {
 	// Span with inner text
 	s.Reset()
 	el = New(s, "span").R(
-		New(s, "t", "This is some inner text").R(), // "t" is a pseudo tag for plain text
+		Text(s, "This is some inner text"),
 	)
 	if el.String() != `<span>This is some inner text</span>` {
 		t.Error("Failed to render a span with inner text", "\nGot:", el.String())
@@ -29,7 +29,7 @@ func TestRender(t *testing.T) {
 	// Span with multiple inner text
 	s.Reset()
 	el = New(s, "span", "id", "special", "class", "normal").R(
-		New(s, "t", "This is some inner text", " and some more by the way"), // we can use a list of texts
+		Text(s, "This is some inner text", " and some more by the way"), // we can use a list of texts
 	)
 	str := el.String()
 	expected := `<span id="special" class="normal">This is some inner text and some more by the way</span>`
@@ -43,9 +43,9 @@ func TestRender(t *testing.T) {
 	// Div with text and element children
 	s.Reset()
 	el = New(s, "div", "id", "container", "class", "active").R(
-		New(s, "t", "This is some inner text", " and some more by the way").R(),
+		Text(s, "This is some inner text", " and some more by the way").R(),
 		New(s, "form", "method", "post").R(),
-		New(s, "t", "Some ending text").R(),
+		Text(s, "Some ending text").R(),
 	)
 	str = el.String()
 	expected = `<div id="container" class="active">This is some inner text and some more by the way<form method="post"></form>Some ending text</div>`
@@ -60,14 +60,14 @@ func TestRender(t *testing.T) {
 	s.Reset()
 	moreText := " - more text"
 	el = New(s, "div", "id", "container", "class", "active").R(
-		New(s, "t", "some text", moreText).R(),
+		Text(s, "some text", moreText).R(),
 		New(s, "form", "method", "post").R(
 			New(s, "input", "value", "some input").R(),
 			New(s, "button").R(
-				New(s, "span", "style", "background-color:wheat").R(New(s, "t", "My nice button")),
+				New(s, "span", "style", "background-color:wheat").R(Text(s, "My nice button")),
 			),
 		),
-		New(s, "t", "Some ending text").R(),
+		Text(s, "Some ending text").R(),
 	)
 	str = el.String()
 	expected = `<div id="container" class="active">some text - more text<form method="post"><input value="some input"><button><span style="background-color:wheat">My nice button</span></button></form>Some ending text</div>`
