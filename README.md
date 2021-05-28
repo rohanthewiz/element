@@ -1,7 +1,7 @@
 # Simple HTML generator
 Forget templates, and having to learn some half-baked templating language to generate decent HTML pages.
 This proves that HTML can be generated nicely from Go code. All is explicit and compiler-checked.
-Though I may have 100% test coverage, this is alpha, so you probably shouldn't deploy to production without a good html linter (see JetBrains products - I *highly* recommend Goland)
+Though I may have 100% test coverage, this is beta, so you can deploy to production, however you should verify results with a good html linter (see JetBrains products - I *highly* recommend Goland!)
 
 ## Usage
 Simply create an element and render it: `e("span").R("Inner text")`
@@ -12,17 +12,36 @@ See the example https://github.com/rohanthewiz/element/tree/master/example/simpl
 package main
 
 import (
-	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/gofiber/fiber/v2"
 	"github.com/rohanthewiz/element"
 )
 
 func main() {
-    e := element.New  // to keep things unobtrusive
-    animals := []string{"cat", "mouse", "dog"}  // just an ordinary Go slice
+	r := fiber.New()
+	r.Get("/", rootHandler)
+	r.Listen(":8000")
+}
 
-    str := e("html").R(
-        e("head").R(
-            e("style").R(`
+func rootHandler(c *fiber.Ctx) error {
+	animals := []string{"cat", "mouse", "dog"}
+	colors := []string{"red", "blue", "green", "indigo", "violet"}
+	c.Set("Content-Type", "text/html")
+	err := c.SendString(generateTemplate(animals, colors))
+	return err
+}
+
+func generateTemplate(animals []string, colors []string) string {
+	e := element.New                           // to keep things unobtrusive
+	t := element.Text
+	s := &strings.Builder{}
+	s.WriteString("<!DOCTYPE html>\n")
+	e(s, "html", "lang", "en").R(
+		e(s, "head").R(
+			e(s, "style").R(
+				t(s, `
                 #page-container {
                     padding: 4rem; height: 100vh; background-color: rgb(232, 230, 228);
                 }
@@ -31,34 +50,65 @@ func main() {
                 }
                 .highlight {
                     background-color: yellow;
-                }			
+                }
                 .footer {
                     text-align: center; font-size: 0.8rem; border-top: 1px solid #ccc; padding: 1em;
                 }
-            `), 
-        ),
-        e("body").R(
-            e("div", "id", "page-container").R(
-                e("h1").R("This is my heading"),
-                e("div", "class", "intro").R(
-                    e("p").R(
-                        "I've got plenty to say here ",
-                        e("span", "class", "highlight").R("important phrase!"),
-                        " More intro text",
-                    ),
-                ),
-                e("div").R(
-                    "Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum ",
-                    e("p").R("Finally..."),
-                ),
-                e("ul", "class", "list").For(animals, "li"), // Iterate my slice - move over Angular!
-                e("div", "class", "footer").R("About | Privacy | Logout"),
-            ),
-        ),
-    )
+                `),
+			),
+		),
+		e(s, "body").R(
+			e(s, "div", "id", "page-container").R(
+				e(s, "h1").R(
+					t(s, "This is my heading"),
+				),
+				e(s, "div", "class", "intro").R(
+					e(s, "p").R(
+						t(s, "I've got plenty to say here "),
+						e(s, "span", "class", "highlight").R(
+							t(s, "important phrase!", " More intro text"),
+						),
+					),
+				),
+				e(s, "p").R(
+					t(s, "ABC Company"), e(s, "br").R(),
+					func() (el element.Element) {
+						out := ""
+						for i := 0; i < 10; i++ {
+							out += strconv.Itoa(i) + ","
+						}
+						return t(s, out)
+					}(),
+				),
+				e(s, "div").R(
+					t(s, "Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum "),
+					e(s, "p").R(t(s, "Finally...")),
+				),
+				// Iterate over a slice with some built-in functions
+				e(s, "ul", "class", "list").For(animals, "li").R(),
 
-    fmt.Println(str)  // Use a good html viewer to see formatted result
+				// Iterate over a slice with an anonymous function - this is very versatile!
+				e(s, "select").R(
+					func() element.Element {
+						for _, color := range colors {
+							el :=  e(s, "option", "value", color)
+							if color == "blue" {
+								el = e(s, "option", "value", color, "selected", "selected")
+							}
+							el.R(t(s, color))
+						}
+						return t(s, "") // bogus as element is not used in R()
+					}(),
+				),
+				e(s, "p").R(), // quick spacer :-)
+				e(s, "div", "class", "footer").R(t(s, "About | Privacy | Logout")),
+			),
+		),
+	)
+
+	return s.String()
 }
+
 ```
 
 Produces this:
@@ -70,7 +120,8 @@ Here's what the formatted output looks like:
 
 ```html
 <!-- Formatted with JetBrains' Goland (Code | Reformat Code) -->
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <style>
         #page-container {
@@ -99,14 +150,24 @@ Here's what the formatted output looks like:
 </head>
 <body>
 <div id="page-container"><h1>This is my heading</h1>
-    <div class="intro"><p>I've got plenty to say here <span class="highlight">important phrase!</span> More intro text
+    <div class="intro"><p>I've got plenty to say here <span class="highlight">important phrase! More intro text</span>
     </p></div>
+    <p>ABC Company<br>0,1,2,3,4,5,6,7,8,9,</p>
     <div>Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum <p>Finally...</p></div>
     <ul class="list">
         <li>cat</li>
         <li>mouse</li>
         <li>dog</li>
     </ul>
+    <select>
+        <option value="red">red</option>
+        <option value="blue">
+        <option value="blue" selected="selected">blue</option>
+        <option value="green">green</option>
+        <option value="indigo">indigo</option>
+        <option value="violet">violet</option>
+    </select>
+    <p></p>
     <div class="footer">About | Privacy | Logout</div>
 </div>
 </body>
@@ -116,18 +177,10 @@ Here's what the formatted output looks like:
 ## Style Hints
 It's Go code man, `go fmt` as you please. I do suggest a couple things though.
 
-* If you are rendering a short inner text for the element, keep that on one line: `e("span").R("please note")`
+* If you are rendering a short inner text for the element, keep that on one line: `e(s, "span").R(t(s,"please note"))`
 * If you are rendering multiple items, especially nested elements, break the render into multiple lines
 
-```go
-e("div", "class", "wrapper").R(
-	e("div", "class", "inner").R(
-		e("p").R("Here is some information")
-	)
-)
-```
-
 ## Contributing
-Give me some ideas, code, and time :-) if you'd like to see this become better.
+If you have ideas, let me know. PRs are welcome, but keep the below in mind.
 The idea is to keep this as **light** and unobtrusive as possible. Thanks!
-Also, if possible try to maintain 100% coverage -- again Goland has all the tools needed for test coverage
+Also, if possible try to maintain at least 95% coverage -- again Goland has all the tools needed for test coverage.
