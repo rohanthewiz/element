@@ -1,96 +1,86 @@
 package element
 
 import (
+	"log"
 	"strings"
 )
 
 type Element struct {
-	El string // just the base of the element e.g. form
-	Attr map[string]string
-	Single bool
+	El         string // just the base of the element e.g. td, h1
+	arrayAttrs []string
+	attrs      map[string]string
+	sb         *strings.Builder
 }
 
-// Create a new element
-func New(el string, attrs ...string ) (Element) {
-	return Element{El: strings.ToLower(el), Attr: stringlistToMap(attrs...)}
-}
-
-func (e Element) IsSingleTag() bool {
-	if _, ok := singleTags[e.El]; ok {
-		return true
-	}
-	return false
-}
-
-// Add attributes after element creation
-func (e Element) AddAttributes(attrs ...string) {
-	m := stringlistToMap(attrs...)
-	for k, v := range m {
-		e.Attr[k] = v
-	}
-}
-
-// Render with `inner` as the innerHTML
-func (e Element) R(inner ...string) (str string) {
-	str = "<" + e.El
-
-	for k, v := range e.Attr {
-		str += " " + k + "=" + `"` + v + `"`
+// New creates a new element
+func New(s *strings.Builder, el string, attrs ...string) (e Element) {
+	if s == nil {
+		log.Println("Please supply a pointer to a string builder to element.New():", el)
 	}
 
+	e = Element{sb: s, El: strings.ToLower(el)}
+
+	if e.IsText() {
+		e.arrayAttrs = attrs // plain text will use the original list
+	} else {
+		e.attrs = stringlistToMap(attrs...)
+	}
+
+	e.writeOpeningTag() // write opening tag right away
+
+	return e
+}
+
+// Text creates a new text element
+func Text(s *strings.Builder, texts ...string) (e Element) {
+	if s == nil {
+		log.Println("Please supply a pointer to a string builder to element.Text()")
+	}
+
+	e = Element{sb: s, El: "t"}
+	e.arrayAttrs = texts
+	e.writeOpeningTag() // write opening tag right away
+
+	return e
+}
+
+// R renders Elements - well kind of, as the language will run inner functions first
+// 	we don't have to do anything for children
+// This element's Ancestors will be already in the tree (string builder) bc New() is called before R (Render)
+// So, essentially this is just to let us know to add our ending tag if applicable
+func (e Element) R(_ ...Element) Element {
 	if !e.IsSingleTag() {
-		str += ">"
-		for _, r := range inner {
-			str += r
-		}
-		str += "</" + e.El
+		e.sb.WriteString("</" + e.El + ">")
 	}
-	str += ">"
-	return
+	return e
 }
 
-// Render element only if condition true
-func (e Element) RIf(condition bool, inner ...string) (str string) {
-	if !condition {
-		return
-	}
-	return e.R(inner...)
-}
-
-// Render each item in the slice wrapped in the Element el
-// with everything nested within the parent element
-// Attrs is a key, value list. A value may be marked as interpolatable with the iterated item with `{{$1}}`
-// A value in the attrs list may be marked as interpolatable with the iterated item
-func (e Element) For(arr []string, ele string, attrs ...string) string {
-	// Find and save the index of the first interpolatable attr if any
-	j := 0  // 0 is safe since we would never interpolate a key
-	for i, a := range attrs {
-		if i % 2 == 1 && a == "{{$1}}" {  // an attribute value wants to be interpolated
-			j = i; break
-		}
-	}
-
-	out := ""
-	el := Element{ El: ele }
-	for _, item := range arr {
-		if j > 0 {
-			attrs[j] = item  // replace
-		}
-		el.Attr = stringlistToMap(attrs...)
-		if j == 0 {
-			out += el.R(item) // render the element wrapping item
+func (e Element) writeOpeningTag() {
+	if e.sb != nil {
+		if e.El == "t" { // "t" is a pseudo element representing a list of strings
+			for _, a := range e.arrayAttrs {
+				e.sb.WriteString(a)
+			}
 		} else {
-			out += el.R()  // we already used the item in an attribute, so no wrap
+			e.sb.WriteString("<" + e.El)
+			for k, v := range e.attrs {
+				e.sb.WriteString(" " + k + "=" + `"` + v + `"`)
+			}
+			e.sb.WriteString(">")
 		}
 	}
-	return e.R(out)
 }
 
-
-// Render as in For, but only if condition true
-func (e Element) ForIf(condition bool, arr []string, el string, extra ...string) (str string) {
-	if !condition {
-		return
+// For renders a slice of items wrapped in the Element el
+// with everything nested within the parent element e
+// Attrs is a key, value list.
+// Note that the use of an inline anonymous function gives more flexibility
+// This function is just for convenience
+func (e Element) For(items []string, ele string, attrs ...string) Element {
+	for _, item := range items {
+		New(e.sb, ele, attrs...).R(
+			New(e.sb, "t", item),
+		)
 	}
-	return e.For(arr, el, extra...)
+	return e
 }

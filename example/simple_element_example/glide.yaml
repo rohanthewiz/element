@@ -1,5 +1,0 @@
-package: github.com/rohanthewiz/element/example/main
-import:
-- package: github.com/labstack/echo
-  version: ~3.2.5
-- package: github.com/rohanthewiz/element
