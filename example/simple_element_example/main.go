@@ -1,10 +1,12 @@
 package main
 
+
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/rohanthewiz/element"
 	"strconv"
 	"strings"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/rohanthewiz/element"
 )
 
 func main() {
@@ -16,15 +18,17 @@ func main() {
 func rootHandler(c *fiber.Ctx) error {
 	animals := []string{"cat", "mouse", "dog"}
 	colors := []string{"red", "blue", "green", "indigo", "violet"}
-	return c.SendString(generateTemplate(animals, colors))
+	c.Set("Content-Type", "text/html")
+	err := c.SendString(generateTemplate(animals, colors))
+	return err
 }
 
 func generateTemplate(animals []string, colors []string) string {
 	e := element.New                           // to keep things unobtrusive
 	t := element.Text
-	s := strings.Builder{}
-
-	e(s, "html").R(
+	s := &strings.Builder{}
+	s.WriteString("<!DOCTYPE html>\n")
+	e(s, "html", "lang", "en").R(
 		e(s, "head").R(
 			e(s, "style").R(
 				t(s, `
@@ -41,6 +45,7 @@ func generateTemplate(animals []string, colors []string) string {
                     text-align: center; font-size: 0.8rem; border-top: 1px solid #ccc; padding: 1em;
                 }
             `),
+			),
 		),
 		e(s, "body").R(
 			e(s, "div", "id", "page-container").R(
