@@ -1,6 +1,5 @@
 package main
 
-
 import (
 	"strconv"
 	"strings"
@@ -19,19 +18,39 @@ func rootHandler(c *fiber.Ctx) error {
 	animals := []string{"cat", "mouse", "dog"}
 	colors := []string{"red", "blue", "green", "indigo", "violet"}
 	c.Set("Content-Type", "text/html")
-	err := c.SendString(generateTemplate(animals, colors))
+	err := c.SendString(generateHTML(animals, colors))
 	return err
 }
 
-func generateTemplate(animals []string, colors []string) string {
-	e := element.New                           // to keep things unobtrusive
-	t := element.Text
-	s := &strings.Builder{}
+func generateHTML(animals []string, colors []string) string {
+	s := &strings.Builder{} // This allows us to reduce memory allocations as we build our HTML
+
+	// These anonymous functions nicely wrap our string builder
+	// so we don't have to explicitly pass it in to every element call below
+	e := func(el string, p ...string) element.Element {
+		return element.New(s, el, p...)
+	}
+	t := func(p ...string) element.Element {
+		return element.Text(s, p...)
+	}
+
+	/*
+		// *The below is a perfect candidate for saving as a snippet / Live Template in your editor / IDE*
+		// Place at the top of every function rendering HTML with Element
+		s := &strings.Builder{}
+		e := func(el string, p ...string) element.Element {
+			return element.New(s, el, p...)
+		}
+		t := func(p ...string) element.Element {
+			return element.Text(s, p...)
+		}
+	*/
+
 	s.WriteString("<!DOCTYPE html>\n")
-	e(s, "html", "lang", "en").R(
-		e(s, "head").R(
-			e(s, "style").R(
-				t(s, `
+	e("html", "lang", "en").R(
+		e("head").R(
+			e("style").R(
+				t(`
                 #page-container {
                     padding: 4rem; height: 100vh; background-color: rgb(232, 230, 228);
                 }
@@ -47,51 +66,56 @@ func generateTemplate(animals []string, colors []string) string {
             `),
 			),
 		),
-		e(s, "body").R(
-			e(s, "div", "id", "page-container").R(
-				e(s, "h1").R(
-					t(s, "This is my heading"),
+		e("body").R(
+			e("div", "id", "page-container").R(
+				e("h1").R(
+					t("This is my heading"),
 				),
-				e(s, "div", "class", "intro").R(
-					e(s, "p").R(
-						t(s, "I've got plenty to say here "),
-						e(s, "span", "class", "highlight").R(
-							t(s, "important phrase!", " More intro text"),
+				e("div", "class", "intro").R(
+					e("p").R(
+						t("I've got plenty to say here "),
+						e("span", "class", "highlight").R(
+							t("important phrase!", " More intro text"),
 						),
 					),
 				),
-				e(s, "p").R(
-					t(s, "ABC Company"), e(s, "br").R(),
+				e("p").R(
+					t("ABC Company"),
+					e("br"), // single tags don't need to call `.R()`
 					func() (el element.Element) {
 						out := ""
 						for i := 0; i < 10; i++ {
 							out += strconv.Itoa(i) + ","
 						}
-						return t(s, out)
+						return t(out)
 					}(),
 				),
-				e(s, "div").R(
-					t(s, "Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum "),
-					e(s, "p").R(t(s, "Finally...")),
+				e("div").R(
+					t("Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum "),
+					e("p").R(t("Finally...")),
 				),
-				// Iterate over a slice with some built-in functions
-				e(s, "ul", "class", "list").For(animals, "li").R(),
+				// Iterate over a slice with a built-in function
+				// You can actually do more with an inline anonymous function
+				e("ul", "class", "list").For(animals, "li").R(),
 
 				// Iterate over a slice with an anonymous function - this is very versatile!
-				e(s, "select").R(
+				e("select").R(
 					func() element.Element {
 						for _, color := range colors {
-							el :=  e(s, "option", "value", color)
+							var el element.Element
 							if color == "blue" {
-								el = e(s, "option", "value", color, "selected", "selected")
+								el = e("option", "value", color, "selected", "selected")
+							} else {
+								el = e("option", "value", color)
 							}
-							el.R(t(s, color))
+							el.R(t(color))
 						}
-						return t(s, "") // bogus as element is not used in R()
+						return t()
+						// return t("") // bogus as element is not used in calling R() above
 					}(),
 				),
-				e(s, "p").R(), // quick spacer :-)
-				e(s, "div", "class", "footer").R(t(s, "About | Privacy | Logout")),
+				e("p").R(), // quick spacer :-)
+				e("div", "class", "footer").R(t("About | Privacy | Logout")),
 			),
 		),
 	)

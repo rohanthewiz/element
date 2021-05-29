@@ -1,15 +1,12 @@
 github.com/andybalholm/brotli v1.0.1 h1:KqhlKozYbRtJvsPrrEeXcO+N2l6NYT5A2QAFmSULpEc=
 github.com/andybalholm/brotli v1.0.1/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
-github.com/gofiber/fiber v1.14.6 h1:QRUPvPmr8ijQuGo1MgupHBn8E+wW0IKqiOvIZPtV70o=
 github.com/gofiber/fiber/v2 v2.10.0 h1:cYwonWaFVa7wBd/LKhgKu7mFNg2CHv5ztY6gzXtrvW8=
 github.com/gofiber/fiber/v2 v2.10.0/go.mod h1:Ah3IJikrKNRepl/HuVawppS25X7FWohwfCSRn7kJG28=
 github.com/klauspost/compress v1.11.8/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/klauspost/compress v1.11.13 h1:eSvu8Tmq6j2psUJqJrLcWH6K3w5Dwc+qipbaA6eVEN4=
 github.com/klauspost/compress v1.11.13/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
-github.com/rohanthewiz/element v0.1.2 h1:q4CkTCi5yoMW8H9p9bn/zPt4Hk0OpMm7OfIE7BzyfuI=
-github.com/rohanthewiz/element v0.1.2/go.mod h1:VNgNUGzMSA2rEot4fXM2deHofTXnF8dt5gV2KIQ+0tA=
-github.com/rohanthewiz/element v0.1.3-0.20210527223135-96ed4539e893 h1:TuI1TysFlyW/nIQxxUiFbmjaKFoYQxk1i3UBkrZXhXk=
-github.com/rohanthewiz/element v0.1.3-0.20210527223135-96ed4539e893/go.mod h1:4L5RL1XalF5TppamYQlDZ6CwvCZJYJ5NdM27BA6WJkA=
+github.com/rohanthewiz/element v0.1.6 h1:x+jJPcZG6DtgejoA/WFgaR6RU8LU4g4cyOjnzqcjmr0=
+github.com/rohanthewiz/element v0.1.6/go.mod h1:4L5RL1XalF5TppamYQlDZ6CwvCZJYJ5NdM27BA6WJkA=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasthttp v1.23.0 h1:0ufwSD9BhWa6f8HWdmdq4FHQ23peRo3Ng/Qs8m5NcFs=

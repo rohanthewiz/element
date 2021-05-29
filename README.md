@@ -1,12 +1,14 @@
 # Simple HTML generator
 Forget templates, and having to learn some half-baked templating language to generate decent HTML pages.
 This proves that HTML can be generated nicely from Go code. All is explicit and compiler-checked.
-Though I may have 100% test coverage, this is beta, so you can deploy to production, however you should verify results with a good html linter (see JetBrains products - I *highly* recommend Goland!)
+Though I may have good test coverage, this is beta. You can deploy to production, however you should verify results with a good html linter/checker (see JetBrains products - I *highly* recommend Goland! BTW, this is in production use)
 
 ## Usage
-Simply create an element and render it: `e("span").R("Inner text")`
-We use short method names to keep the code as unobtrusive as possible.
-See the example https://github.com/rohanthewiz/element/tree/master/example/simple_element_example for a current, full example app.
+Simply create an element and render it: `e("span").R(t("Inner text")) // -> "<span>Inner Text</span>`
+(Please see the full example below)
+
+We use short method names and some aliases to keep the code as unobtrusive as possible.
+**See the example:** https://github.com/rohanthewiz/element/tree/master/example/simple_element_example for a full, ready-to-compile example app.
 
 ```go
 package main
@@ -29,19 +31,39 @@ func rootHandler(c *fiber.Ctx) error {
 	animals := []string{"cat", "mouse", "dog"}
 	colors := []string{"red", "blue", "green", "indigo", "violet"}
 	c.Set("Content-Type", "text/html")
-	err := c.SendString(generateTemplate(animals, colors))
+	err := c.SendString(generateHTML(animals, colors))
 	return err
 }
 
-func generateTemplate(animals []string, colors []string) string {
-	e := element.New                           // to keep things unobtrusive
-	t := element.Text
-	s := &strings.Builder{}
+func generateHTML(animals []string, colors []string) string {
+	s := &strings.Builder{} // This allows us to reduce memory allocations as we build our HTML
+
+	// These anonymous functions nicely wrap our string builder
+	// so we don't have to explicitly pass it in to every element call below
+	e := func(el string, p ...string) element.Element {
+		return element.New(s, el, p...)
+	}
+	t := func(p ...string) element.Element {
+		return element.Text(s, p...)
+	}
+
+	/*
+		// *The below is a perfect candidate for saving as a snippet / Live Template in your editor / IDE*
+		// Place at the top of every function rendering HTML with Element
+		s := &strings.Builder{}
+		e := func(el string, p ...string) element.Element {
+			return element.New(s, el, p...)
+		}
+		t := func(p ...string) element.Element {
+			return element.Text(s, p...)
+		}
+	*/
+
 	s.WriteString("<!DOCTYPE html>\n")
-	e(s, "html", "lang", "en").R(
-		e(s, "head").R(
-			e(s, "style").R(
-				t(s, `
+	e("html", "lang", "en").R(
+		e("head").R(
+			e("style").R(
+				t(`
                 #page-container {
                     padding: 4rem; height: 100vh; background-color: rgb(232, 230, 228);
                 }
@@ -54,61 +76,65 @@ func generateTemplate(animals []string, colors []string) string {
                 .footer {
                     text-align: center; font-size: 0.8rem; border-top: 1px solid #ccc; padding: 1em;
                 }
-                `),
+            `),
 			),
 		),
-		e(s, "body").R(
-			e(s, "div", "id", "page-container").R(
-				e(s, "h1").R(
-					t(s, "This is my heading"),
+		e("body").R(
+			e("div", "id", "page-container").R(
+				e("h1").R(
+					t("This is my heading"),
 				),
-				e(s, "div", "class", "intro").R(
-					e(s, "p").R(
-						t(s, "I've got plenty to say here "),
-						e(s, "span", "class", "highlight").R(
-							t(s, "important phrase!", " More intro text"),
+				e("div", "class", "intro").R(
+					e("p").R(
+						t("I've got plenty to say here "),
+						e("span", "class", "highlight").R(
+							t("important phrase!", " More intro text"),
 						),
 					),
 				),
-				e(s, "p").R(
-					t(s, "ABC Company"), e(s, "br").R(),
+				e("p").R(
+					t("ABC Company"),
+					e("br"), // single tags don't need to call `.R()`
 					func() (el element.Element) {
 						out := ""
 						for i := 0; i < 10; i++ {
 							out += strconv.Itoa(i) + ","
 						}
-						return t(s, out)
+						return t(out)
 					}(),
 				),
-				e(s, "div").R(
-					t(s, "Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum "),
-					e(s, "p").R(t(s, "Finally...")),
+				e("div").R(
+					t("Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum "),
+					e("p").R(t("Finally...")),
 				),
-				// Iterate over a slice with some built-in functions
-				e(s, "ul", "class", "list").For(animals, "li").R(),
+				// Iterate over a slice with a built-in function
+				// You can actually do more with an inline anonymous function
+				e("ul", "class", "list").For(animals, "li").R(),
 
 				// Iterate over a slice with an anonymous function - this is very versatile!
-				e(s, "select").R(
+				e("select").R(
 					func() element.Element {
 						for _, color := range colors {
-							el :=  e(s, "option", "value", color)
+							var el element.Element
 							if color == "blue" {
-								el = e(s, "option", "value", color, "selected", "selected")
+								el = e("option", "value", color, "selected", "selected")
+							} else {
+								el = e("option", "value", color)
 							}
-							el.R(t(s, color))
+							el.R(t(color))
 						}
-						return t(s, "") // bogus as element is not used in R()
+						return t()
+						// return t("") // bogus as element is not used in calling R() above
 					}(),
 				),
-				e(s, "p").R(), // quick spacer :-)
-				e(s, "div", "class", "footer").R(t(s, "About | Privacy | Logout")),
+				e("p").R(), // quick spacer :-)
+				e("div", "class", "footer").R(t("About | Privacy | Logout")),
 			),
 		),
 	)
 
 	return s.String()
 }
-
 ```
 
 Produces this:
@@ -116,7 +142,7 @@ Produces this:
 ![element_generated_page](https://user-images.githubusercontent.com/1130495/32986574-dc894b08-cc9a-11e7-82eb-f62fffb84895.png)
 
 The bonus is that our HTML is already somewhat minified to one line so it's very efficient.
-Here's what the formatted output looks like:
+Here's what the formatted output can look like:
 
 ```html
 <!-- Formatted with JetBrains' Goland (Code | Reformat Code) -->
@@ -161,7 +187,6 @@ Here's what the formatted output looks like:
     </ul>
     <select>
         <option value="red">red</option>
-        <option value="blue">
         <option value="blue" selected="selected">blue</option>
         <option value="green">green</option>
         <option value="indigo">indigo</option>
@@ -174,13 +199,12 @@ Here's what the formatted output looks like:
 </html>
 ```
 
-## Style Hints
-It's Go code man, `go fmt` as you please. I do suggest a couple things though.
-
-* If you are rendering a short inner text for the element, keep that on one line: `e(s, "span").R(t(s,"please note"))`
-* If you are rendering multiple items, especially nested elements, break the render into multiple lines
+## Hints
+- Single tag elements (like `br`) don't need to call `.R()`, however most other elements are dual tag and so must call `.R()`
+- Use `go fmt` to format go code as normal
+- Enjoy the full power and freedom of Go, while generating HTML responses!
 
 ## Contributing
 If you have ideas, let me know. PRs are welcome, but keep the below in mind.
-The idea is to keep this as **light** and unobtrusive as possible. Thanks!
+The idea is to keep this as *light* and unobtrusive as possible. Thanks!
 Also, if possible try to maintain at least 95% coverage -- again Goland has all the tools needed for test coverage.
