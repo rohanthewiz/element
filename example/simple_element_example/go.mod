@@ -4,5 +4,5 @@ go 1.15
 
 require (
 	github.com/gofiber/fiber/v2 v2.10.0
-	github.com/rohanthewiz/element v0.1.6
+	github.com/rohanthewiz/element v0.2.0
 )

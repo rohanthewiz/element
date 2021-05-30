@@ -30,7 +30,7 @@ func generateHTML(animals []string, colors []string) string {
 	e := func(el string, p ...string) element.Element {
 		return element.New(s, el, p...)
 	}
-	t := func(p ...string) element.Element {
+	t := func(p ...string) int {
 		return element.Text(s, p...)
 	}
 
@@ -41,7 +41,7 @@ func generateHTML(animals []string, colors []string) string {
 		e := func(el string, p ...string) element.Element {
 			return element.New(s, el, p...)
 		}
-		t := func(p ...string) element.Element {
+		t := func(p ...string) int {
 			return element.Text(s, p...)
 		}
 	*/
@@ -82,7 +82,7 @@ func generateHTML(animals []string, colors []string) string {
 				e("p").R(
 					t("ABC Company"),
 					e("br"), // single tags don't need to call `.R()`
-					func() (el element.Element) {
+					func() (x int) {
 						out := ""
 						for i := 0; i < 10; i++ {
 							out += strconv.Itoa(i) + ","
@@ -96,11 +96,11 @@ func generateHTML(animals []string, colors []string) string {
 				),
 				// Iterate over a slice with a built-in function
 				// You can actually do more with an inline anonymous function
-				e("ul", "class", "list").For(animals, "li").R(),
+				e("ul", "class", "list").For(animals, "li"),
 
 				// Iterate over a slice with an anonymous function - this is very versatile!
 				e("select").R(
-					func() element.Element {
+					func() (x int) {
 						for _, color := range colors {
 							var el element.Element
 							if color == "blue" {
@@ -110,8 +110,7 @@ func generateHTML(animals []string, colors []string) string {
 							}
 							el.R(t(color))
 						}
-						return t()
-						// return t("") // bogus as element is not used in calling R() above
+						return
 					}(),
 				),
 				e("p").R(), // quick spacer :-)
