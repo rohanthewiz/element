@@ -18,9 +18,15 @@ func NewBuilder() (b *Builder) {
 	b.Ele = func(el string, p ...string) Element {
 		return New(b.s, el, p...)
 	}
-	b.Text = func(p ...string) int {
+	b.Text = func(p ...string) struct{} {
 		return Text(b.s, p...)
 	}
+	return
+}
+
+// WriteString writes directly to the string builder
+func (b *Builder) WriteString(s string) (err error) {
+	_, err = b.s.WriteString(s)
 	return
 }
 
@@ -33,4 +39,4 @@ func (b *Builder) String() string {
 type elementFunc func(el string, p ...string) Element
 
 // textFunc renders literal text
-type textFunc func(p ...string) int
+type textFunc func(p ...string) struct{}

@@ -30,7 +30,7 @@ func New(s *strings.Builder, el string, attrs ...string) (e Element) {
 }
 
 // Text creates a new text element
-func Text(s *strings.Builder, texts ...string) (r int) {
+func Text(s *strings.Builder, texts ...string) (a struct{}) {
 	if s == nil {
 		log.Println("Please supply a pointer to a string builder to element.Text()")
 	}
@@ -44,8 +44,8 @@ func Text(s *strings.Builder, texts ...string) (r int) {
 // 	we don't have to do anything for children
 // This element's Ancestors will be already in the tree (string builder) bc New() is called before R (Render)
 // So, essentially this is just to let us know to add our ending tag if applicable
-// The return is bogus - it's just to satisfy the any interface{} input of the parent .R()
-func (e Element) R(_ ...interface{}) (r int) {
+// The return is bogus - it's just to satisfy the any input of the parent .R()
+func (e Element) R(_ ...any) (a struct{}) {
 	e.close()
 	return
 }
@@ -56,7 +56,7 @@ func (e Element) R(_ ...interface{}) (r int) {
 // Note that the use of an inline anonymous function gives more flexibility
 // This function is just for convenience
 // The return is just to satisfy the any interface{} input param of the parent .R()
-func (e Element) For(items []string, ele string, attrs ...string) (r int) {
+func (e Element) For(items []string, ele string, attrs ...string) (a struct{}) {
 	for _, item := range items {
 		New(e.sb, ele, attrs...).R(
 			New(e.sb, "t", item),

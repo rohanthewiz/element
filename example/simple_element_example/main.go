@@ -1,8 +1,8 @@
 package main
 
 import (
+	"log"
 	"strconv"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rohanthewiz/element"
@@ -11,7 +11,7 @@ import (
 func main() {
 	r := fiber.New()
 	r.Get("/", rootHandler)
-	r.Listen(":8000")
+	log.Fatal(r.Listen(":8000"))
 }
 
 func rootHandler(c *fiber.Ctx) error {
@@ -23,30 +23,11 @@ func rootHandler(c *fiber.Ctx) error {
 }
 
 func generateHTML(animals []string, colors []string) string {
-	s := &strings.Builder{} // This allows us to reduce memory allocations as we build our HTML
+	b := element.NewBuilder()
+	e := b.Ele
+	t := b.Text
 
-	// These anonymous functions nicely wrap our string builder
-	// so we don't have to explicitly pass it in to every element call below
-	e := func(el string, p ...string) element.Element {
-		return element.New(s, el, p...)
-	}
-	t := func(p ...string) int {
-		return element.Text(s, p...)
-	}
-
-	/*
-		// *The below is a perfect candidate for saving as a snippet / Live Template in your editor / IDE*
-		// Place at the top of every function rendering HTML with Element
-		s := &strings.Builder{}
-		e := func(el string, p ...string) element.Element {
-			return element.New(s, el, p...)
-		}
-		t := func(p ...string) int {
-			return element.Text(s, p...)
-		}
-	*/
-
-	s.WriteString("<!DOCTYPE html>\n")
+	_ = b.WriteString("<!DOCTYPE html>\n")
 	e("html", "lang", "en").R(
 		e("head").R(
 			e("style").R(
@@ -82,10 +63,13 @@ func generateHTML(animals []string, colors []string) string {
 				e("p").R(
 					t("ABC Company"),
 					e("br"), // single tags don't need to call `.R()`
-					func() (x int) {
+					func() (x any) {
 						out := ""
 						for i := 0; i < 10; i++ {
-							out += strconv.Itoa(i) + ","
+							if i > 0 {
+								out += ","
+							}
+							out += strconv.Itoa(i)
 						}
 						return t(out)
 					}(),
@@ -100,7 +84,7 @@ func generateHTML(animals []string, colors []string) string {
 
 				// Iterate over a slice with an anonymous function - this is very versatile!
 				e("select").R(
-					func() (x int) {
+					func() (x any) {
 						for _, color := range colors {
 							var el element.Element
 							if color == "blue" {
@@ -119,5 +103,5 @@ func generateHTML(animals []string, colors []string) string {
 		),
 	)
 
-	return s.String()
+	return b.String()
 }

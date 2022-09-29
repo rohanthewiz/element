@@ -5,12 +5,6 @@ github.com/gofiber/fiber/v2 v2.10.0/go.mod h1:Ah3IJikrKNRepl/HuVawppS25X7FWohwfC
 github.com/klauspost/compress v1.11.8/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/klauspost/compress v1.11.13 h1:eSvu8Tmq6j2psUJqJrLcWH6K3w5Dwc+qipbaA6eVEN4=
 github.com/klauspost/compress v1.11.13/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
-github.com/rohanthewiz/element v0.1.5-0.20210530072500-fc93755ba781 h1:vWek+4Ugy70El5qAt7TLdwBQarsaCKw6O8fekntRhqE=
-github.com/rohanthewiz/element v0.1.5-0.20210530072500-fc93755ba781/go.mod h1:4L5RL1XalF5TppamYQlDZ6CwvCZJYJ5NdM27BA6WJkA=
-github.com/rohanthewiz/element v0.1.6 h1:x+jJPcZG6DtgejoA/WFgaR6RU8LU4g4cyOjnzqcjmr0=
-github.com/rohanthewiz/element v0.1.6/go.mod h1:4L5RL1XalF5TppamYQlDZ6CwvCZJYJ5NdM27BA6WJkA=
-github.com/rohanthewiz/element v0.2.2 h1:+qQOFi97tKF7NjoxYcNRsAmDxADJ77KuL9fb5Zj7l0Q=
-github.com/rohanthewiz/element v0.2.2/go.mod h1:4L5RL1XalF5TppamYQlDZ6CwvCZJYJ5NdM27BA6WJkA=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasthttp v1.23.0 h1:0ufwSD9BhWa6f8HWdmdq4FHQ23peRo3Ng/Qs8m5NcFs=
