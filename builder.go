@@ -15,6 +15,7 @@ type Builder struct {
 func NewBuilder() (b *Builder) {
 	b = &Builder{}
 	b.s = &strings.Builder{}
+
 	b.Ele = func(el string, p ...string) Element {
 		return New(b.s, el, p...)
 	}
@@ -27,6 +28,12 @@ func NewBuilder() (b *Builder) {
 // WriteString writes directly to the string builder
 func (b *Builder) WriteString(s string) (err error) {
 	_, err = b.s.WriteString(s)
+	return
+}
+
+// WriteBytes writes bytes directly to the string builder
+func (b *Builder) WriteBytes(byts []byte) (err error) {
+	_, _ = b.s.Write(byts)
 	return
 }
 
