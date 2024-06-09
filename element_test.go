@@ -81,6 +81,7 @@ func TestRender(t *testing.T) {
 
 func TestFor(t *testing.T) {
 	var testAnimals = []string{"cat", "mouse", "dog"}
+
 	s := &strings.Builder{}
 
 	// Div with text and element children
