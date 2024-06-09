@@ -16,11 +16,11 @@ func NewBuilder() (b *Builder) {
 	b = &Builder{}
 	b.s = &strings.Builder{}
 
-	b.Ele = func(el string, pairs ...string) Element {
-		return New(b.s, el, pairs...)
+	b.Ele = func(el string, attrPairs ...string) Element {
+		return New(b.s, el, attrPairs...)
 	}
-	b.Text = func(pairs ...string) struct{} {
-		return Text(b.s, pairs...)
+	b.Text = func(attrPairs ...string) struct{} {
+		return Text(b.s, attrPairs...)
 	}
 	return
 }
@@ -43,7 +43,7 @@ func (b *Builder) String() string {
 }
 
 // elementFunc build an element
-type elementFunc func(el string, pairs ...string) Element
+type elementFunc func(el string, attrPairs ...string) Element
 
 // textFunc renders literal text
-type textFunc func(pairs ...string) struct{}
+type textFunc func(attrPairs ...string) struct{}
