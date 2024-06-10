@@ -40,6 +40,17 @@ func TestRender(t *testing.T) {
 		fmt.Println("good ->", str)
 	}
 
+	// Span with odd number of attributes
+	s.Reset()
+	New(s, "span", "id", "special", "class").R()
+	str = s.String()
+	expected = `<span id="special"></span>`
+	if len(str) != len(expected) { // Go's map order is random, so have to rely on length match
+		t.Error("Failed to render a span with odd number of attributes", "\nExpected:", expected, "\nGot:", str)
+	} else {
+		fmt.Println("good ->", str)
+	}
+
 	// Div with text and element children
 	s.Reset()
 	New(s, "div", "id", "container", "class", "active").R(
