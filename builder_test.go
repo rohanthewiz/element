@@ -34,6 +34,26 @@ func TestBuilder_String(t *testing.T) {
 	})
 }
 
+func TestBuildElementWithDelayedRender(t *testing.T) {
+	const want = `<div><p style="color:red">Hello World!</p></div>`
+
+	t.Run("Builder - Create element with delayed render", func(t *testing.T) {
+		b := NewBuilder()
+
+		pDelayedRender := b.EleNoRender("p")
+
+		// We could conditionally add a color style
+		pDelayedRender.AddAttributes("style", "color:red")
+
+		b.Ele("div").R(pDelayedRender.RenderOpeningTag().R(
+			b.Text("Hello World!")))
+
+		if got := b.String(); got != want {
+			t.Errorf("String() = %v, want %v", got, want)
+		}
+	})
+}
+
 func TestBuilder_WriteString(t *testing.T) {
 	const want = `<span>Testing, testing</span>`
 	t.Run("Builder WriteString()", func(t *testing.T) {
