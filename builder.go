@@ -25,6 +25,12 @@ func NewBuilder() (b *Builder) {
 	return
 }
 
+// Funcs is a convenience method for returning the builder funcs
+// - typically used for aliasing
+func (b *Builder) Funcs() (ele elementFunc, text textFunc) {
+	return b.Ele, b.Text
+}
+
 // WriteString writes directly to the string builder
 func (b *Builder) WriteString(s string) (err error) {
 	_, err = b.s.WriteString(s)
@@ -41,9 +47,3 @@ func (b *Builder) WriteBytes(byts []byte) (err error) {
 func (b *Builder) String() string {
 	return b.s.String()
 }
-
-// elementFunc build an element
-type elementFunc func(el string, attrPairs ...string) Element
-
-// textFunc renders literal text
-type textFunc func(attrPairs ...string) struct{}
