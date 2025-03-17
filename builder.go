@@ -25,9 +25,24 @@ func NewBuilder() (b *Builder) {
 	return
 }
 
-// Funcs is a convenience method for returning the builder funcs
-// - typically used for aliasing
+// Funcs is a convenience method for returning
+// the builder functions b.Ele and b.Text
+// that are used for creating elements and literal text
 func (b *Builder) Funcs() (ele elementFunc, text textFunc) {
+	return b.Ele, b.Text
+}
+
+// EleFuncs is another convenience method for returning
+// the builder functions b.Ele and b.Text
+// that are used for creating elements and literal text
+func (b *Builder) EleFuncs() (ele elementFunc, text textFunc) {
+	return b.Ele, b.Text
+}
+
+// Fn is another convenience method for returning
+// the builder functions b.Ele and b.Text
+// that are used for creating elements and literal text
+func (b *Builder) Fn() (ele elementFunc, text textFunc) {
 	return b.Ele, b.Text
 }
 
