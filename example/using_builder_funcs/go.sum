@@ -1,0 +1,10 @@
+git.akyoto.dev/go/assert v0.1.3 h1:QwCUbmG4aZYsNk/OuRBz1zWVKmGlDUHhOnnDBfn8Qw8=
+git.akyoto.dev/go/assert v0.1.3/go.mod h1:0GzMaM0eURuDwtGkJJkCsI7r2aUKr+5GmWNTFPgDocM=
+github.com/rohanthewiz/element v0.4.1 h1:+y+2rteZsH1n2LnqYk4qIlEi8Gj9ykjsDNKzauj/lRo=
+github.com/rohanthewiz/element v0.4.1/go.mod h1:yxmrFVnO9eQQ7GbjRfJgJG9u8yHUjTTxy/6ji3PNhXY=
+github.com/rohanthewiz/element v0.4.2-0.20250318091218-e3d2e4ae0636 h1:Q+3GPoXbZ5PC5DsQoqqSnPOAedqvpfmPkqeKSe2wQqk=
+github.com/rohanthewiz/element v0.4.2-0.20250318091218-e3d2e4ae0636/go.mod h1:yxmrFVnO9eQQ7GbjRfJgJG9u8yHUjTTxy/6ji3PNhXY=
+github.com/rohanthewiz/rweb v0.1.12 h1:2C5i6Zxy/2UXRw9gaIQ3RmOuOxfdA9QhIq9IEdPM0xo=
+github.com/rohanthewiz/rweb v0.1.12/go.mod h1:GBeM+x9dq6LY3GCQXRFNxX5sLpBBcZdsCLw39qj2PmA=
+github.com/rohanthewiz/rweb v0.1.13-0.20250307165947-074c63d462ae h1:CL7ksi0wR5c0/jb4Um4dZd0asg0HBPlTz0miKe7IJsU=
+github.com/rohanthewiz/rweb v0.1.13-0.20250307165947-074c63d462ae/go.mod h1:GBeM+x9dq6LY3GCQXRFNxX5sLpBBcZdsCLw39qj2PmA=
