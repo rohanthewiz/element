@@ -25,26 +25,7 @@ func NewBuilder() (b *Builder) {
 	return
 }
 
-// Funcs is a convenience method for returning
-// the builder functions b.Ele and b.Text
-// that are used for creating elements and literal text
-func (b *Builder) Funcs() (ele elementFunc, text textFunc) {
-	return b.Ele, b.Text
-}
-
-// EleFuncs is another convenience method for returning
-// the builder functions b.Ele and b.Text
-// that are used for creating elements and literal text
-func (b *Builder) EleFuncs() (ele elementFunc, text textFunc) {
-	return b.Ele, b.Text
-}
-
-// Fn is another convenience method for returning
-// the builder functions b.Ele and b.Text
-// that are used for creating elements and literal text
-func (b *Builder) Fn() (ele elementFunc, text textFunc) {
-	return b.Ele, b.Text
-}
+// Input / 0utput
 
 // WriteString writes directly to the string builder
 func (b *Builder) WriteString(s string) (err error) {
