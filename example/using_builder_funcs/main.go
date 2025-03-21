@@ -22,7 +22,7 @@ func main() {
 }
 
 func rootHandler(c rweb.Context) error {
-	b, e, t := element.Vars()
+	b, _, t := element.Vars()
 
 	b.Html().R(
 		b.Head().R(
@@ -59,7 +59,7 @@ tr:nth-child(even) {
 					b.P("style", "font-weight:bold").R(
 						t("Hello there big world!"),
 					),
-					e("aside", "style", "display:inline-block;float:right").R(t("Not sure what you put in an aside!")),
+					b.Aside("style", "display:inline-block;float:right").R(t("Not sure what you put in an aside!")),
 					b.Table().R(
 						b.THead().R(
 							b.Tr("class", "table-head").R(
