@@ -22,7 +22,7 @@ func main() {
 }
 
 func rootHandler(c rweb.Context) error {
-	b, _, t := element.Vars()
+	b, e, t := element.Vars()
 
 	b.Html().R(
 		b.Head().R(
@@ -54,12 +54,14 @@ tr:nth-child(even) {
 `),
 			),
 			b.Body().R(
+				e("div", "class", "title").R(t("Element Check")),
 				b.Div("class", "container").R(
 					b.H1().R(t("Element Check")),
 					b.P("style", "font-weight:bold").R(
 						t("Hello there big world!"),
 					),
 					b.Aside("style", "display:inline-block;float:right").R(t("Not sure what you put in an aside!")),
+
 					b.Table().R(
 						b.THead().R(
 							b.Tr("class", "table-head").R(
@@ -81,6 +83,12 @@ tr:nth-child(even) {
 							),
 						),
 					),
+					b.Pre().R(
+						t(`This is a preformatted block of text.
+	It will be rendered as a block of text with  line breaks. 
+	This is a preformatted block of text. It will be rendered as a block of text with  line breaks.`),
+					),
+					b.Div("class", "footer").R(t("Copyright © 2023 Element Check")),
 				),
 			),
 		),
