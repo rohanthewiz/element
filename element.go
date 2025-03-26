@@ -41,7 +41,9 @@ func Text(s *strings.Builder, texts ...string) (a struct{}) {
 }
 
 // R renders Elements - well kind of, as the language will run inner functions first
-// 	we don't have to do anything for children
+//
+//	we don't have to do anything for children
+//
 // This element's Ancestors will be already in the tree (string builder) bc New() is called before R (Render)
 // So, essentially this is just to let us know to add our ending tag if applicable
 // The return is bogus - it's just to satisfy the any input of the parent .R()
@@ -56,6 +58,7 @@ func (e Element) R(_ ...any) (a struct{}) {
 // Note that the use of an inline anonymous function gives more flexibility
 // This function is just for convenience
 // The return is just to satisfy the any interface{} input param of the parent .R()
+// Consider this method deprecated as we can do so much more with anonymous functions, and even better, components.
 func (e Element) For(items []string, ele string, attrs ...string) (a struct{}) {
 	for _, item := range items {
 		New(e.sb, ele, attrs...).R(

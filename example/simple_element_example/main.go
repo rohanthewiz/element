@@ -4,33 +4,64 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/rohanthewiz/element"
+	"github.com/rohanthewiz/rweb"
+	"github.com/rohanthewiz/serr"
 )
 
 func main() {
-	r := fiber.New()
-	r.Get("/", rootHandler)
-	log.Fatal(r.Listen(":8000"))
+	s := rweb.NewServer(rweb.ServerOptions{
+		Address: ":8000",
+		Verbose: true,
+	})
+
+	s.Use(rweb.RequestInfo) // Stats Middleware
+
+	s.Get("/", rootHandler)
+	log.Fatal(s.Run())
 }
 
-func rootHandler(c *fiber.Ctx) error {
+func rootHandler(c rweb.Context) error {
 	animals := []string{"cat", "mouse", "dog"}
 	colors := []string{"red", "blue", "green", "indigo", "violet"}
-	c.Set("Content-Type", "text/html")
-	err := c.SendString(generateHTML(animals, colors))
-	return err
+	err := c.WriteHTML(generateHTML(animals, colors))
+	if err != nil {
+		return serr.Wrap(err)
+	}
+	return nil
+}
+
+type SelectComponent struct {
+	Selected string
+	Items    []string
+}
+
+func (s SelectComponent) Render(b *element.Builder) (x any) {
+	_, t := b.Vars()
+
+	b.Select().R(
+		func() (x any) {
+			for _, color := range s.Items {
+				params := []string{"value", color}
+				if color == s.Selected {
+					params = append(params, "selected", "selected")
+				}
+				b.Option(params...).R(t(color))
+			}
+			return
+		}(),
+	)
+	return
 }
 
 func generateHTML(animals []string, colors []string) string {
-	b := element.NewBuilder()
-	e := b.Ele
-	t := b.Text
+	b, e, t := element.Vars()
 
-	_ = b.WriteString("<!DOCTYPE html>\n")
-	e("html", "lang", "en").R(
-		e("head").R(
-			e("style").R(
+	selComp := SelectComponent{Selected: "blue", Items: colors}
+
+	b.Html().R(
+		b.Head().R(
+			b.Style().R(
 				t(`
                 #page-container {
                     padding: 4rem; height: 100vh; background-color: rgb(232, 230, 228);
@@ -47,9 +78,9 @@ func generateHTML(animals []string, colors []string) string {
             `),
 			),
 		),
-		e("body").R(
-			e("div", "id", "page-container").R(
-				e("h1").R(
+		b.Body().R(
+			b.Div("id", "page-container").R(
+				b.H1().R(
 					t("This is my heading"),
 				),
 				e("div", "class", "intro").R(
@@ -60,7 +91,7 @@ func generateHTML(animals []string, colors []string) string {
 						),
 					),
 				),
-				e("p").R(
+				b.P().R(
 					t("ABC Company"),
 					e("br"), // single tags don't need to call `.R()`
 					func() (x any) {
@@ -74,31 +105,19 @@ func generateHTML(animals []string, colors []string) string {
 						return t(out)
 					}(),
 				),
-				e("div").R(
+				b.Div().R(
 					t("Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum "),
 					e("p").R(t("Finally...")),
 				),
 				// Iterate over a slice with a built-in function
-				// You can actually do more with an inline anonymous function
+				// You can actually do more with an inline anonymous function, and components,
+				// so consider the For method here deprecated
 				e("ul", "class", "list").For(animals, "li"),
 
-				// Iterate over a slice with an anonymous function - this is very versatile!
-				e("select").R(
-					func() (x any) {
-						for _, color := range colors {
-							var el element.Element
-							if color == "blue" {
-								el = e("option", "value", color, "selected", "selected")
-							} else {
-								el = e("option", "value", color)
-							}
-							el.R(t(color))
-						}
-						return
-					}(),
-				),
-				e("p").R(), // quick spacer :-)
-				e("div", "class", "footer").R(t("About | Privacy | Logout")),
+				element.RenderComponents(b, selComp),
+				b.P().R(), // quick spacer :-)
+				e("div", "class", "footer").R(
+					t("About | Privacy | Logout")),
 			),
 		),
 	)
