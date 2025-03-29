@@ -60,3 +60,43 @@ func TestBuilder_WriteBytes(t *testing.T) {
 		}
 	})
 }
+
+func TestBuilder_F(t *testing.T) {
+	tests := []struct {
+		name         string
+		formatString string
+		args         []any
+		expected     string
+	}{
+		{
+			name:         "simple string",
+			formatString: "Hello",
+			args:         nil,
+			expected:     "Hello",
+		},
+		{
+			name:         "string with one argument",
+			formatString: "Hello, %s!",
+			args:         []any{"world"},
+			expected:     "Hello, world!",
+		},
+		{
+			name:         "multiple arguments",
+			formatString: "%s %d %s",
+			args:         []any{"test", 123, "abc"},
+			expected:     "test 123 abc",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := NewBuilder()
+			b.F(tt.formatString, tt.args...)
+
+			result := b.String() // Assuming Builder has a String() method to get the content
+			if result != tt.expected {
+				t.Errorf("F() = %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}

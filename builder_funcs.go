@@ -1,12 +1,14 @@
 package element
 
+import "fmt"
+
 // elementFunc build an element
 type elementFunc func(el string, attrPairs ...string) Element
 
 // textFunc renders literal text
 type textFunc func(attrPairs ...string) struct{}
 
-// CONVENIENCE METHODS
+// BUILDER CONVENIENCE METHODS
 
 // Funcs is a convenience method for returning
 // the builder methods b.Ele and b.Text
@@ -29,7 +31,21 @@ func (b *Builder) V() (ele elementFunc, text textFunc) {
 	return b.Ele, b.Text
 }
 
-// CONVENIENCE FUNCTIONS
+// F formats and writes a string to the builder.
+// It's a convenience method for fmt.Sprintf that writes directly to the builder.
+//
+// Example:
+//
+//	b := NewBuilder()
+//	b.F("Hello, %s!", "world") // Writes "Hello, world!" to the builder
+//
+// Returns an empty interface for method chaining.
+func (b *Builder) F(formatString string, args ...any) (x any) {
+	b.WriteString(fmt.Sprintf(formatString, args...))
+	return
+}
+
+// ELEMENT CONVENIENCE FUNCTIONS
 
 // Vars returns a builder plus it's convenience methods for creating elements and text
 func Vars() (b *Builder, e elementFunc, t textFunc) {
