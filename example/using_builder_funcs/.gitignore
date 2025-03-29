@@ -1,2 +1,7 @@
+.idea/
+.vscode
+.zed
+.qodo
 
+# Ignore binaries
 builder_funcs
