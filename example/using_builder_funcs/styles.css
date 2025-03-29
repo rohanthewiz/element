@@ -1,0 +1,50 @@
+/* Parent (div) */
+div.card {
+    border: 1px solid #ccc;
+    border-radius:8px;
+    display: block;
+    position: static;
+    width: 826px;
+    height: 130.938px;
+    background-color: rgb(86, 115, 83); /* greenish */
+    margin: 10px 0px;
+    padding: 10px;
+    box-sizing: content-box;
+    color: rgb(255, 255, 255); /* white */
+    text-align: start;
+}
+
+/* Card */
+.card {
+    display: block;
+    position: static;
+    width: 826px;
+    height: 130.938px;
+    background-color: rgb(249, 249, 249); /* light gray */
+    margin: 10px 0px;
+    padding: 10px;
+    box-sizing: content-box;
+    color: rgb(255, 255, 255); /* white */
+    text-align: start;
+}
+
+/* Title (h3) */
+.card h3 {
+    display: block;
+    position: static;
+    border-bottom: 1px solid #aaa;
+    width: 826px;
+    height: 22px;
+    /* background-color: rgba(0, 0, 0, 0); */ /* transparent */
+    margin: 18px 0px;
+    padding: 3px;
+    box-sizing: content-box;
+    color: rgb(255, 255, 255); /* white */
+    text-align: start;
+}
+
+.footer {
+    font-size: 0.8rem;
+    text-align: center;
+    margin-top: 2rem;
+}

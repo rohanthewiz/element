@@ -1,4 +1,7 @@
 .idea/
+.vscode
+.zed
+.qodo
 
 # Ignore binaries
 element
