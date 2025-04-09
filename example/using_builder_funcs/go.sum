@@ -8,6 +8,8 @@ github.com/rohanthewiz/element v0.4.2-0.20250321011157-3f8ed5ada472 h1:xCXXzIZRb
 github.com/rohanthewiz/element v0.4.2-0.20250321011157-3f8ed5ada472/go.mod h1:yxmrFVnO9eQQ7GbjRfJgJG9u8yHUjTTxy/6ji3PNhXY=
 github.com/rohanthewiz/element v0.4.2-0.20250329223230-e19887a79b6e h1:qHgpwVsY76mDayYFV6SDl0Zil6tR9Q6ojORtFzmc+PU=
 github.com/rohanthewiz/element v0.4.2-0.20250329223230-e19887a79b6e/go.mod h1:yxmrFVnO9eQQ7GbjRfJgJG9u8yHUjTTxy/6ji3PNhXY=
+github.com/rohanthewiz/element v0.4.2-0.20250329225931-2d5817c218db h1:W9MnTBsLcGPY9wxxDTZlYAcaTJJaBGQA19gjXkgogdA=
+github.com/rohanthewiz/element v0.4.2-0.20250329225931-2d5817c218db/go.mod h1:yxmrFVnO9eQQ7GbjRfJgJG9u8yHUjTTxy/6ji3PNhXY=
 github.com/rohanthewiz/rweb v0.1.12 h1:2C5i6Zxy/2UXRw9gaIQ3RmOuOxfdA9QhIq9IEdPM0xo=
 github.com/rohanthewiz/rweb v0.1.12/go.mod h1:GBeM+x9dq6LY3GCQXRFNxX5sLpBBcZdsCLw39qj2PmA=
 github.com/rohanthewiz/rweb v0.1.13-0.20250307165947-074c63d462ae h1:CL7ksi0wR5c0/jb4Um4dZd0asg0HBPlTz0miKe7IJsU=

@@ -3,9 +3,9 @@ div.card {
     border: 1px solid #ccc;
     border-radius:8px;
     display: block;
-    position: static;
+    position: relative;
     width: 826px;
-    height: 130.938px;
+    height: 100%;
     background-color: rgb(86, 115, 83); /* greenish */
     margin: 10px 0px;
     padding: 10px;

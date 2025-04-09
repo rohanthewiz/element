@@ -61,7 +61,8 @@ func main() {
 }
 
 type ListOfThings struct {
-	Name string
+	Name   string
+	Things []string
 }
 
 func (l ListOfThings) Render(b *element.Builder) (x any) {
@@ -70,9 +71,10 @@ func (l ListOfThings) Render(b *element.Builder) (x any) {
 	b.Div("class", "card").R( // wrapper
 		b.H3().R(t(l.Name)),
 		b.Ul().R(
-			b.Li().R(t("Item 1")),
-			b.Li().R(t("Item 2")),
-			b.Li().R(t("Item 3")),
+			element.ForEach(b, l.Things,
+				func(b *element.Builder, item string) {
+					b.Li().R(t(item))
+				}),
 		),
 	)
 
@@ -80,8 +82,8 @@ func (l ListOfThings) Render(b *element.Builder) (x any) {
 }
 
 func rootHandler(c rweb.Context) error {
-	list := ListOfThings{Name: "Items"}
-	list2 := ListOfThings{Name: "More Items"}
+	list := ListOfThings{Name: "Items", Things: []string{"Item A", "Item B", "Item C"}}
+	list2 := ListOfThings{Name: "More Items", Things: []string{"Item 1", "Item 2", "Item 3", "Item 4", "Item 5"}}
 
 	b, e, t := element.Vars()
 
