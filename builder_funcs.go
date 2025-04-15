@@ -45,6 +45,13 @@ func (b *Builder) F(formatString string, args ...any) (x any) {
 	return
 }
 
+// Wrap wraps a function that take a builder so it can live inside of a render tree
+// This is just a convenience so don't have to worry about return
+func (b *Builder) Wrap(fn func()) (x any) {
+	fn()
+	return
+}
+
 // ELEMENT CONVENIENCE FUNCTIONS
 
 // Vars returns a builder plus it's convenience methods for creating elements and text

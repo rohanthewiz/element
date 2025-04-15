@@ -181,6 +181,10 @@ func (b *Builder) P(attrPairs ...string) Element {
 	return New(b.s, "p", attrPairs...)
 }
 
+func (b *Builder) Br(attrPairs ...string) Element {
+	return New(b.s, "br", attrPairs...)
+}
+
 // Span creates an inline container element
 //
 // Example:

@@ -61,8 +61,9 @@ func main() {
 }
 
 type ListOfThings struct {
-	Name   string
-	Things []string
+	Name    string
+	Things  []string
+	Numbers []float64
 }
 
 func (l ListOfThings) Render(b *element.Builder) (x any) {
@@ -70,12 +71,26 @@ func (l ListOfThings) Render(b *element.Builder) (x any) {
 
 	b.Div("class", "card").R( // wrapper
 		b.H3().R(t(l.Name)),
-		b.Ul().R(
-			element.ForEach(b, l.Things,
-				func(b *element.Builder, item string) {
-					b.Li().R(t(item))
-				}),
-		),
+
+		b.Wrap(func() {
+			b.Ul().R(
+				element.ForEach(b, l.Things,
+					func(b *element.Builder, item string) {
+						b.Li().R(t(item))
+					}),
+			)
+		}),
+
+		b.Wrap(func() {
+			if len(l.Numbers) > 0 {
+				b.Ul().R(
+					element.ForEach(b, l.Numbers,
+						func(b *element.Builder, number float64) {
+							b.Li().R(b.F("%0.2f", number))
+						}),
+				)
+			}
+		}),
 	)
 
 	return // nil
@@ -84,6 +99,7 @@ func (l ListOfThings) Render(b *element.Builder) (x any) {
 func rootHandler(c rweb.Context) error {
 	list := ListOfThings{Name: "Items", Things: []string{"Item A", "Item B", "Item C"}}
 	list2 := ListOfThings{Name: "More Items", Things: []string{"Item 1", "Item 2", "Item 3", "Item 4", "Item 5"}}
+	list3 := ListOfThings{Name: "Just Numbers", Numbers: []float64{17.0, 5.1, 98.7, 3.1415927}}
 
 	b, e, t := element.Vars()
 
@@ -105,10 +121,16 @@ func rootHandler(c rweb.Context) error {
 
 			b.Div("class", "container").R(
 				// Show some lists
-				element.RenderComponents(b, list, list2),
+				element.RenderComponents(b, list, list2, list3),
 				b.P("style", "font-weight:bold").R(
-					t("Hello there big world!"),
+					t("Hello there big world!"), b.Br().R(),
+					b.F("%s", time.Now().String()),
 				),
+				b.Wrap(func() {
+					if 2 > 1 {
+						t("Yup. Two is greater than 1.")
+					}
+				}),
 				b.Aside("style", "display:inline-block;float:right;padding:1rem").R(
 					t("This is an aside!")),
 
