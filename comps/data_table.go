@@ -1,7 +1,8 @@
-package components
+package comps
 
 import (
 	_ "embed"
+	"strings"
 
 	"github.com/rohanthewiz/element"
 )
@@ -12,29 +13,49 @@ var dataTableCSS string
 //go:embed data_table.js
 var dataTableJS string
 
+// DataTable is a component for representing rows of data.
+// Use NewDataTable function for properly creating a new DataTable instance.
 type DataTable struct {
-	Id                  string
-	CustomStyles        string
-	ZeroInternalStyles  bool
-	CustomScripts       string
-	ZeroInternalScripts bool
+	Id string
+	DataTableOptions
+}
+
+type DataTableOptions struct {
+	CustomStyles       string
+	ZeroInternalStyles bool
+	CustomJS           string
+	ZeroInternalJS     bool
 }
 
 // NewDataTable returns a new data table component
-func NewDataTable() *DataTable {
+func NewDataTable(dtOpts DataTableOptions) *DataTable {
 	return &DataTable{
-		Id:                  "ele-data-table-" + genRandId(), // Create a unique ID for the data table
-		CustomStyles:        dataTableCSS,
-		ZeroInternalStyles:  true,
-		CustomScripts:       dataTableJS,
-		ZeroInternalScripts: true,
+		Id:               "ele-data-table", // + genRandId(), // Create a unique ID for the data table
+		DataTableOptions: dtOpts,
 	}
 }
 
 func (tbl DataTable) Render(b *element.Builder) (x any) {
+	dataTableJS = strings.ReplaceAll(dataTableJS, "$DATA_TABLE_ID", tbl.Id)
 	e, t := b.Vars()
 
-	e("body").R(
+	b.Body().R(
+		b.Wrap(func() {
+			if len(tbl.DataTableOptions.CustomStyles) > 0 {
+				b.Style().R(t(tbl.DataTableOptions.CustomStyles))
+			}
+			if !tbl.ZeroInternalStyles {
+				b.Style().R(t(dataTableCSS))
+			}
+
+			if len(tbl.DataTableOptions.CustomJS) > 0 {
+				b.Script().R(t(tbl.DataTableOptions.CustomJS))
+			}
+			if !tbl.ZeroInternalJS {
+				b.Script().R(t(dataTableJS))
+			}
+		}),
+
 		e("div", "class", "data-table-container").R(
 			// Loading overlay
 			e("div", "class", "loading-overlay").R(
@@ -72,7 +93,7 @@ func (tbl DataTable) Render(b *element.Builder) (x any) {
 			),
 
 			// Data table
-			e("table", "id", "dataTable").R(
+			e("table", "id", tbl.Id).R(
 				e("thead").R(
 					e("tr").R(
 						e("th", "width", "40px").R(
