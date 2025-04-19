@@ -1,6 +1,7 @@
 package element
 
 import (
+	"fmt"
 	"log"
 	"strings"
 )
@@ -29,7 +30,7 @@ func New(s *strings.Builder, el string, attrs ...string) (e Element) {
 	return e
 }
 
-// Text creates a new text element
+// Text is an element core function which creates a new text element in the string builder
 func Text(s *strings.Builder, texts ...string) (a struct{}) {
 	if s == nil {
 		log.Println("Please supply a pointer to a string builder to element.Text()")
@@ -57,7 +58,6 @@ func (e Element) R(_ ...any) (a struct{}) {
 // Attrs is a key, value list.
 // Note that the use of an inline anonymous function gives more flexibility
 // This function is just for convenience
-// The return is just to satisfy the any interface{} input param of the parent .R()
 // Consider this method deprecated as we can do so much more with anonymous functions, and even better, components.
 func (e Element) For(items []string, ele string, attrs ...string) (a struct{}) {
 	for _, item := range items {
@@ -78,7 +78,7 @@ func (e Element) writeOpeningTag() {
 		} else {
 			e.sb.WriteString("<" + e.El)
 			for k, v := range e.attrs {
-				e.sb.WriteString(" " + k + "=" + `"` + v + `"`)
+				e.sb.WriteString(fmt.Sprintf(` %s="%s"`, k, v))
 			}
 			e.sb.WriteString(">")
 		}
