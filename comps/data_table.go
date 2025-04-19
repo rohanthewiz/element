@@ -7,6 +7,8 @@ import (
 	"github.com/rohanthewiz/element"
 )
 
+// NOTE: DATATABLE IS A WORK IN PROGRESS COMPONENT
+
 //go:embed data_table.css
 var dataTableCSS string
 

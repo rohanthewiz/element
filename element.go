@@ -1,6 +1,7 @@
 package element
 
 import (
+	"fmt"
 	"log"
 	"strings"
 )
@@ -77,7 +78,7 @@ func (e Element) writeOpeningTag() {
 		} else {
 			e.sb.WriteString("<" + e.El)
 			for k, v := range e.attrs {
-				e.sb.WriteString(" " + k + "=" + `"` + v + `"`)
+				e.sb.WriteString(fmt.Sprintf(` %s="%s"`, k, v))
 			}
 			e.sb.WriteString(">")
 		}

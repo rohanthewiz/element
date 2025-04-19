@@ -83,7 +83,7 @@ func generateHTML(animals []string, colors []string) string {
 				b.H1().R(
 					t("This is my heading"),
 				),
-				e("div", "class", "intro").R(
+				e("div", "class", "intro", "unpaired").R( // testing bad pairs
 					e("p").R(
 						t("I've got plenty to say here "),
 						e("span", "class", "highlight").R(

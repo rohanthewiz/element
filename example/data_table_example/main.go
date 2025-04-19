@@ -10,7 +10,7 @@ import (
 	"github.com/rohanthewiz/rweb"
 )
 
-const siteName = "Data Table Example"
+const siteName = "WORK IN PROGRESS - Data Table Example"
 
 const localStyles = `
 div.title {

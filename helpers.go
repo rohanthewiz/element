@@ -1,6 +1,10 @@
 package element
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/rohanthewiz/serr"
+)
 
 // Satisfy the Stringer interface
 func (e Element) String() string {
@@ -30,8 +34,14 @@ func stringlistToMap(items ...string) map[string]string {
 	m := map[string]string{}
 
 	if len(items)%2 != 0 {
-		fmt.Println("Bad number of items to stringListToMap. Dropping:", items[len(items)-1:])
-		return m
+		fmt.Printf(`WARN: Even number of strings required for Element attributes.
+From: %s (%s)
+Items %q dropping %q.
+`,
+			serr.FunctionName(serr.FrameLevels.FrameLevel4),
+			serr.FunctionLoc(serr.FrameLevels.FrameLevel4),
+			items, items[len(items)-1])
+		items = items[:len(items)-1] // drop the last item
 	}
 
 	key := ""
