@@ -9,3 +9,5 @@ require (
 	github.com/rohanthewiz/rweb v0.1.13-0.20250326190031-13ba05eb74d8
 	github.com/rohanthewiz/serr v1.2.2
 )
+
+replace github.com/rohanthewiz/element => /Users/RAllison3/projs/go/element

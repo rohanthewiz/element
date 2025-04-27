@@ -13,10 +13,18 @@ func V() (b *Builder, e elementFunc, t textFunc) {
 	return Vars()
 }
 
-// ForEach is a convenience method for performing an operation on a list of items of any type
-func ForEach[T any](b *Builder, items []T, each func(b *Builder, item T)) (x any) {
+// ForEach is a renderable function for performing an operation on a list of generic items.
+// Note: breaking change - no need to pass the builder as this is meant for a render tree
+// where an instance of builder is already available
+// Example:
+//
+//	items := []string{"item1", "item2"}
+//	ForEach(items, func(item string) {
+//		b.P().T(item)
+//	})
+func ForEach[T any](items []T, each func(item T)) (x any) {
 	for _, itm := range items {
-		each(b, itm)
+		each(itm)
 	}
 	return
 }
