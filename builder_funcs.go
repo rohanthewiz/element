@@ -6,7 +6,7 @@ import "fmt"
 type elementFunc func(el string, attrPairs ...string) Element
 
 // textFunc renders literal text
-type textFunc func(attrPairs ...string) struct{}
+type textFunc func(attrPairs ...string) any
 
 // BUILDER CONVENIENCE METHODS
 
@@ -45,6 +45,15 @@ func (b *Builder) F(formatString string, args ...any) (x any) {
 	return
 }
 
+// T renders a list of strings directly to the builder.
+// It is the fastest way to render text
+func (b *Builder) T(strs ...string) (x any) {
+	for _, str := range strs {
+		b.WriteString(str)
+	}
+	return
+}
+
 // Wrap allows some Go code inside a render tree, so some logic can be performed in the process of rendering
 // Example:
 //
@@ -52,12 +61,12 @@ func (b *Builder) F(formatString string, args ...any) (x any) {
 //	 	isEvening := true
 //
 //		b.Div().R(
-//			b.H2().R(t("Testing some things")),
+//			b.H2().T("Testing some things"),
 //			b.Wrap(func() {
 //				if isEvening {
-//					b.H3().R(t("Good evening!"))
+//					b.H3().T("Good evening!")
 //				} else {
-//					b.H3().R(t("Good day!"))
+//					b.H3().T("Good day!")
 //				}
 //			})
 //		)

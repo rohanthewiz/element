@@ -19,7 +19,7 @@ func NewBuilder() (b *Builder) {
 	b.Ele = func(el string, attrPairs ...string) Element {
 		return New(b.s, el, attrPairs...)
 	}
-	b.Text = func(attrPairs ...string) struct{} {
+	b.Text = func(attrPairs ...string) (x any) {
 		return Text(b.s, attrPairs...)
 	}
 	return

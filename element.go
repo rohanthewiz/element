@@ -2,91 +2,171 @@ package element
 
 import (
 	"fmt"
-	"log"
 	"strings"
+
+	"github.com/rohanthewiz/serr"
 )
 
 type Element struct {
-	El         string // just the base of the element e.g. td, h1
+	name string // just the base of the element e.g. td, h1
+	id   string // id is the unique element id
+	// seq        int    // seq holds the order of the element - order is not guaranteed, but it is useful for debugging
 	arrayAttrs []string
 	attrs      map[string]string
+	function   string // function in which the element is created
+	location   string // file:line_nbr of the element creation
 	sb         *strings.Builder
+	issues     []string // issues can hold any issues with the element
+}
+
+func (el Element) Name() string {
+	return el.name
 }
 
 // New creates a new element
 func New(s *strings.Builder, el string, attrs ...string) (e Element) {
 	if s == nil {
-		log.Println("Please supply a pointer to a string builder to element.New():", el)
+		fmt.Println("Please supply a pointer to a string builder to element.New():", el)
 	}
-	e = Element{sb: s, El: strings.ToLower(el)}
+
+	e = Element{sb: s, name: strings.ToLower(el)}
+	e.id = e.name + "-" + genRandomId(6) // generate a random id for the element
+	e.function = serr.FunctionName(serr.FrameLevels.FrameLevel3)
+	e.location = serr.FunctionLoc(serr.FrameLevels.FrameLevel3)
 
 	if e.IsText() {
 		e.arrayAttrs = attrs // plain text will use the original list
 	} else {
-		e.attrs = stringlistToMap(attrs...)
+		e.attrs = stringlistToMap(e, attrs...)
 	}
 
 	e.writeOpeningTag() // write opening tag right away
+
+	if IsDebugMode() && !e.IsSingleTag() {
+		// Temporarily element id into the issues map as an open tag
+		concerns.UpsertConcern(concernOpenTag, e)
+	}
+
 	return e
 }
 
 // Text is an element core function which creates a new text element in the string builder
-func Text(s *strings.Builder, texts ...string) (a struct{}) {
+func Text(s *strings.Builder, texts ...string) (x any) {
 	if s == nil {
-		log.Println("Please supply a pointer to a string builder to element.Text()")
+		fmt.Println("Please supply a pointer to a string builder to element.Text()")
 	}
-	e := Element{sb: s, El: "t"}
+	e := Element{sb: s, name: "t"}
 	e.arrayAttrs = texts
 	e.writeOpeningTag() // write opening tag right away
 	return
 }
 
-// R renders Elements - well kind of, as the language will run inner functions first
-//
-//	we don't have to do anything for children
-//
-// This element's Ancestors will be already in the tree (string builder) bc New() is called before R (Render)
-// So, essentially this is just to let us know to add our ending tag if applicable
-// The return is bogus - it's just to satisfy the any input of the parent .R()
-func (e Element) R(_ ...any) (a struct{}) {
-	e.close()
-	return
-}
-
-// For renders a slice of items wrapped in the Element el
-// with everything nested within the parent element e
-// Attrs is a key, value list.
-// Note that the use of an inline anonymous function gives more flexibility
-// This function is just for convenience
-// Consider this method deprecated as we can do so much more with anonymous functions, and even better, components.
-func (e Element) For(items []string, ele string, attrs ...string) (a struct{}) {
-	for _, item := range items {
-		New(e.sb, ele, attrs...).R(
-			New(e.sb, "t", item),
-		)
+// R renders children of the element and any closing tag if applicable
+// The element's opening tag will be already in the render tree (string builder)
+// because New() [element] is called before R (Render)
+// So, essentially this is just to allow any children to render and let us add our ending tag if applicable
+// The return is just to have some value to pass back as an argument of the parent .R()
+func (el Element) R(args ...any) (x any) {
+	if el.IsSingleTag() {
+		return // Single tags do not have children, so we just return
 	}
-	e.close()
+
+	if IsDebugMode() {
+		for i, arg := range args {
+			// Not sure, but we may want to deprecate this
+			_, isStruct := arg.(struct{})
+
+			// Check if the argument is a single element tag as we will allow single tags to not be rendered
+			argIsSingleElement := false
+			argEle, isElement := arg.(Element)
+			if isElement && argEle.IsSingleTag() {
+				argIsSingleElement = true
+			}
+
+			// Our standard now is to return an empty value of type any (i.e. nil) to the parent R().
+			// Anything other than nil from the children elements (or struct{}), should be considered an issue
+			// Most likely some literal text was not wrapped in t().
+			if arg != nil && !isStruct && !argIsSingleElement {
+				strArg := ""
+				if isElement {
+					strArg = arg.(Element).detailsHtml() // Get details of the element
+				} else {
+					strArg = fmt.Sprintf("%v", arg) // Convert to string representation
+				}
+
+				issue := fmt.Sprintf(`The %s child is not properly rendered.
+		Did you forget to wrap with t()? Child: %q`,
+					ToOrdinal(i+1), strArg)
+
+				// fmt.Println(issue) // TODO turn this back on
+				el.issues = append(el.issues, issue)
+			}
+		}
+
+		if len(el.issues) > 0 {
+			// Add / Replace element in the concerns map
+			concerns.UpsertConcern(concernOther, el)
+		}
+	}
+
+	el.close()
+
+	if IsDebugMode() {
+		// Remove the open tag from concerns
+		concerns.UpsertConcern(concernClosedTag, el)
+	}
 	return
 }
 
-func (e Element) writeOpeningTag() {
-	if e.sb != nil {
-		if e.El == "t" { // "t" is a pseudo element representing a list of strings
-			for _, a := range e.arrayAttrs {
-				e.sb.WriteString(a)
+// T renders a list of text-only children on an Element
+// This eliminates the need to do R(builder.Text())
+func (el Element) T(texts ...string) (x any) {
+	el.R(Text(el.sb, texts...))
+	return
+}
+
+func (el Element) writeOpeningTag() {
+	if el.sb != nil {
+		if el.name == "t" { // "t" is a pseudo element representing a list of strings
+			for _, a := range el.arrayAttrs {
+				el.sb.WriteString(a)
 			}
 		} else {
-			e.sb.WriteString("<" + e.El)
-			for k, v := range e.attrs {
-				e.sb.WriteString(fmt.Sprintf(` %s="%s"`, k, v))
+			el.sb.WriteString("<" + el.name)
+			for k, v := range el.attrs {
+				el.sb.WriteString(fmt.Sprintf(` %s="%s"`, k, v))
 			}
-			e.sb.WriteString(">")
+			el.sb.WriteString(">")
 		}
 	}
 }
 
-func (e Element) close() {
-	if !e.IsSingleTag() {
-		e.sb.WriteString("</" + e.El + ">")
+func (el Element) close() {
+	if !el.IsSingleTag() {
+		el.sb.WriteString("</" + el.name + ">")
 	}
 }
+
+func (el Element) details() string {
+	return fmt.Sprintf("Element %s in %s (%s)", el.id, el.function, el.location)
+}
+
+func (el Element) detailsHtml() string {
+	return fmt.Sprintf("<strong>%s</strong> tag %s<br>%s (<strong>%s</strong>)", el.name, el.id, el.function, el.location)
+}
+
+/* Deprecating For - use b.Wrap and ForEach instead // For renders a slice of items wrapped in the Element el
+// with everything nested within the parent element e
+// Attrs is a key, value list.
+// Note that the builder convenience functions gives more flexibility
+// Consider this method deprecated as we can do so much more with builder.Wrap and components.
+func (el Element) For(items []string, ele string, attrs ...string) (x any) {
+	for _, item := range items {
+		New(el.sb, ele, attrs...).R(
+			New(el.sb, "t", item),
+		)
+	}
+	el.close()
+	return
+}
+*/
