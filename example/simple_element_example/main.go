@@ -18,6 +18,23 @@ func main() {
 	s.Use(rweb.RequestInfo) // Stats Middleware
 
 	s.Get("/", rootHandler)
+
+	s.Get("/debug-set", func(c rweb.Context) error {
+		element.DebugSet()
+		return c.WriteHTML("<h3>Debug mode set.</h3> <a href='/'>Home</a>")
+	})
+
+	s.Get("/debug-clear", func(c rweb.Context) error {
+		element.DebugClear()
+		return c.WriteHTML("<h3>Debug mode is off.</h3> <a href='/'>Home</a>")
+	})
+
+	s.Get("/debug-show", func(c rweb.Context) error {
+		err := c.WriteHTML(element.DebugShow())
+		return err
+	})
+
+	// Run Server
 	log.Fatal(s.Run())
 }
 
@@ -54,10 +71,6 @@ func (s SelectComponent) Render(b *element.Builder) (x any) {
 }
 
 func generateHTML(animals []string, colors []string) string {
-	// Set Debug mode and output debug into at end
-	// element.DebugSet()
-	// defer element.DebugCheck()
-
 	b, e, t := element.Vars()
 
 	selComp := SelectComponent{Selected: "blue", Items: colors}
