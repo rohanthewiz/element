@@ -50,6 +50,16 @@ func New(s *strings.Builder, el string, attrs ...string) (e Element) {
 	return e
 }
 
+func (el Element) HasAttribute(key, value string) bool {
+	if el.attrs == nil {
+		return false
+	}
+	if val, ok := el.attrs[key]; ok && val == value {
+		return true
+	}
+	return false
+}
+
 // Text is an element core function which creates a new text element in the string builder
 func Text(s *strings.Builder, texts ...string) (x any) {
 	if s == nil {

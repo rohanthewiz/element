@@ -79,7 +79,8 @@ func TestRender(t *testing.T) {
 	}
 }
 
-func TestFor(t *testing.T) {
+// We have deprecated For -- use builder.Wrap or element.ForEach instead
+/*func TestFor(t *testing.T) {
 	var testAnimals = []string{"cat", "mouse", "dog"}
 
 	s := &strings.Builder{}
@@ -97,3 +98,4 @@ func TestFor(t *testing.T) {
 		fmt.Println("good ->", str)
 	}
 }
+*/
