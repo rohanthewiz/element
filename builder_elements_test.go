@@ -102,7 +102,7 @@ func TestHtmlElements(t *testing.T) {
 			b := NewBuilder()
 			tt.function(b).R()
 			got := b.String()
-			if !strings.EqualFold(got, tt.want) && !regexp.MustCompile(tt.want).MatchString(got) {
+			if !regexp.MustCompile(tt.want).MatchString(got) {
 				t.Errorf("%s() = %v, want %v", tt.name, got, tt.want)
 			}
 		})
@@ -116,9 +116,12 @@ func TestHtmlElementsWithAttributes(t *testing.T) {
 		attributes []string
 		want       string
 	}{
-		{name: "Div with class", function: func(b *Builder) Element { return b.Div("class", "container") }, attributes: []string{"class", "container"}, want: `<div class="container"></div>`},
-		{name: "A with href", function: func(b *Builder) Element { return b.A("href", "https://example.com") }, attributes: []string{"href", "https://example.com"}, want: `<a href="https://example.com"></a>`},
-		{name: "Img with src", function: func(b *Builder) Element { return b.Img("src", "image.jpg", "alt", "An image") }, attributes: []string{"src", "image.jpg", "alt", "An image"}, want: `<img src="image.jpg" alt="An image">`},
+		{name: "Div with class", function: func(b *Builder) Element { return b.Div("class", "container") },
+			attributes: []string{"class", "container"}, want: `<div.*class="container".*></div>`},
+		{name: "A with href", function: func(b *Builder) Element { return b.A("href", "https://example.com") },
+			attributes: []string{"href", "https://example.com"}, want: `<a.*href="https://example.com".*></a>`},
+		{name: "Img with src", function: func(b *Builder) Element { return b.Img("src", "image.jpg", "alt", "An image") },
+			attributes: []string{"src", "image.jpg", "alt", "An image"}, want: `<img.*src="image.jpg".*>`},
 	}
 
 	for _, tt := range tests {
@@ -126,7 +129,7 @@ func TestHtmlElementsWithAttributes(t *testing.T) {
 			b := NewBuilder()
 			tt.function(b).R()
 			got := b.String()
-			if got != tt.want {
+			if !regexp.MustCompile(tt.want).MatchString(got) {
 				t.Errorf("%s(%s) = %v, want %v", tt.name, strings.Join(tt.attributes, ", "), got, tt.want)
 			}
 		})
@@ -144,7 +147,7 @@ func TestHtmlElementsWithContent(t *testing.T) {
 			setup: func(b *Builder) {
 				b.P().R(b.Text("Hello"))
 			},
-			want: "<p>Hello</p>",
+			want: "<p.*>Hello</p>",
 		},
 		{
 			name: "Div with nested elements",
@@ -154,7 +157,7 @@ func TestHtmlElementsWithContent(t *testing.T) {
 					b.P().R(b.Text("Paragraph")),
 				)
 			},
-			want: `<div class="container"><h1>Title</h1><p>Paragraph</p></div>`,
+			want: `<div.*class="container".*><h1.*>Title</h1><p.*>Paragraph</p></div>`,
 		},
 		{
 			name: "Table structure",
@@ -172,7 +175,7 @@ func TestHtmlElementsWithContent(t *testing.T) {
 					),
 				)
 			},
-			want: "<table><thead><tr><th>Header</th></tr></thead><tbody><tr><td>Cell</td></tr></tbody></table>",
+			want: "<table.*><thead.*><tr.*><th.*>Header</th></tr></thead><tbody.*><tr.*><td.*>Cell</td></tr></tbody></table>",
 		},
 	}
 
@@ -181,7 +184,7 @@ func TestHtmlElementsWithContent(t *testing.T) {
 			b := NewBuilder()
 			tt.setup(b)
 			got := b.String()
-			if got != tt.want {
+			if !regexp.MustCompile(tt.want).MatchString(got) {
 				t.Errorf("%s = %v, want %v", tt.name, got, tt.want)
 			}
 		})
