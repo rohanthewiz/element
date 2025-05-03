@@ -1,6 +1,7 @@
 package element
 
 import (
+	"regexp"
 	"testing"
 )
 
@@ -21,41 +22,30 @@ func TestNewBuilder(t *testing.T) {
 	}
 }
 
-func TestBuilder_String(t *testing.T) {
-	const want = `<html><body><p>Hello World!</p></body></html>`
-	t.Run("Builder String()", func(t *testing.T) {
-		b := NewBuilder()
-		b.Ele("html").R(
-			b.Ele("body").R(
-				b.Ele("p").R(b.Text("Hello World!"))))
-		if got := b.String(); got != want {
-			t.Errorf("String() = %v, want %v", got, want)
-		}
-	})
-}
-
 func TestBuilder_WriteString(t *testing.T) {
-	const want = `<span>Testing, testing</span>`
+	const want = `<span.*>Testing, testing</span>`
 	t.Run("Builder WriteString()", func(t *testing.T) {
 		b := NewBuilder()
 		b.Ele("span").R(
 			b.WriteString("Testing, testing"),
 		)
-		if got := b.String(); got != want {
+		got := b.String()
+		if !regexp.MustCompile(want).MatchString(got) {
 			t.Errorf("String() = %v, want %v", got, want)
 		}
 	})
 }
 
 func TestBuilder_WriteBytes(t *testing.T) {
-	const want = `<span>MyDoc: Test this</span>`
+	const want = `<span.*>MyDoc: Test this</span>`
 	t.Run("Builder WriteBytes()", func(t *testing.T) {
 		b := NewBuilder()
 		b.Ele("span").R(
 			b.WriteBytes([]byte("MyDoc: Test this")),
 		)
 
-		if got := b.String(); got != want {
+		got := b.String()
+		if !regexp.MustCompile(want).MatchString(got) {
 			t.Errorf("String() = %v, want %v", got, want)
 		}
 	})

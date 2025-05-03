@@ -43,3 +43,8 @@ func (b *Builder) WriteBytes(byts []byte) (err error) {
 func (b *Builder) String() string {
 	return b.s.String()
 }
+
+// Reset clears the internal strings.Builder
+func (b *Builder) Reset() {
+	b.s.Reset()
+}
