@@ -40,8 +40,8 @@ func (b *Builder) V() (ele elementFunc, text textFunc) {
 //	b.F("Hello, %s!", "world") // Writes "Hello, world!" to the builder
 //
 // Returns an empty interface for method chaining.
-func (b *Builder) F(formatString string, args ...any) (x any) {
-	b.WriteString(fmt.Sprintf(formatString, args...))
+func (b *Builder) F(format string, args ...any) (x any) {
+	_ = b.WriteString(fmt.Sprintf(format, args...))
 	return
 }
 
@@ -49,7 +49,7 @@ func (b *Builder) F(formatString string, args ...any) (x any) {
 // It is the fastest way to render text
 func (b *Builder) T(strs ...string) (x any) {
 	for _, str := range strs {
-		b.WriteString(str)
+		_ = b.WriteString(str)
 	}
 	return
 }

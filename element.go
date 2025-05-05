@@ -129,9 +129,17 @@ func (el Element) R(args ...any) (x any) {
 }
 
 // T renders a list of text-only children on an Element
-// This eliminates the need to do R(builder.Text())
+// Use this when an element has only text children
 func (el Element) T(texts ...string) (x any) {
 	el.R(Text(el.sb, texts...))
+	return
+}
+
+// F renders a formatted text-only child on an Element
+// This eliminates the need to use fmt.Sprintf()
+// Use this when an element has only a single text child
+func (el Element) F(format string, args ...any) (x any) {
+	el.R(Text(el.sb, fmt.Sprintf(format, args...)))
 	return
 }
 

@@ -85,6 +85,48 @@ func TestRender(t *testing.T) {
 	*/
 }
 
+func TestElement_F(t *testing.T) {
+	tests := []struct {
+		name     string
+		format   string
+		args     []any
+		expected string
+	}{
+		{
+			name:     "simple string",
+			format:   "Hello",
+			args:     nil,
+			expected: "Hello",
+		},
+		{
+			name:     "with formatting",
+			format:   "Count: %d",
+			args:     []any{42},
+			expected: "Count: 42",
+		},
+		{
+			name:     "multiple args",
+			format:   "%s: %d",
+			args:     []any{"Total", 100},
+			expected: "Total: 100",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sb := &strings.Builder{}
+			el := New(sb, "div")
+			el.F(tt.format, tt.args...)
+
+			got := sb.String()
+			want := "<div.*>" + tt.expected + "</div>"
+			if !regexp.MustCompile(want).MatchString(got) {
+				t.Errorf("F() = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
 // We have deprecated For -- use builder.Wrap or element.ForEach instead
 /*func TestFor(t *testing.T) {
 	var testAnimals = []string{"cat", "mouse", "dog"}
