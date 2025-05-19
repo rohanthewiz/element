@@ -74,8 +74,8 @@ func (l ListOfThings) Render(b *element.Builder) (x any) {
 
 		b.Wrap(func() {
 			b.Ul().R(
-				element.ForEach(b, l.Things,
-					func(b *element.Builder, item string) {
+				element.ForEach(l.Things,
+					func(item string) {
 						b.Li().R(t(item))
 					}),
 			)
@@ -84,8 +84,8 @@ func (l ListOfThings) Render(b *element.Builder) (x any) {
 		b.Wrap(func() {
 			if len(l.Numbers) > 0 {
 				b.Ul().R(
-					element.ForEach(b, l.Numbers,
-						func(b *element.Builder, number float64) {
+					element.ForEach(l.Numbers,
+						func(number float64) {
 							b.Li().R(b.F("%0.2f", number))
 						}),
 				)
