@@ -19,19 +19,21 @@ func main() {
 
 	s.Get("/", rootHandler)
 
+	// Set debug mode, then go to the page you want to check, refresh it,
+	// then go to /debug-show to see any issues
 	s.Get("/debug-set", func(c rweb.Context) error {
 		element.DebugSet()
 		return c.WriteHTML("<h3>Debug mode set.</h3> <a href='/'>Home</a>")
 	})
 
-	s.Get("/debug-clear", func(c rweb.Context) error {
-		element.DebugClear()
-		return c.WriteHTML("<h3>Debug mode is off.</h3> <a href='/'>Home</a>")
-	})
-
 	s.Get("/debug-show", func(c rweb.Context) error {
 		err := c.WriteHTML(element.DebugShow())
 		return err
+	})
+
+	s.Get("/debug-clear", func(c rweb.Context) error {
+		element.DebugClear()
+		return c.WriteHTML("<h3>Debug mode is off.</h3> <a href='/'>Home</a>")
 	})
 
 	// Run Server
@@ -48,6 +50,9 @@ func rootHandler(c rweb.Context) error {
 	return nil
 }
 
+// SelectComponent is an example of a component
+// note that a component is anything that has a Render method
+// taking an `*element.Builder` and returning `any`
 type SelectComponent struct {
 	Selected string
 	Items    []string
@@ -71,7 +76,7 @@ func (s SelectComponent) Render(b *element.Builder) (x any) {
 }
 
 func generateHTML(animals []string, colors []string) string {
-	b, e, t := element.Vars()
+	b := element.NewBuilder()
 
 	selComp := SelectComponent{Selected: "blue", Items: colors}
 
@@ -95,17 +100,18 @@ func generateHTML(animals []string, colors []string) string {
 		b.Body().R(
 			b.Div("id", "page-container").R(
 				b.H1().T("This is my heading"),
-				e("div", "class", "intro", "unpaired").R( // testing bad pairs
-					e("p").R(
-						t("I've got plenty to say here "),
-						e("span", "class", "highlight").R(
-							t("important phrase!", " More intro text"),
+				b.DivClass("intro").R(), // this should not show any issues
+				b.Div("class", "intro", "unpaired").R( // testing bad pairs
+					b.P().R(
+						b.T("I've got plenty to say here "),
+						b.SpanClass("highlight").R(
+							b.T("important phrase!", " More intro text"),
 						),
 					),
 				),
 				b.P().R(
-					t("ABC Company"),
-					e("br"), // single tags don't need to call `.R()`
+					b.T("ABC Company"),
+					b.Br(), // single tags don't need to call `.R()` or `.T()`, but no harm in calling `.R()` on single tags
 					b.Wrap(func() {
 						out := ""
 						for i := 0; i < 10; i++ {
@@ -114,17 +120,17 @@ func generateHTML(animals []string, colors []string) string {
 							}
 							out += strconv.Itoa(i)
 						}
-						t(out)
+						b.T(out)
 					}),
 				),
 				b.Div().R(
-					t("Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum "),
-					e("p").T("Finally..."),
+					b.T("Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum "),
+					b.T("Finally..."),
 				),
 				// Iterate over a slice with a built-in function
 				// You can actually do more with an inline anonymous function, and components,
 				// so consider the For method here deprecated
-				e("ul", "class", "list").R(
+				b.UlClass("list").R(
 					element.ForEach(animals, func(animal string) {
 						b.Li().T("This is a ", animal, " in a list item")
 					}),
@@ -133,11 +139,15 @@ func generateHTML(animals []string, colors []string) string {
 				// Render a select component
 				element.RenderComponents(b, selComp),
 				b.P().R(), // quick spacer :-)
-				e("div", "class", "footer").
-					T("About | Privacy | Logout"),
+				b.DivClass("footer").T("About | Privacy | Logout"),
 			),
 		),
 	)
 
-	return b.String()
+	out := b.String()
+	// Enable below to see the generated HTML
+	// fmt.Println(strings.Repeat("-", 60))
+	// fmt.Println(out)
+	// fmt.Println(strings.Repeat("=", 60))
+	return out
 }

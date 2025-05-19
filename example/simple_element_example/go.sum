@@ -1,5 +1,7 @@
 git.akyoto.dev/go/assert v0.1.3 h1:QwCUbmG4aZYsNk/OuRBz1zWVKmGlDUHhOnnDBfn8Qw8=
 git.akyoto.dev/go/assert v0.1.3/go.mod h1:0GzMaM0eURuDwtGkJJkCsI7r2aUKr+5GmWNTFPgDocM=
+github.com/rohanthewiz/element v0.4.5-0.20250505164646-57b76106eb58 h1:SfW9emJ7efHzHpvVj8Fthr7Qlq9Kxje7jO9Zj6lz7Lc=
+github.com/rohanthewiz/element v0.4.5-0.20250505164646-57b76106eb58/go.mod h1:cA57S9UGRSaWrMmGC1M+8QCQw/y8kgODiBB0KEwIyzo=
 github.com/rohanthewiz/rweb v0.1.13-0.20250326190031-13ba05eb74d8 h1:lmqBkN+2HHnTd7hWttdDhCBUptUFA8feBnM8bpR9+Vs=
 github.com/rohanthewiz/rweb v0.1.13-0.20250326190031-13ba05eb74d8/go.mod h1:GBeM+x9dq6LY3GCQXRFNxX5sLpBBcZdsCLw39qj2PmA=
 github.com/rohanthewiz/serr v1.2.2 h1:uFQXy4Gzf0ZAfdGvUxRmHJbGcFAjYnHBL3k2HiCvgeM=

@@ -1,10 +1,24 @@
 # Simple HTML generator
-Forget templates, and having to learn some half-baked templating language to generate decent HTML pages.
-This proves that HTML can be generated nicely from Go code. All is explicit and compiler-checked.
-Though I may have good test coverage, this is beta. You can deploy to production, however you should verify results with a good html linter/checker (see JetBrains products - I *highly* recommend Goland! BTW, this is in production use)
+Forget templates, and new templating languages to generate decent HTML pages. 
+Element generates HTML nicely, simply, from Go code. Everything pure compiled Go -- no reflection, funny annotations and weird rules.
+This has been in production for at least 7 years! (ccswm.org)
 
 ## Usage
-Simply create an element and render it: `e("span").R(t("Inner text")) // -> "<span>Inner Text</span>`
+Simply create an element and render it: 
+
+```go
+b := element.NewBuilder()
+b.Span.T("Inner text") // -> Adds "<span>Inner Text</span>"
+
+b.P().R(
+    b.A("href", "http://example.com").T("Example.com"),	
+)
+// -> Adds<p><a href="https://example.com">Example.com</a></p>"
+b.String() // output it all
+// <span>Inner Text</span>
+// <p><a href="https://example.com">Example.com</a></p>
+
+```
 (Please see the full example below)
 
 We use short method names and some aliases to keep the code as unobtrusive as possible.
@@ -31,6 +45,25 @@ func main() {
 	s.Use(rweb.RequestInfo) // Stats Middleware
 
 	s.Get("/", rootHandler)
+
+	// Set debug mode, then go to the page you want to check, refresh it,
+	// then go to /debug-show to see any issues
+	s.Get("/debug-set", func(c rweb.Context) error {
+		element.DebugSet()
+		return c.WriteHTML("<h3>Debug mode set.</h3> <a href='/'>Home</a>")
+	})
+
+	s.Get("/debug-show", func(c rweb.Context) error {
+		err := c.WriteHTML(element.DebugShow())
+		return err
+	})
+
+	s.Get("/debug-clear", func(c rweb.Context) error {
+		element.DebugClear()
+		return c.WriteHTML("<h3>Debug mode is off.</h3> <a href='/'>Home</a>")
+	})
+
+	// Run Server
 	log.Fatal(s.Run())
 }
 
@@ -44,17 +77,16 @@ func rootHandler(c rweb.Context) error {
 	return nil
 }
 
+// SelectComponent is an example of a component
+// note that a component is anything that has a Render method
+// taking an `*element.Builder` and returning `any`
 type SelectComponent struct {
 	Selected string
 	Items    []string
 }
 
-// Render here implements the element.Component interface
-// which is anything that can render to a given builder,
-// returning anything as returns are discarded
+// Render method signature matches the element.Component interface
 func (s SelectComponent) Render(b *element.Builder) (x any) {
-	_, t := b.Vars()
-
 	b.Select().R(
 		func() (x any) {
 			for _, color := range s.Items {
@@ -62,7 +94,7 @@ func (s SelectComponent) Render(b *element.Builder) (x any) {
 				if color == s.Selected {
 					params = append(params, "selected", "selected")
 				}
-				b.Option(params...).R(t(color))
+				b.Option(params...).T(color)
 			}
 			return
 		}(),
@@ -71,14 +103,13 @@ func (s SelectComponent) Render(b *element.Builder) (x any) {
 }
 
 func generateHTML(animals []string, colors []string) string {
-	b, e, t := element.Vars()
+	b := element.NewBuilder()
 
 	selComp := SelectComponent{Selected: "blue", Items: colors}
 
 	b.Html().R(
 		b.Head().R(
-			b.Style().R(
-				t(`
+			b.Style().T(`
                 #page-container {
                     padding: 4rem; height: 100vh; background-color: rgb(232, 230, 228);
                 }
@@ -90,27 +121,25 @@ func generateHTML(animals []string, colors []string) string {
                 }
                 .footer {
                     text-align: center; font-size: 0.8rem; border-top: 1px solid #ccc; padding: 1em;
-                }
-            `),
+                }`,
 			),
 		),
 		b.Body().R(
 			b.Div("id", "page-container").R(
-				b.H1().R(
-					t("This is my heading"),
-				),
-				e("div", "class", "intro").R(
-					e("p").R(
-						t("I've got plenty to say here "),
-						e("span", "class", "highlight").R(
-							t("important phrase!", " More intro text"),
+				b.H1().T("This is my heading"),
+				b.DivClass("intro").R(), // this should not show any issues
+				b.Div("class", "intro", "unpaired").R( // testing bad pairs
+					b.P().R(
+						b.T("I've got plenty to say here "),
+						b.SpanClass("highlight").R(
+							b.T("important phrase!", " More intro text"),
 						),
 					),
 				),
 				b.P().R(
-					t("ABC Company"),
-					e("br"), // single tags don't need to call `.R()`
-					func() (x any) {
+					b.T("ABC Company"),
+					b.Br(), // single tags don't need to call `.R()` or `.T()`, but no harm in calling `.R()` on single tags
+					b.Wrap(func() {
 						out := ""
 						for i := 0; i < 10; i++ {
 							if i > 0 {
@@ -118,22 +147,26 @@ func generateHTML(animals []string, colors []string) string {
 							}
 							out += strconv.Itoa(i)
 						}
-						return t(out)
-					}(),
+						b.T(out)
+					}),
 				),
 				b.Div().R(
-					t("Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum "),
-					e("p").R(t("Finally...")),
+					b.T("Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum "),
+					b.T("Finally..."),
 				),
 				// Iterate over a slice with a built-in function
 				// You can actually do more with an inline anonymous function, and components,
 				// so consider the For method here deprecated
-				e("ul", "class", "list").For(animals, "li"),
+				b.UlClass("list").R(
+					element.ForEach(animals, func(animal string) {
+						b.Li().T("This is a ", animal, " in a list item")
+					}),
+				),
 
+				// Render a select component
 				element.RenderComponents(b, selComp),
 				b.P().R(), // quick spacer :-)
-				e("div", "class", "footer").R(
-					t("About | Privacy | Logout")),
+				b.DivClass("footer").T("About | Privacy | Logout"),
 			),
 		),
 	)
@@ -142,19 +175,15 @@ func generateHTML(animals []string, colors []string) string {
 }
 ```
 
-Produces this:
-
-![element_generated_page](https://user-images.githubusercontent.com/1130495/32986574-dc894b08-cc9a-11e7-82eb-f62fffb84895.png)
-
 The bonus is that our HTML is already somewhat minified to one line so it's very efficient.
 Here's what the formatted output can look like:
 
 ```html
 <!-- Formatted with JetBrains' Goland (Code | Reformat Code) -->
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <style>
+<html data-ele-id="html-gUr_ZVN3">
+<head data-ele-id="head-jXV6jyD-">
+    <style data-ele-id="style-jaP1Z7RD">
         #page-container {
             padding: 4rem;
             height: 100vh;
@@ -176,40 +205,79 @@ Here's what the formatted output can look like:
             font-size: 0.8rem;
             border-top: 1px solid #ccc;
             padding: 1em;
-        }
-    </style>
+        }</style>
 </head>
-<body>
-<div id="page-container"><h1>This is my heading</h1>
-    <div class="intro"><p>I've got plenty to say here <span class="highlight">important phrase! More intro text</span>
-    </p></div>
-    <p>ABC Company<br>0,1,2,3,4,5,6,7,8,9,</p>
-    <div>Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum <p>Finally...</p></div>
-    <ul class="list">
-        <li>cat</li>
-        <li>mouse</li>
-        <li>dog</li>
+<body data-ele-id="body-q0-_xsVj">
+<div id="page-container" data-ele-id="div-OWVE-Cdh"><h1 data-ele-id="h1-pa6mczX9">This is my heading</h1>
+    <div class="intro" data-ele-id="div-yJWOSiuA"></div>
+    <div class="intro" data-ele-id="div-cNDBsWT0"><p data-ele-id="p-dqbVmkSN">I've got plenty to say here <span
+            class="highlight" data-ele-id="span-_KNmmqqv">important phrase! More intro text</span></p></div>
+    <p data-ele-id="p-PvKlD4JZ">ABC Company<br data-ele-id="br--sDnADbX">0,1,2,3,4,5,6,7,8,9</p>
+    <div data-ele-id="div-p_jnZHug">Lorem Ipsum Lorem Ipsum Lorem<br>Ipsum Lorem Ipsum Finally...</div>
+    <ul class="list" data-ele-id="ul-YP6wxCfB">
+        <li data-ele-id="li-c4nMXicM">This is a cat in a list item</li>
+        <li data-ele-id="li-XNgvBCVl">This is a mouse in a list item</li>
+        <li data-ele-id="li-udTQgyXz">This is a dog in a list item</li>
     </ul>
-    <select>
-        <option value="red">red</option>
-        <option value="blue" selected="selected">blue</option>
-        <option value="green">green</option>
-        <option value="indigo">indigo</option>
-        <option value="violet">violet</option>
+    <select data-ele-id="select-RtGDjeiY">
+        <option data-ele-id="option-z7CHgXy6" value="red">red</option>
+        <option selected="selected" data-ele-id="option-u_JNNpLo" value="blue">blue</option>
+        <option value="green" data-ele-id="option-b3A3WoJW">green</option>
+        <option value="indigo" data-ele-id="option-OrBW4DJk">indigo</option>
+        <option value="violet" data-ele-id="option-8nVTX0OZ">violet</option>
     </select>
-    <p></p>
-    <div class="footer">About | Privacy | Logout</div>
+    <p data-ele-id="p-aVhF4jEp"></p>
+    <div class="footer" data-ele-id="div-8tQscer_">About | Privacy | Logout</div>
 </div>
 </body>
 </html>
 ```
 
 ## Hints
+- Use Builder to create elements -- this is the new way that comes with good benefits.
+- You can create elements directly with Element, but there should be no need to that now. Using Builder provides more features including convenience (less typing) and great debugging.
 - Single tag elements (like `br`) don't need to call `.R()`, however most other elements are dual tag and so must call `.R()`
+- Practically, just include `.R()` for all elements unless you are terminating an element with just pure text, in which case you can terminate with `.T()`.
 - Use `go fmt` to format go code as normal
 - Enjoy the full power and freedom of Go, while generating HTML responses!
+
+## Enabling debugging
+- Example uses rweb - `go get github.com/rohanthewiz/rweb`
+
+### Turn Element debugging on
+
+```go
+    s := rweb.NewServer(rweb.ServerOptions{
+        Address: ":8000",
+        Verbose: true,
+    })
+
+	s.Get("/debug-set", func(c rweb.Context) error {
+		element.DebugSet()
+		return c.WriteHTML("<h3>Debug mode set.</h3> <a href='/'>Home</a>")
+	})
+```
+
+###  Show any issues found
+```go
+	s.Get("/debug-show", func(c rweb.Context) error {
+		err := c.WriteHTML(element.DebugShow())
+		return err
+	})
+```
+
+### Clear Debugging, so full performance is restored
+
+```go
+	s.Get("/debug-clear", func(c rweb.Context) error {
+		element.DebugClear()
+		return c.WriteHTML("<h3>Debug mode is off.</h3> <a href='/'>Home</a>")
+	})
+```
+
+- See the `example/interfaces/main.go` for a full example
 
 ## Contributing
 If you have ideas, let me know. PRs are welcome, but keep the below in mind.
 The idea is to keep this as *light* and unobtrusive as possible. Thanks!
-Also, if possible try to maintain at least 95% coverage -- again Goland has all the tools needed for test coverage.
+Also, if possible, try to achieve full coverage of any new code added -- again Goland has all the tools needed for test coverage.
