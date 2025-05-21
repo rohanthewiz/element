@@ -2,7 +2,6 @@ package element
 
 import (
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -53,7 +52,9 @@ Args: %q dropping %q`, items, items[len(items)-1])
 		items = items[:len(items)-1] // drop the last item
 	}
 
-	items = append(items, "data-ele-id", e.id) // Add the data-ele-id attribute
+	if debugMode {
+		items = append(items, "data-ele-id", e.id) // Add the data-ele-id attribute
+	}
 
 	key := ""
 	for i, item := range items {
@@ -66,13 +67,14 @@ Args: %q dropping %q`, items, items[len(items)-1])
 	return m
 }
 
-// genRandString is a fast generator of a random string
+/*// genRandString is a fast generator of a random string
 // based on math.Rand (non-cryptographic)
 func genRandString(length int) string {
 	byts := make([]byte, length)
 	seededRand.Read(byts) // Use the seeded generator
 	return hex.EncodeToString(byts)
 }
+*/
 
 // genRandomId is a fast generator of a base64 encoded random string
 // based on math.Rand (non-cryptographic)
