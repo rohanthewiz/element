@@ -90,3 +90,60 @@ func TestBuilder_F(t *testing.T) {
 		})
 	}
 }
+
+// BodyComponent implements Component interface for testing
+type BodyComponent struct{}
+
+func (tc BodyComponent) Render(b *Builder) any {
+	b.Div().T("Test Content")
+	return nil
+}
+
+func TestBuilder_HtmlPage(t *testing.T) {
+	tests := []struct {
+		name             string
+		styles           string
+		headWithoutStyle string
+		body             Component
+		want             string
+	}{
+		{
+			name:             "Basic HTML page",
+			styles:           "body { color: black; }",
+			headWithoutStyle: "<title>Test</title>",
+			body:             BodyComponent{},
+			want:             "<!DOCTYPE html><html><head><title>Test</title><style>body { color: black; }</style></head><body><div>Test Content</div></body></html>",
+		},
+		{
+			name:             "HTML page without styles",
+			styles:           "",
+			headWithoutStyle: "<title>Test</title>",
+			body:             BodyComponent{},
+			want:             "<!DOCTYPE html><html><head><title>Test</title></head><body><div>Test Content</div></body></html>",
+		},
+		{
+			name:             "HTML page without head content",
+			styles:           "body { color: tan; }",
+			headWithoutStyle: "",
+			body:             BodyComponent{},
+			want:             "<!DOCTYPE html><html><head><style>body { color: tan; }</style></head><body><div>Test Content</div></body></html>",
+		},
+		{
+			name:             "HTML page without styles and head content",
+			styles:           "",
+			headWithoutStyle: "",
+			body:             BodyComponent{},
+			want:             "<!DOCTYPE html><html><head></head><body><div>Test Content</div></body></html>",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := NewBuilder()
+			got := b.HtmlPage(tt.styles, tt.headWithoutStyle, tt.body)
+			if got != tt.want {
+				t.Errorf("HtmlPage() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
