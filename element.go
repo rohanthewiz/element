@@ -30,7 +30,11 @@ func New(s *strings.Builder, el string, attrs ...string) (e Element) {
 	}
 
 	e = Element{sb: s, name: strings.ToLower(el)}
-	e.id = e.name + "-" + genRandomId(6) // generate a random id for the element
+	e.id = e.name
+	if IsDebugMode() {
+		e.id += "-" + genRandomId(6) // generate a random id for the element
+	}
+
 	e.function = serr.FunctionName(serr.FrameLevels.FrameLevel3)
 	e.location = serr.FunctionLoc(serr.FrameLevels.FrameLevel3)
 

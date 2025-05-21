@@ -1,6 +1,8 @@
 package element
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // elementFunc build an element
 type elementFunc func(el string, attrPairs ...string) Element
@@ -81,4 +83,49 @@ func (b *Builder) RenderComps(bc ...Component) (x any) {
 		comp.Render(b)
 	}
 	return
+}
+
+// HtmlPage generates an HTML page.
+// Params:
+// 1. styles - inner HTML of <style> tag
+// 2. headWithoutStyle - inner HTML of the <head> tag not including <style>
+// 3. body - an Element Component (interface - Render(b *Builder) (x any))
+// Example:
+//
+//	// Create a body component
+//	type Bod struct{}
+//	func (bod Bod) Render(b *element.Builder) (x any) {
+//		b.H1().T("Hello World")
+//		b.PClass("intro").R(
+//			b.Span().T("This is a simple example of using the Element library to generate HTML."),
+//		)
+//		return
+//	}
+//
+//	func buildMyPage() string {
+//		b := element.NewBuilder()
+//		return b.HtmlPage(
+//			".intro { background-color: #f0f0f0; }",
+//			"<title>My Page</title><script src="https://example.com/some.js"></script>",
+//			Bod{},
+//		)
+//	}
+func (b *Builder) HtmlPage(styles, headWithoutStyle string, body Component) (out string) {
+	b.Html().R(
+		b.Head().R(
+			b.Wrap(func() {
+				if len(headWithoutStyle) > 0 {
+					b.T(headWithoutStyle)
+				}
+				if len(styles) > 0 {
+					b.Style().T(styles)
+				}
+			}),
+		),
+		b.Body().R(
+			body.Render(b),
+		),
+	)
+
+	return b.String()
 }
