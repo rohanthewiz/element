@@ -28,16 +28,16 @@ b.String() // output it all
 - Elements may have children, so we don't render their closing tags as yet. This is where `R()` comes in. 
 - `R()` causes the calling function (of the element) to wait until all/any children (lexically arguments) are resolved (rendered)
     before calling `close()` on the parent element
-- In other words, element leverages the natural other of function and argument execution (a tree, AST) to properly layout HTML elements (also a tree)
-- Element therefore is natural Go, not a templating or pseudo language shimmed in, but pure one-shot compiled Go!
+- In other words, element leverages the natural order of function and argument execution (a tree, AST) to properly layout HTML elements (also a tree)
+- Element therefore is natural Go, not a templating or pseudo language shimmed in, but pure, one-shot compiled Go!
 - Also, as everything is written in a single pass with very little memory allocation, it runs at the full speed of Go!
 
 ### Note
 - The actual values returned by children elements are ignored.
-- `R()`s receive arguments `any` types, but they are discarded
-- In debug mode we do peek at the arguments to help identify issue in children elements
+- `R()` receive arguments of `any` type, but they are discarded
+- In debug mode, we do peek at the arguments to help identify issue in children elements
 
-## Exammple
+## Example
 
 We use short method names and some aliases to keep the code as unobtrusive as possible.
 **See the example:** https://github.com/rohanthewiz/element/tree/master/example/simple_element_example for a full, ready-to-compile example app.
@@ -284,11 +284,11 @@ Here's what the formatted output can look like:
 
 ## Hints
 - Use Builder to create elements -- this is the new way that comes with good benefits.
-- You can create elements directly with Element, but there should be no need to that now. Using Builder provides more features including convenience (less typing) and great debugging.
+- You can create elements directly with Element, but there should be no need to do that now. Using Builder provides more features including convenience (less typing) and great debugging.
 - Single tag elements (like `br`) don't need to call `.R()`, however most other elements are dual tag and so must call `.R()`
 - Practically, just include `.R()` for all elements unless you are terminating an element with just pure text, in which case you can terminate with `.T()`.
 - Use `go fmt` to format go code as normal
-- Enjoy the full power and freedom of Go, while generating HTML responses!
+- Enjoy the full power and freedom of Go, say goodbye to the jungle of the Frontend!
 
 ## Enabling debugging
 - Example uses rweb - `go get github.com/rohanthewiz/rweb`
@@ -324,9 +324,9 @@ Here's what the formatted output can look like:
 	})
 ```
 
-- See the `example/interfaces/main.go` for a full example
+- See the `example/simple_element_example/main.go` for a full example
 
 ## Contributing
 If you have ideas, let me know. PRs are welcome, but keep the below in mind.
-The idea is to keep this as *light* and unobtrusive as possible. Thanks!
-Also, if possible, try to achieve full coverage of any new code added -- again Goland has all the tools needed for test coverage.
+- The idea is to keep this as *light* and unobtrusive as possible. Thanks!
+- Also, if possible, try to achieve full coverage of any new code added -- again Goland has all the tools needed for test coverage.
