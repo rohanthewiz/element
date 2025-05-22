@@ -1,6 +1,6 @@
 # Simple HTML generator
 Forget templates, and new templating languages to generate decent HTML pages. 
-Element generates HTML nicely, simply, from Go code. Everything pure compiled Go -- no reflection, funny annotations and weird rules.
+Element generates HTML nicely, simply, from Go code. Everything is pure compiled Go -- no reflection, funny annotations and weird rules.
 This has been in production for at least 7 years! (ccswm.org)
 
 ## Usage
@@ -20,6 +20,24 @@ b.String() // output it all
 
 ```
 (Please see the full example below)
+
+## How it works
+- Element maintains an underlying `strings.Builder`, to which it appends HTML as you go.
+- When you call `b.P()` an opening paragraph tag is immediately added to the string builder.
+- `b.P()` returns an element.Element.
+- Elements may have children, so we don't render their closing tags as yet. This is where `R()` comes in. 
+- `R()` causes the calling function (of the element) to wait until all/any children (lexically arguments) are resolved (rendered)
+    before calling `close()` on the parent element
+- In other words, element leverages the natural other of function and argument execution (a tree, AST) to properly layout HTML elements (also a tree)
+- Element therefore is natural Go, not a templating or pseudo language shimmed in, but pure one-shot compiled Go!
+- Also, as everything is written in a single pass with very little memory allocation, it runs at the full speed of Go!
+
+### Note
+- The actual values returned by children elements are ignored.
+- `R()`s receive arguments `any` types, but they are discarded
+- In debug mode we do peek at the arguments to help identify issue in children elements
+
+## Exammple
 
 We use short method names and some aliases to keep the code as unobtrusive as possible.
 **See the example:** https://github.com/rohanthewiz/element/tree/master/example/simple_element_example for a full, ready-to-compile example app.
@@ -45,6 +63,8 @@ func main() {
 	s.Use(rweb.RequestInfo) // Stats Middleware
 
 	s.Get("/", rootHandler)
+
+	s.Get("/other-page", otherPageHandler)
 
 	// Set debug mode, then go to the page you want to check, refresh it,
 	// then go to /debug-show to see any issues
@@ -171,7 +191,36 @@ func generateHTML(animals []string, colors []string) string {
 		),
 	)
 
+	out := b.String()
+	// Enable below to see the generated HTML
+	// fmt.Println(strings.Repeat("-", 60))
+	// fmt.Println(out)
+	// fmt.Println(strings.Repeat("=", 60))
+	return out
+}
+
+// ----- OTHER PAGE -----
+// demonstrates an alternative (I think better) page construction technique
+
+func otherPageHandler(c rweb.Context) error {
+	return c.WriteHTML(otherHTMLPage())
+}
+
+func otherHTMLPage() (out string) {
+	b := element.NewBuilder()
+	b.HtmlPage("body {background-color:#eee;}", "<title>My Other Page</title>", otherBody{})
 	return b.String()
+}
+
+type otherBody struct{}
+
+func (ob otherBody) Render(b *element.Builder) (x any) {
+	b.H1().T("This is my other page")
+	b.P().R(
+		b.T("This is a simple example of using the Element library to generate HTML."),
+	)
+	b.DivClass("footer").T("About | Privacy | Logout")
+	return
 }
 ```
 

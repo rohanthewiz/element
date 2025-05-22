@@ -19,6 +19,8 @@ func main() {
 
 	s.Get("/", rootHandler)
 
+	s.Get("/other-page", otherPageHandler)
+
 	// Set debug mode, then go to the page you want to check, refresh it,
 	// then go to /debug-show to see any issues
 	s.Get("/debug-set", func(c rweb.Context) error {
@@ -150,4 +152,28 @@ func generateHTML(animals []string, colors []string) string {
 	// fmt.Println(out)
 	// fmt.Println(strings.Repeat("=", 60))
 	return out
+}
+
+// ----- OTHER PAGE -----
+
+// otherPageHandler demonstrates an alternative page construction technique
+func otherPageHandler(c rweb.Context) error {
+	return c.WriteHTML(otherHTMLPage())
+}
+
+func otherHTMLPage() (out string) {
+	b := element.NewBuilder()
+	b.HtmlPage("body {background-color:#eee;}", "<title>My Other Page</title>", otherBody{})
+	return b.String()
+}
+
+type otherBody struct{}
+
+func (ob otherBody) Render(b *element.Builder) (x any) {
+	b.H1().T("This is my other page")
+	b.P().R(
+		b.T("This is a simple example of using the Element library to generate HTML."),
+	)
+	b.DivClass("footer").T("About | Privacy | Logout")
+	return
 }
