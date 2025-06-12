@@ -79,10 +79,16 @@ func Text(s *strings.Builder, texts ...string) (x any) {
 // The element's opening tag will be already in the render tree (string builder)
 // because New() [element] is called before R (Render)
 // So, essentially this is just to allow any children to render and let us add our ending tag if applicable
-// The return is just to have some value to pass back as an argument of the parent .R()
+// The return is just to have some value to pass back as an argument of the parent R()
 func (el Element) R(args ...any) (x any) {
 	if el.IsSingleTag() {
-		return // Single tags do not have children, so we just return
+		if IsDebugMode() && len(args) > 0 { // We tried to render children on a single tag -- we shouldn't do that.
+			issue := fmt.Sprintf(`The element is a single tag, but yet has %d child(ren). It should have none.`, len(args))
+			fmt.Printf("![%s] %s\n", el.id, issue)
+			el.issues = append(el.issues, issue)
+			concerns.UpsertConcern(concernOther, el)
+		}
+		return // Single tags should not have children, so just return
 	}
 
 	if IsDebugMode() {
@@ -109,10 +115,10 @@ func (el Element) R(args ...any) (x any) {
 				}
 
 				issue := fmt.Sprintf(`The %s child is not properly rendered.
-		Did you forget to wrap with t()? Child: %q`,
+		Did you forget to wrap with builder.Text()? Child: %q`,
 					ToOrdinal(i+1), strArg)
 
-				// fmt.Println(issue) // TODO turn this back on
+				fmt.Println("![%s] %s\n", el.id, issue)
 				el.issues = append(el.issues, issue)
 			}
 		}

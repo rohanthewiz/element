@@ -1,41 +1,49 @@
 # Simple HTML generator
 Forget templates, and new templating languages to generate decent HTML pages. 
-Element generates HTML nicely, simply, from Go code. Everything is pure compiled Go -- no reflection, funny annotations and weird rules.
+Element generates HTML nicely, simply, from Go code. Everything is pure compiled Go -- no reflection, funny annotations or weird rules.
 This has been in production for at least 7 years! (ccswm.org)
 
 ## Usage
 Simply create an element and render it: 
 
 ```go
-b := element.NewBuilder()
-b.Span.T("Inner text") // -> Adds "<span>Inner Text</span>"
+	b := element.NewBuilder()
 
-b.P().R(
-    b.A("href", "http://example.com").T("Example.com"),	
-)
-// -> Adds<p><a href="https://example.com">Example.com</a></p>"
-b.String() // output it all
-// <span>Inner Text</span>
-// <p><a href="https://example.com">Example.com</a></p>
+	// Body(), like most builder methods, writes the *opening* tag to the underlying string builder
+	// and is terminated with R(), which allows children to be rendered, and any closing tag appended,
+	// or could be terminated with T(args...string), if the children are all literal text.
+	b.Body().R(
+		// DivClass is a convenience method for outputting and element with at least a "class" attribute
+		b.DivClass("container").R( // -> Creates `<div class="container">...{span and paragraph children} ...</div>`
+			b.Span().T("Some text"), // -> Adds "<span>Some text</span>"
 
+			b.P().R( // -> Adds<p><a href="https://example.com">Example.com</a></p>"
+				b.A("href", "http://example.com").T("Example.com"),
+			), // ending </p> tag
+		), // ending </div> tag
+	) // </body>
+
+	b.String()
+	//-> <body><div class="container"><span>Some text</span><p><a href="http://example.com">Example.com</a></p></div></body>
 ```
-(Please see the full example below)
+(Please see the full examples in the example/ folder)
 
 ## How it works
 - Element maintains an underlying `strings.Builder`, to which it appends HTML as you go.
 - When you call `b.P()` an opening paragraph tag is immediately added to the string builder.
 - `b.P()` returns an element.Element.
 - Elements may have children, so we don't render their closing tags as yet. This is where `R()` comes in. 
-- `R()` causes the calling function (of the element) to wait until all/any children (lexically arguments) are resolved (rendered)
-    before calling `close()` on the parent element
-- In other words, element leverages the natural order of function and argument execution (a tree, AST) to properly layout HTML elements (also a tree)
+- `R()` causes the calling function (of the element) to wait until all/any children (lexically, arguments) are resolved (rendered).
+    before calling `close()` on the parent element.
+- In other words, element leverages the natural order of function and argument execution (a tree, AST) to properly layout HTML elements (also a tree).
 - Element therefore is natural Go, not a templating or pseudo language shimmed in, but pure, one-shot compiled Go!
 - Also, as everything is written in a single pass with very little memory allocation, it runs at the full speed of Go!
 
 ### Note
 - The actual values returned by children elements are ignored.
 - `R()` receive arguments of `any` type, but they are discarded
-- In debug mode, we do peek at the arguments to help identify issue in children elements
+- `T()` like `R()` can terminate an opened element, but `T()` is used when the children are literal text only.
+- In debug mode, we do peek at the arguments passed to `R()` to help identify any issue in children elements.
 
 ## Example
 
@@ -67,18 +75,18 @@ func main() {
 	s.Get("/other-page", otherPageHandler)
 
 	// Set debug mode, then go to the page you want to check, refresh it,
-	// then go to /debug-show to see any issues
-	s.Get("/debug-set", func(c rweb.Context) error {
+	// then go to /debug/show to see any issues
+	s.Get("/debug/set", func(c rweb.Context) error {
 		element.DebugSet()
 		return c.WriteHTML("<h3>Debug mode set.</h3> <a href='/'>Home</a>")
 	})
 
-	s.Get("/debug-show", func(c rweb.Context) error {
+	s.Get("/debug/show", func(c rweb.Context) error {
 		err := c.WriteHTML(element.DebugShow())
 		return err
 	})
 
-	s.Get("/debug-clear", func(c rweb.Context) error {
+	s.Get("/debug/clear", func(c rweb.Context) error {
 		element.DebugClear()
 		return c.WriteHTML("<h3>Debug mode is off.</h3> <a href='/'>Home</a>")
 	})
@@ -301,7 +309,7 @@ Here's what the formatted output can look like:
         Verbose: true,
     })
 
-	s.Get("/debug-set", func(c rweb.Context) error {
+	s.Get("/debug/set", func(c rweb.Context) error {
 		element.DebugSet()
 		return c.WriteHTML("<h3>Debug mode set.</h3> <a href='/'>Home</a>")
 	})
@@ -309,7 +317,7 @@ Here's what the formatted output can look like:
 
 ###  Show any issues found
 ```go
-	s.Get("/debug-show", func(c rweb.Context) error {
+	s.Get("/debug/show", func(c rweb.Context) error {
 		err := c.WriteHTML(element.DebugShow())
 		return err
 	})
@@ -318,13 +326,13 @@ Here's what the formatted output can look like:
 ### Clear Debugging, so full performance is restored
 
 ```go
-	s.Get("/debug-clear", func(c rweb.Context) error {
+	s.Get("/debug/clear", func(c rweb.Context) error {
 		element.DebugClear()
 		return c.WriteHTML("<h3>Debug mode is off.</h3> <a href='/'>Home</a>")
 	})
 ```
 
-- See the `example/simple_element_example/main.go` for a full example
+- See `example/simple_element_example/main.go` for a full example
 
 ## Contributing
 If you have ideas, let me know. PRs are welcome, but keep the below in mind.
