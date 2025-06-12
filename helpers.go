@@ -42,9 +42,9 @@ func stringlistToMap(e Element, items ...string) map[string]string {
 	if len(items)%2 != 0 {
 		issue := fmt.Sprintf(`Even number of arguments required for Element attributes.
 Args: %q dropping %q`, items, items[len(items)-1])
-		// fmt.Println(issue)
 
 		if debugMode {
+			fmt.Printf("![%s] %s\n", e.id, issue)
 			e.issues = append(e.issues, issue)
 			concerns.UpsertConcern(concernOther, e)
 		}

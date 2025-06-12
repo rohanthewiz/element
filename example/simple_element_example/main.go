@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 
@@ -21,22 +22,25 @@ func main() {
 
 	s.Get("/other-page", otherPageHandler)
 
-	// Set debug mode, then go to the page you want to check, refresh it,
-	// then go to /debug-show to see any issues
-	s.Get("/debug-set", func(c rweb.Context) error {
+	// Set debug mode, then go to the page you want to check and refresh it,
+	// then go to /debug/show to see any issues (or watch the console)
+	s.Get("/debug/set", func(c rweb.Context) error {
 		element.DebugSet()
 		return c.WriteHTML("<h3>Debug mode set.</h3> <a href='/'>Home</a>")
 	})
 
-	s.Get("/debug-show", func(c rweb.Context) error {
+	s.Get("/debug/show", func(c rweb.Context) error {
 		err := c.WriteHTML(element.DebugShow())
 		return err
 	})
 
-	s.Get("/debug-clear", func(c rweb.Context) error {
+	s.Get("/debug/clear", func(c rweb.Context) error {
 		element.DebugClear()
 		return c.WriteHTML("<h3>Debug mode is off.</h3> <a href='/'>Home</a>")
 	})
+
+	// Render an HTML fragment -- just bc we can
+	fmt.Println(TestRender())
 
 	// Run Server
 	log.Fatal(s.Run())
@@ -154,6 +158,27 @@ func generateHTML(animals []string, colors []string) string {
 	return out
 }
 
+func TestRender() string {
+	b := element.NewBuilder()
+
+	// Body() like most builder methods writes the *opening* tag to the underlying string builder
+	// and are mostly terminated with R(), which allows children to be rendered, and any closing tag appended,
+	// or can be terminated with T(args...string), if the children are text-only.
+	b.Body().R(
+		// DivClass is a convenience method for outputting and element with at least a "class" attribute
+		b.DivClass("container").R( // -> Creates `<div class="container">...{span and paragraph children} ...</div>`
+			b.Span().T("Some text"), // -> Adds "<span>Some text</span>"
+
+			b.P().R( // -> Adds<p><a href="https://example.com">Example.com</a></p>"
+				b.A("href", "http://example.com").T("Example.com"),
+			), // ending </p> tag
+		), // ending </div> tag
+	) // </body>
+
+	return b.String()
+	// -> <body><div class="container"><span>Some text</span><p><a href="http://example.com">Example.com</a></p></div></body>
+}
+
 // ----- OTHER PAGE -----
 
 // otherPageHandler demonstrates an alternative page construction technique
@@ -174,6 +199,7 @@ func (ob otherBody) Render(b *element.Builder) (x any) {
 	b.P().R(
 		b.T("This is a simple example of using the Element library to generate HTML."),
 	)
+	b.Input("type", "text").R(b.Span().T("I shouldn't be here"))
 	b.DivClass("footer").T("About | Privacy | Logout")
 	return
 }
