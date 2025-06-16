@@ -147,3 +147,139 @@ func TestElement_F(t *testing.T) {
 	}
 }
 */
+
+func TestDebugShowWithCopyIcon(t *testing.T) {
+	// Enable debug mode
+	DebugSet()
+	defer DebugClear()
+
+	// Create an element with an issue
+	b := NewBuilder()
+	b.Div().R(
+		// This will create an issue - text not wrapped
+		"unwrapped text",
+	)
+
+	// Get debug output
+	output := DebugShow()
+
+	// Check that output contains the copy icon SVG
+	if !strings.Contains(output, `class="copy-icon"`) {
+		t.Error("Debug output should contain copy icon class")
+	}
+
+	if !strings.Contains(output, `onclick="copyToClipboard(`) {
+		t.Error("Debug output should contain copyToClipboard function call")
+	}
+
+	if !strings.Contains(output, `<svg`) {
+		t.Error("Debug output should contain SVG element")
+	}
+
+	// Check that JavaScript is included
+	if !strings.Contains(output, `function copyToClipboard(text)`) {
+		t.Error("Debug output should contain copyToClipboard JavaScript function")
+	}
+
+	if !strings.Contains(output, `function showNotification(message)`) {
+		t.Error("Debug output should contain showNotification JavaScript function")
+	}
+
+	// Check that CSS for copy icon is included
+	if !strings.Contains(output, `.copy-icon {`) {
+		t.Error("Debug output should contain CSS for copy icon")
+	}
+
+	if !strings.Contains(output, `.notification {`) {
+		t.Error("Debug output should contain CSS for notification")
+	}
+}
+
+func TestDebugClearIssues(t *testing.T) {
+	// Enable debug mode
+	DebugSet()
+	defer DebugClear()
+
+	// Create an element with an issue
+	b := NewBuilder()
+	b.Div().R(
+		// This will create an issue - text not wrapped
+		"unwrapped text",
+	)
+
+	// Verify issue exists
+	output := DebugShow()
+	if !strings.Contains(output, "unwrapped text") {
+		t.Error("Debug output should contain the issue")
+	}
+
+	// Clear issues only
+	DebugClearIssues()
+
+	// Verify debug mode is still active
+	if !IsDebugMode() {
+		t.Error("Debug mode should still be active after clearing issues")
+	}
+
+	// Verify issues are cleared
+	output = DebugShow()
+	if strings.Contains(output, "unwrapped text") {
+		t.Error("Issues should be cleared")
+	}
+	if !strings.Contains(output, "No element concerns found") {
+		t.Error("Should show no concerns after clearing")
+	}
+
+	// Create new issue after clearing
+	b.Div().R(
+		"another unwrapped text",
+	)
+
+	// Verify new issue is tracked
+	output = DebugShow()
+	if !strings.Contains(output, "another unwrapped text") {
+		t.Error("New issues should be tracked after clearing")
+	}
+}
+
+func TestDebugShowClearButton(t *testing.T) {
+	// Enable debug mode
+	DebugSet()
+	defer DebugClear()
+
+	// Create an element with an issue
+	b := NewBuilder()
+	b.Div().R(
+		"unwrapped text",
+	)
+
+	// Get debug output
+	output := DebugShow()
+
+	// Check that output contains the clear button
+	if !strings.Contains(output, `class="clear-button"`) {
+		t.Error("Debug output should contain clear button")
+	}
+
+	if !strings.Contains(output, `onclick="clearIssues()"`) {
+		t.Error("Clear button should have onclick handler")
+	}
+
+	if !strings.Contains(output, "Clear Issues") {
+		t.Error("Clear button should have 'Clear Issues' text")
+	}
+
+	// Check that clearIssues JavaScript function is included
+	if !strings.Contains(output, `function clearIssues()`) {
+		t.Error("Debug output should contain clearIssues JavaScript function")
+	}
+
+	if !strings.Contains(output, `/debug/clear-issues`) {
+		t.Error("JavaScript should fetch /debug/clear-issues endpoint")
+	}
+
+	// Check CSS for clear button
+	if !strings.Contains(output, `.clear-button {`) {
+		t.Error("Debug output should contain CSS for clear button")
+	}
+}

@@ -39,6 +39,11 @@ func main() {
 		return c.WriteHTML("<h3>Debug mode is off.</h3> <a href='/'>Home</a>")
 	})
 
+	s.Get("/debug/clear-issues", func(c rweb.Context) error {
+		element.DebugClearIssues()
+		return c.WriteHTML("<h3>Issues cleared (debug mode still active).</h3> <a href='/'>Home</a> | <a href='/debug/show'>View Debug</a>")
+	})
+
 	// Render an HTML fragment -- just bc we can
 	fmt.Println(TestRender())
 

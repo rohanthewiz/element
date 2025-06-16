@@ -28,6 +28,11 @@ func DebugClear() {
 	concerns.Clear() // Clear the concerns map
 }
 
+// DebugClearIssues clears only the concerns map without turning off debug mode
+func DebugClearIssues() {
+	concerns.Clear()
+}
+
 var concerns = elementConcerns{cmap: make(map[string]Element, 8)}
 
 type elementConcerns struct {
@@ -180,13 +185,120 @@ func DebugShow(opts ...DebugOptions) (out string) {
             .tbl-element-concerns li:last-child {
                 margin-bottom: 0;
             }
+            .copy-icon {
+                display: inline-block;
+                width: 16px;
+                height: 16px;
+                margin-left: 5px;
+                cursor: pointer;
+                vertical-align: text-bottom;
+                transition: opacity 0.2s;
+                stroke: #3498db;
+            }
+            .copy-icon:hover {
+                opacity: 0.7;
+            }
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: #2ecc71;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                opacity: 0;
+                transition: opacity 0.3s;
+                z-index: 1000;
+            }
+            .notification.show {
+                opacity: 1;
+            }
+            .clear-button {
+                background-color: #e74c3c;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                font-size: 14px;
+                border-radius: 5px;
+                cursor: pointer;
+                margin: 10px 0;
+                transition: background-color 0.3s;
+            }
+            .clear-button:hover {
+                background-color: #c0392b;
+            }
+            .clear-button:active {
+                transform: scale(0.98);
+            }
         `),
 			),
 			b.Body().R(
+				b.Script().T(`
+					function copyToClipboard(text) {
+						navigator.clipboard.writeText(text).then(function() {
+							showNotification('Copied: ' + text);
+						}).catch(function(err) {
+							console.error('Failed to copy: ', err);
+							// Fallback for older browsers
+							const textArea = document.createElement("textarea");
+							textArea.value = text;
+							textArea.style.position = "fixed";
+							textArea.style.left = "-999999px";
+							document.body.appendChild(textArea);
+							textArea.focus();
+							textArea.select();
+							try {
+								document.execCommand('copy');
+								showNotification('Copied: ' + text);
+							} catch (err) {
+								console.error('Fallback copy failed: ', err);
+							}
+							document.body.removeChild(textArea);
+						});
+					}
+					
+					function showNotification(message) {
+						const notification = document.createElement('div');
+						notification.className = 'notification';
+						notification.textContent = message;
+						document.body.appendChild(notification);
+						
+						// Trigger reflow to enable transition
+						notification.offsetHeight;
+						notification.classList.add('show');
+						
+						setTimeout(function() {
+							notification.classList.remove('show');
+							setTimeout(function() {
+								document.body.removeChild(notification);
+							}, 300);
+						}, 2000);
+					}
+					
+					function clearIssues() {
+						fetch('/debug/clear-issues')
+							.then(response => {
+								if (response.ok) {
+									showNotification('Issues cleared successfully');
+									setTimeout(function() {
+										window.location.reload();
+									}, 1000);
+								} else {
+									showNotification('Failed to clear issues');
+								}
+							})
+							.catch(error => {
+								console.error('Error clearing issues:', error);
+								showNotification('Error clearing issues');
+							});
+					}
+				`),
 				b.H2().T("Element Concerns"),
 				b.P().R(
 					b.F("Total issues: %d", len(concerns.cmap)),
 				),
+				b.Button("class", "clear-button", "onclick", "clearIssues()").T("Clear Issues"),
 
 				b.Table("class", "tbl-element-concerns").R(
 					b.THead().R(

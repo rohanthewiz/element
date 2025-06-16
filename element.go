@@ -118,7 +118,7 @@ func (el Element) R(args ...any) (x any) {
 		Did you forget to wrap with builder.Text()? Child: %q`,
 					ToOrdinal(i+1), strArg)
 
-				fmt.Println("![%s] %s\n", el.id, issue)
+				fmt.Printf("![%s] %s\n", el.id, issue)
 				el.issues = append(el.issues, issue)
 			}
 		}
@@ -180,7 +180,8 @@ func (el Element) details() string {
 }
 
 func (el Element) detailsHtml() string {
-	return fmt.Sprintf("<strong>%s</strong> tag %s<br>%s (<strong>%s</strong>)", el.name, el.id, el.function, el.location)
+	copyIcon := `<svg class="copy-icon" onclick="copyToClipboard('` + el.location + `')" title="Copy location" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
+	return fmt.Sprintf("<strong>%s</strong> tag %s<br>%s (<strong>%s</strong> %s)", el.name, el.id, el.function, el.location, copyIcon)
 }
 
 /* Deprecating For - use b.Wrap and ForEach instead // For renders a slice of items wrapped in the Element el
