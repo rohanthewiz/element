@@ -1,6 +1,7 @@
 .idea/
 .vscode
 .zed
+.claude
 .qodo
 
 # Ignore binaries
