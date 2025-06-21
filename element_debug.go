@@ -223,10 +223,38 @@ func DebugShow(opts ...DebugOptions) (out string) {
                 padding: 20px;
                 border-radius: 5px;
                 overflow-x: auto;
+                position: relative;
             }
             .markdown-view pre {
                 margin: 0;
                 white-space: pre-wrap;
+            }
+            .markdown-copy-button {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background-color: #3498db;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                font-size: 14px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+            .markdown-copy-button:hover {
+                background-color: #2980b9;
+            }
+            .markdown-copy-button:active {
+                transform: scale(0.98);
+            }
+            .markdown-copy-button svg {
+                width: 16px;
+                height: 16px;
+                fill: currentColor;
             }
             
             /* Existing table styles */
@@ -397,6 +425,11 @@ func DebugShow(opts ...DebugOptions) (out string) {
 								showNotification('Error clearing issues');
 							});
 					}
+					
+					function copyMarkdownContent() {
+						const markdownContent = document.getElementById('markdown-content-pre').textContent;
+						copyToClipboard(markdownContent);
+					}
 				`),
 				b.H2().T("Element Concerns"),
 				b.P().R(
@@ -449,7 +482,11 @@ func DebugShow(opts ...DebugOptions) (out string) {
 				// Markdown content
 				b.DivClass("tab-content", "id", "markdown-content").R(
 					b.DivClass("markdown-view").R(
-						b.Pre().T(markdownContent.String()),
+						b.ButtonClass("markdown-copy-button", "onclick", "copyMarkdownContent()").R(
+							b.F(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>`),
+							b.F("Copy"),
+						),
+						b.Pre("id", "markdown-content-pre").T(markdownContent.String()),
 					),
 				),
 			),
