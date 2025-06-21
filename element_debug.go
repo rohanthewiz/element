@@ -154,10 +154,82 @@ func DebugShow(opts ...DebugOptions) (out string) {
 	} else {
 		b, _, _ := Vars()
 
+		// Build markdown content
+		var markdownContent strings.Builder
+		markdownContent.WriteString("## Element Concerns\n\n")
+		markdownContent.WriteString(fmt.Sprintf("Total issues: %d\n\n", len(concerns.cmap)))
+		markdownContent.WriteString("| Key | Details | Issues |\n")
+		markdownContent.WriteString("|-----|---------|--------|\n")
+		
+		for key, el := range concerns.cmap {
+			var issuesText string
+			if strings.HasPrefix(key, concernOpenTag) {
+				issuesText = fmt.Sprintf("**%s** tag not closed", el.name)
+			} else {
+				if len(el.issues) > 0 {
+					issueList := make([]string, len(el.issues))
+					for i, issue := range el.issues {
+						issueList[i] = issue
+					}
+					issuesText = strings.Join(issueList, ", ")
+				}
+			}
+			markdownContent.WriteString(fmt.Sprintf("| %s | %s | %s |\n", key, el.detailsHtml(), issuesText))
+		}
+
 		b.Html().R(
 			b.Head().R(
 				b.Title().T("Element Concerns Report"),
 				b.Style().T(`
+            /* Tab styles */
+            .tabs {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+                border-bottom: 2px solid #e0e0e0;
+            }
+            .tab {
+                padding: 10px 20px;
+                cursor: pointer;
+                background-color: #f5f5f5;
+                border: 1px solid #e0e0e0;
+                border-bottom: none;
+                border-radius: 5px 5px 0 0;
+                font-weight: 500;
+                transition: all 0.3s;
+            }
+            .tab:hover {
+                background-color: #e8e8e8;
+            }
+            .tab.active {
+                background-color: white;
+                border-color: #3498db;
+                border-top: 3px solid #3498db;
+                color: #3498db;
+                margin-bottom: -2px;
+                padding-bottom: 12px;
+            }
+            .tab-content {
+                display: none;
+            }
+            .tab-content.active {
+                display: block;
+            }
+            
+            /* Markdown view styles */
+            .markdown-view {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+                background-color: #f8f9fa;
+                padding: 20px;
+                border-radius: 5px;
+                overflow-x: auto;
+            }
+            .markdown-view pre {
+                margin: 0;
+                white-space: pre-wrap;
+            }
+            
+            /* Existing table styles */
             .tbl-element-concerns {
                 width: 100%;
                 border-collapse: collapse;
@@ -254,6 +326,19 @@ func DebugShow(opts ...DebugOptions) (out string) {
 			),
 			b.Body().R(
 				b.Script().T(`
+					function switchTab(tabName) {
+						// Remove active class from all tabs and contents
+						const tabs = document.querySelectorAll('.tab');
+						const contents = document.querySelectorAll('.tab-content');
+						
+						tabs.forEach(tab => tab.classList.remove('active'));
+						contents.forEach(content => content.classList.remove('active'));
+						
+						// Add active class to selected tab and content
+						document.getElementById(tabName + '-tab').classList.add('active');
+						document.getElementById(tabName + '-content').classList.add('active');
+					}
+					
 					function copyToClipboard(text) {
 						navigator.clipboard.writeText(text).then(function() {
 							showNotification('Copied: ' + text);
@@ -317,38 +402,54 @@ func DebugShow(opts ...DebugOptions) (out string) {
 				b.P().R(
 					b.F("Total issues: %d", len(concerns.cmap)),
 				),
-				b.Button("class", "clear-button", "onclick", "clearIssues()").T("Clear Issues"),
-
-				b.Table("class", "tbl-element-concerns").R(
-					b.THead().R(
-						b.Tr().R(
-							b.Th().T("Key"),
-							b.Th().T("Details"),
-							b.Th().T("Issues"),
+				b.ButtonClass("clear-button", "onclick", "clearIssues()").T("Clear Issues"),
+				
+				// Tab navigation
+				b.DivClass("tabs").R(
+					b.DivClass("tab active", "id", "html-tab", "onclick", "switchTab('html')").T("HTML"),
+					b.DivClass("tab", "id", "markdown-tab", "onclick", "switchTab('markdown')").T("Markdown"),
+				),
+				
+				// HTML content (default active)
+				b.DivClass("tab-content active", "id", "html-content").R(
+					b.TableClass("tbl-element-concerns").R(
+						b.THead().R(
+							b.Tr().R(
+								b.Th().T("Key"),
+								b.Th().T("Details"),
+								b.Th().T("Issues"),
+							),
+						),
+						b.TBody().R(
+							b.Wrap(func() {
+								for key, el := range concerns.cmap {
+									b.Tr().R(
+										b.Td().T(key),
+										b.Td().T(el.detailsHtml()),
+										b.Td().R(
+											b.Wrap(func() {
+												if strings.HasPrefix(key, concernOpenTag) {
+													b.F("<strong>%s</strong> tag not closed", el.name)
+												} else {
+													b.Ul().R(
+														ForEach(el.issues, func(issue string) {
+															b.Li().T(issue)
+														}),
+													)
+												}
+											}),
+										),
+									)
+								}
+							}),
 						),
 					),
-					b.TBody().R(
-						b.Wrap(func() {
-							for key, el := range concerns.cmap {
-								b.Tr().R(
-									b.Td().T(key),
-									b.Td().T(el.detailsHtml()),
-									b.Td().R(
-										b.Wrap(func() {
-											if strings.HasPrefix(key, concernOpenTag) {
-												b.F("<strong>%s</strong> tag not closed", el.name)
-											} else {
-												b.Ul().R(
-													ForEach(el.issues, func(issue string) {
-														b.Li().T(issue)
-													}),
-												)
-											}
-										}),
-									),
-								)
-							}
-						}),
+				),
+				
+				// Markdown content
+				b.DivClass("tab-content", "id", "markdown-content").R(
+					b.DivClass("markdown-view").R(
+						b.Pre().T(markdownContent.String()),
 					),
 				),
 			),
