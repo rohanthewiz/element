@@ -100,10 +100,13 @@ type DebugOptions struct {
 
 func DebugShow(opts ...DebugOptions) (out string) {
 	if !debugMode {
+		msg := "Debug mode is not enabled. Set debug mode to true to see element concerns."
+		fmt.Println(msg)
+		
+		// Still return HTML for backward compatibility
 		b, _, _ := Vars()
 		b.Body().R(
-			b.P("style", "font-weight:bold").
-				T("Debug mode is not enabled. Set debug mode to true to see element concerns."),
+			b.P("style", "font-weight:bold").T(msg),
 		)
 		return b.String()
 	}
@@ -120,18 +123,34 @@ func DebugShow(opts ...DebugOptions) (out string) {
 		return msg // No concerns to report
 	}
 
-	if len(opts) > 0 && opts[0].TextOnly {
-		fmt.Printf("\nELEMENT CONCERNS: %d issues ------------------\n\n", len(concerns.cmap))
-		for key, el := range concerns.cmap {
-			fmt.Printf("- key: %s\n", key)
-			fmt.Println(el.details())
-			if strings.HasPrefix(key, concernOpenTag) {
-				fmt.Printf("appears to be not closed with R()\n\n")
-			} else {
-				fmt.Printf("### issues\n* %s\n\n", strings.Join(el.issues, "\n  * "))
+	// Always output markdown to terminal
+	fmt.Printf("\n## ELEMENT CONCERNS: %d issues\n\n", len(concerns.cmap))
+	fmt.Println("| Details | Issues |")
+	fmt.Println("|---------|--------|")
+	
+	for key, el := range concerns.cmap {
+		details := fmt.Sprintf("**%s** tag %s - %s (%s)", el.name, el.id, el.function, el.location)
+		
+		var issues string
+		if strings.HasPrefix(key, concernOpenTag) {
+			issues = fmt.Sprintf("**%s** tag not closed", el.name)
+		} else {
+			if len(el.issues) > 0 {
+				issueList := make([]string, len(el.issues))
+				for i, issue := range el.issues {
+					issueList[i] = "• " + issue
+				}
+				issues = strings.Join(issueList, "; ")
 			}
 		}
+		
+		fmt.Printf("| %s | %s |\n", details, issues)
+	}
+	fmt.Println()
 
+	if len(opts) > 0 && opts[0].TextOnly {
+		// TextOnly mode - just return empty string since we already printed to terminal
+		return ""
 	} else {
 		b, _, _ := Vars()
 
