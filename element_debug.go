@@ -102,7 +102,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
 	if !debugMode {
 		msg := "Debug mode is not enabled. Set debug mode to true to see element concerns."
 		fmt.Println(msg)
-		
+
 		// Still return HTML for backward compatibility
 		b, _, _ := Vars()
 		b.Body().R(
@@ -127,10 +127,10 @@ func DebugShow(opts ...DebugOptions) (out string) {
 	fmt.Printf("\n## ELEMENT CONCERNS: %d issues\n\n", len(concerns.cmap))
 	fmt.Println("| Details | Issues |")
 	fmt.Println("|---------|--------|")
-	
+
 	for key, el := range concerns.cmap {
 		details := fmt.Sprintf("**%s** tag %s - %s (%s)", el.name, el.id, el.function, el.location)
-		
+
 		var issues string
 		if strings.HasPrefix(key, concernOpenTag) {
 			issues = fmt.Sprintf("**%s** tag not closed", el.name)
@@ -143,7 +143,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
 				issues = strings.Join(issueList, "; ")
 			}
 		}
-		
+
 		fmt.Printf("| %s | %s |\n", details, issues)
 	}
 	fmt.Println()
@@ -160,7 +160,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
 		markdownContent.WriteString(fmt.Sprintf("Total issues: %d\n\n", len(concerns.cmap)))
 		markdownContent.WriteString("| Key | Details | Issues |\n")
 		markdownContent.WriteString("|-----|---------|--------|\n")
-		
+
 		for key, el := range concerns.cmap {
 			var issuesText string
 			if strings.HasPrefix(key, concernOpenTag) {
@@ -334,7 +334,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
                 opacity: 1;
             }
             .clear-button {
-                background-color: #6c757d;
+                background-color: rgb(51, 151, 217);
                 color: white;
                 border: none;
                 padding: 10px 20px;
@@ -436,13 +436,13 @@ func DebugShow(opts ...DebugOptions) (out string) {
 					b.F("Total issues: %d", len(concerns.cmap)),
 				),
 				b.ButtonClass("clear-button", "onclick", "clearIssues()").T("Clear Issues"),
-				
+
 				// Tab navigation
 				b.DivClass("tabs").R(
 					b.DivClass("tab active", "id", "html-tab", "onclick", "switchTab('html')").T("HTML"),
 					b.DivClass("tab", "id", "markdown-tab", "onclick", "switchTab('markdown')").T("Markdown"),
 				),
-				
+
 				// HTML content (default active)
 				b.DivClass("tab-content active", "id", "html-content").R(
 					b.TableClass("tbl-element-concerns").R(
@@ -478,7 +478,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
 						),
 					),
 				),
-				
+
 				// Markdown content
 				b.DivClass("tab-content", "id", "markdown-content").R(
 					b.DivClass("markdown-view").R(
