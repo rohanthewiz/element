@@ -234,7 +234,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
                 opacity: 1;
             }
             .clear-button {
-                background-color: #e74c3c;
+                background-color: #6c757d;
                 color: white;
                 border: none;
                 padding: 10px 20px;
@@ -245,7 +245,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
                 transition: background-color 0.3s;
             }
             .clear-button:hover {
-                background-color: #c0392b;
+                background-color: #5a6268;
             }
             .clear-button:active {
                 transform: scale(0.98);
