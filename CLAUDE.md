@@ -92,3 +92,58 @@ go mod verify
 - The library has been production-tested for 7+ years at ccswm.org
 - Performance is a key consideration - avoid adding features that require reflection or multiple passes
 - Keep the API light and unobtrusive
+
+## DebugShow Enhancement Plan
+
+### Current State (as of 2025-06-21)
+
+The `DebugShow()` function in `element_debug.go` has been enhanced with:
+1. **Tabbed interface** - HTML view (default) and Markdown view
+2. **HTML view** - Shows styled table with issues, copy functionality for element IDs, and "Clear Issues" button
+3. **Markdown view** - Shows markdown table format with a blue "Copy" button in top-right corner
+4. **Terminal output** - Always outputs markdown table to console
+5. **Uses Class builder methods** - e.g., `DivClass()`, `ButtonClass()`, `TableClass()`
+
+### Issue Deduplication Plan
+
+**Problem**: Multiple identical issues can appear for the same file location when elements are created in loops or repeated code patterns. Element IDs are randomly generated on each page refresh, so they cannot be used for deduplication.
+
+**Deduplication Key Components**:
+1. **File location** - `el.location` (e.g., "element_test.go:123")
+2. **Element name** - `el.name` (e.g., "div", "span")
+3. **Issue text** - The actual issue message from `el.issues[]`
+4. **Function context** - `el.function` (the function where the element was created)
+
+**Implementation Strategy**:
+1. Create a deduplication map with composite key: `location + "|" + name + "|" + issueText`
+2. Track count of duplicates for each unique issue
+3. Display deduplicated issues with occurrence count
+4. In the concerns map iteration, group by the deduplication key
+5. Show format like: "**div** tag not closed (3 occurrences)"
+
+**Data Structures Needed**:
+```go
+type DeduplicatedIssue struct {
+    Key      string   // Composite key for deduplication
+    Element  Element  // First occurrence of the element
+    Count    int      // Number of occurrences
+    IssueText string  // The issue message
+}
+```
+
+**UI Changes**:
+- Add a new column "Count" or incorporate count into existing columns
+- In markdown view, show count in parentheses
+- In HTML view, could add a badge or number indicator
+
+**Code Locations to Modify**:
+1. `DebugShow()` function around lines 150-460
+2. The loop that builds HTML table (around line 425)
+3. The loop that builds markdown content (around line 164)
+4. Consider adding a toggle for deduplication on/off
+
+**Testing Considerations**:
+- Test with elements created in loops
+- Test with identical issues in different functions
+- Ensure deduplication doesn't hide important context
+- Verify both HTML and Markdown views show counts correctly
