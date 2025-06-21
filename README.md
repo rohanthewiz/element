@@ -43,6 +43,7 @@ Simply create an element and render it:
 - The actual values returned by children elements are ignored.
 - `R()` receive arguments of `any` type, but they are discarded
 - `T()` like `R()` can terminate an opened element, but `T()` is used when the children are literal text only.
+- `F()` can also terminate an opened element with a single formatted string. Example: `b.Span().F("The value is: %0.1f", value)` 
 - In debug mode, we do peek at the arguments passed to `R()` to help identify any issue in children elements.
 
 ## Example
