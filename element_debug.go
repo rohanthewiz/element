@@ -123,12 +123,24 @@ func DebugShow(opts ...DebugOptions) (out string) {
 		return msg // No concerns to report
 	}
 
+	// Deduplicate concerns
+	seenIssues := make(map[string]bool)
+	dedupedConcerns := make(map[string]Element)
+	
+	for key, el := range concerns.cmap {
+		dedupKey := buildDedupKey(el, key)
+		if !seenIssues[dedupKey] {
+			seenIssues[dedupKey] = true
+			dedupedConcerns[key] = el
+		}
+	}
+
 	// Always output markdown to terminal
-	fmt.Printf("\n## ELEMENT CONCERNS: %d issues\n\n", len(concerns.cmap))
+	fmt.Printf("\n## ELEMENT CONCERNS: %d issues\n\n", len(dedupedConcerns))
 	fmt.Println("| Details | Issues |")
 	fmt.Println("|---------|--------|")
 
-	for key, el := range concerns.cmap {
+	for key, el := range dedupedConcerns {
 		details := fmt.Sprintf("**%s** tag %s - %s (%s)", el.name, el.id, el.function, el.location)
 
 		var issues string
@@ -157,11 +169,11 @@ func DebugShow(opts ...DebugOptions) (out string) {
 		// Build markdown content
 		var markdownContent strings.Builder
 		markdownContent.WriteString("## Element Concerns\n\n")
-		markdownContent.WriteString(fmt.Sprintf("Total issues: %d\n\n", len(concerns.cmap)))
+		markdownContent.WriteString(fmt.Sprintf("Total issues: %d\n\n", len(dedupedConcerns)))
 		markdownContent.WriteString("| Key | Details | Issues |\n")
 		markdownContent.WriteString("|-----|---------|--------|\n")
 
-		for key, el := range concerns.cmap {
+		for key, el := range dedupedConcerns {
 			var issuesText string
 			if strings.HasPrefix(key, concernOpenTag) {
 				issuesText = fmt.Sprintf("**%s** tag not closed", el.name)
@@ -433,7 +445,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
 				`),
 				b.H2().T("Element Concerns"),
 				b.P().R(
-					b.F("Total issues: %d", len(concerns.cmap)),
+					b.F("Total issues: %d", len(dedupedConcerns)),
 				),
 				b.ButtonClass("clear-button", "onclick", "clearIssues()").T("Clear Issues"),
 
@@ -455,7 +467,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
 						),
 						b.TBody().R(
 							b.Wrap(func() {
-								for key, el := range concerns.cmap {
+								for key, el := range dedupedConcerns {
 									b.Tr().R(
 										b.Td().T(key),
 										b.Td().T(el.detailsHtml()),
@@ -500,4 +512,21 @@ func DebugShow(opts ...DebugOptions) (out string) {
 
 func buildConcernKey(concernType, id string) string {
 	return concernType + "-" + id
+}
+
+// buildDedupKey creates a composite key for deduplication based on location, element name, and issue
+func buildDedupKey(el Element, concernKey string) string {
+	// For open tag issues
+	if strings.HasPrefix(concernKey, concernOpenTag) {
+		return el.location + "|" + el.name + "|open_tag_not_closed"
+	}
+	
+	// For other issues, concatenate all issue texts
+	if len(el.issues) > 0 {
+		issueText := strings.Join(el.issues, ";")
+		return el.location + "|" + el.name + "|" + issueText
+	}
+	
+	// Fallback
+	return el.location + "|" + el.name + "|unknown"
 }
