@@ -10,5 +10,7 @@ github.com/rohanthewiz/rweb v0.1.13-0.20250326190031-13ba05eb74d8 h1:lmqBkN+2HHn
 github.com/rohanthewiz/rweb v0.1.13-0.20250326190031-13ba05eb74d8/go.mod h1:GBeM+x9dq6LY3GCQXRFNxX5sLpBBcZdsCLw39qj2PmA=
 github.com/rohanthewiz/rweb v0.1.15-0.20250623111125-fc918c5c8a6f h1:OdPml7EzkjeTzESUwlW0Lt40UuauKXQfPlQFD5wKd6E=
 github.com/rohanthewiz/rweb v0.1.15-0.20250623111125-fc918c5c8a6f/go.mod h1:Ye+1p+Emvyp3TvpmqPWUrTaLWPBbsc4F5gvfI4dz2CI=
+github.com/rohanthewiz/rweb v0.1.15-0.20250627103250-2193106caf44 h1:rH18Baa7fc8p9IihJXUJv2re5vvwuLLBKPiA1dOUrtM=
+github.com/rohanthewiz/rweb v0.1.15-0.20250627103250-2193106caf44/go.mod h1:Ye+1p+Emvyp3TvpmqPWUrTaLWPBbsc4F5gvfI4dz2CI=
 github.com/rohanthewiz/serr v1.2.2 h1:uFQXy4Gzf0ZAfdGvUxRmHJbGcFAjYnHBL3k2HiCvgeM=
 github.com/rohanthewiz/serr v1.2.2/go.mod h1:WYBghPccoTAUknotbanGZzWnIFREXYI5ULwf5sjznxY=
