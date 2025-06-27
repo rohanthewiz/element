@@ -22,24 +22,27 @@ func main() {
 
 	s.Get("/other-page", otherPageHandler)
 
+	// Group debug routes under /debug prefix
+	debugGrp := s.Group("/debug")
+
 	// Set debug mode, then go to the page you want to check and refresh it,
 	// then go to /debug/show to see any issues (or watch the console)
-	s.Get("/debug/set", func(c rweb.Context) error {
+	debugGrp.Get("/set", func(c rweb.Context) error {
 		element.DebugSet()
 		return c.WriteHTML("<h3>Debug mode set.</h3> <a href='/'>Home</a>")
 	})
 
-	s.Get("/debug/show", func(c rweb.Context) error {
+	debugGrp.Get("/show", func(c rweb.Context) error {
 		err := c.WriteHTML(element.DebugShow())
 		return err
 	})
 
-	s.Get("/debug/clear", func(c rweb.Context) error {
+	debugGrp.Get("/clear", func(c rweb.Context) error {
 		element.DebugClear()
 		return c.WriteHTML("<h3>Debug mode is off.</h3> <a href='/'>Home</a>")
 	})
 
-	s.Get("/debug/clear-issues", func(c rweb.Context) error {
+	debugGrp.Get("/clear-issues", func(c rweb.Context) error {
 		element.DebugClearIssues()
 		return c.WriteHTML("<h3>Issues cleared (debug mode still active).</h3> <a href='/'>Home</a> | <a href='/debug/show'>View Debug</a>")
 	})
