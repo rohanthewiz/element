@@ -4,7 +4,11 @@ github.com/rohanthewiz/element v0.4.5-0.20250505164646-57b76106eb58 h1:SfW9emJ7e
 github.com/rohanthewiz/element v0.4.5-0.20250505164646-57b76106eb58/go.mod h1:cA57S9UGRSaWrMmGC1M+8QCQw/y8kgODiBB0KEwIyzo=
 github.com/rohanthewiz/element v0.5.1-0.20250521230548-1fc55d9b5968 h1:vMZjC9TH2uhvwIPQA7NOQk4wLBGpiWIlXoSQv/Ylak0=
 github.com/rohanthewiz/element v0.5.1-0.20250521230548-1fc55d9b5968/go.mod h1:cA57S9UGRSaWrMmGC1M+8QCQw/y8kgODiBB0KEwIyzo=
+github.com/rohanthewiz/element v0.5.3-0.20250621223353-5dc8294d4f85 h1:00lfin98L8yCeOEE/9YHFQCmCopNMTr5syVAxmL0v/I=
+github.com/rohanthewiz/element v0.5.3-0.20250621223353-5dc8294d4f85/go.mod h1:cA57S9UGRSaWrMmGC1M+8QCQw/y8kgODiBB0KEwIyzo=
 github.com/rohanthewiz/rweb v0.1.13-0.20250326190031-13ba05eb74d8 h1:lmqBkN+2HHnTd7hWttdDhCBUptUFA8feBnM8bpR9+Vs=
 github.com/rohanthewiz/rweb v0.1.13-0.20250326190031-13ba05eb74d8/go.mod h1:GBeM+x9dq6LY3GCQXRFNxX5sLpBBcZdsCLw39qj2PmA=
+github.com/rohanthewiz/rweb v0.1.15-0.20250623111125-fc918c5c8a6f h1:OdPml7EzkjeTzESUwlW0Lt40UuauKXQfPlQFD5wKd6E=
+github.com/rohanthewiz/rweb v0.1.15-0.20250623111125-fc918c5c8a6f/go.mod h1:Ye+1p+Emvyp3TvpmqPWUrTaLWPBbsc4F5gvfI4dz2CI=
 github.com/rohanthewiz/serr v1.2.2 h1:uFQXy4Gzf0ZAfdGvUxRmHJbGcFAjYnHBL3k2HiCvgeM=
 github.com/rohanthewiz/serr v1.2.2/go.mod h1:WYBghPccoTAUknotbanGZzWnIFREXYI5ULwf5sjznxY=

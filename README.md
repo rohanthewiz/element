@@ -39,7 +39,28 @@ Simply create an element and render it:
 - Element therefore is natural Go, not a templating or pseudo language shimmed in, but pure, one-shot compiled Go!
 - Also, as everything is written in a single pass with very little memory allocation, it runs at the full speed of Go!
 
-### Note
+## Core principles of Element
+- Element takes a code-first approach to producing HTML.
+- First we get a builder from Element: `b := element.NewBuilder()`.
+- Note: Builder will render element tags to an internal string builder.
+- Then we use the builder to first render the opening tag of the element internally, and return the Element. `b.P("id", "special")` // -> Element
+- The element will then close in a few possible ways:
+    - Most often we will use the Element method `R()` to
+        - *allow any children to render* `b.P("id", "special").R(b.Span().T("We are saying something"))`
+        - then close out the current element by writing its closing tag (if any) to the internal string builder
+    - If the children of the current tag will be purely literal text, it is optimal to use the method `T()` to
+        - *allow the pure text children to render*. Example: `b.P("id", "special").T("one", "two", "three")`
+        - then close out the current element by writing its closing tag (if any) to the internal string builder
+    - If the children of the current tag will be a single formatted piece text, we should use the method `F()` to
+        - *allow the formatted text to render* similiar to `fmt.Sprintf()`. Example: `b.P("id", "special").F("There are %d items", count)`
+        - then close out the current element by writing its closing tag (if any) to the internal string builder
+- For elements that have no children prefer to close with `R()`, rather than `T()` or `T("")`
+- Prefer `b.T()` over `b.Text()` since `b.Text()` is being deprecated.
+- When rendering elements, where we include a "class" attribute make sure to use the corresponding builder function ending in "Class".
+    - Example: use `b.PClass("intro")` instead of `b.P("class", "intro")`
+- When we are done building elements we get the fully rendered HTML with `b.String()`
+
+### Things to Note
 - The actual values returned by children elements are ignored.
 - `R()` receive arguments of `any` type, but they are discarded
 - `T()` like `R()` can terminate an opened element, but `T()` is used when the children are literal text only.
