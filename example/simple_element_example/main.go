@@ -23,6 +23,7 @@ func main() {
 
 	// Add middleware to log request information (method, path, duration, etc.)
 	s.Use(rweb.RequestInfo)
+	s.ElementDebugRoutes()
 
 	// Define route handlers
 	// The root handler demonstrates Element's core features including components and iteration
@@ -30,37 +31,6 @@ func main() {
 
 	// The other-page handler shows an alternative approach using HtmlPage helper
 	s.Get("/other-page", otherPageHandler)
-
-	// Group debug routes under /debug prefix for cleaner URL organization
-	// Debug mode helps identify issues like unclosed tags or unpaired attributes
-	debugGrp := s.Group("/debug")
-
-	// Enable debug mode - this adds data-ele-id attributes to elements
-	// and tracks any HTML generation issues. After enabling, refresh any page
-	// you want to check, then visit /debug/show to see collected issues
-	debugGrp.Get("/set", func(c rweb.Context) error {
-		element.DebugSet()
-		return c.WriteHTML("<h3>Debug mode set.</h3> <a href='/'>Home</a>")
-	})
-
-	// Display collected issues in a formatted table with HTML and Markdown views
-	// This shows any HTML generation problems detected while debug mode was active
-	debugGrp.Get("/show", func(c rweb.Context) error {
-		err := c.WriteHTML(element.DebugShow())
-		return err
-	})
-
-	// Disable debug mode completely (stops tracking and clears all issues)
-	debugGrp.Get("/clear", func(c rweb.Context) error {
-		element.DebugClear()
-		return c.WriteHTML("<h3>Debug mode is off.</h3> <a href='/'>Home</a>")
-	})
-
-	// Clear collected issues but keep debug mode active for continued tracking
-	debugGrp.Get("/clear-issues", func(c rweb.Context) error {
-		element.DebugClearIssues()
-		return c.WriteHTML("<h3>Issues cleared (debug mode still active).</h3> <a href='/'>Home</a> | <a href='/debug/show'>View Debug</a>")
-	})
 
 	// Demonstrate standalone HTML generation (without HTTP context)
 	// This shows Element can be used independently of web servers
