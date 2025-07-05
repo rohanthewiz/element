@@ -1,6 +1,7 @@
 package element
 
 import (
+	_ "embed"
 	"fmt"
 	"strings"
 	"sync"
@@ -11,6 +12,12 @@ const (
 	concernOpenTag   = "open_tag"
 	concernClosedTag = "closed_tag"
 )
+
+//go:embed assets/debug_table.js
+var tableJS string
+
+//go:embed assets/debug_table.css
+var tableCSS string
 
 var debugMode = false // we will set to true to enable debug mode
 
@@ -126,7 +133,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
 	// Deduplicate concerns
 	seenIssues := make(map[string]bool)
 	dedupedConcerns := make(map[string]Element)
-	
+
 	for key, el := range concerns.cmap {
 		dedupKey := buildDedupKey(el, key)
 		if !seenIssues[dedupKey] {
@@ -192,257 +199,10 @@ func DebugShow(opts ...DebugOptions) (out string) {
 		b.Html().R(
 			b.Head().R(
 				b.Title().T("Element Concerns Report"),
-				b.Style().T(`
-            /* Tab styles */
-            .tabs {
-                display: flex;
-                gap: 10px;
-                margin-bottom: 20px;
-                border-bottom: 2px solid #e0e0e0;
-            }
-            .tab {
-                padding: 10px 20px;
-                cursor: pointer;
-                background-color: #f5f5f5;
-                border: 1px solid #e0e0e0;
-                border-bottom: none;
-                border-radius: 5px 5px 0 0;
-                font-weight: 500;
-                transition: all 0.3s;
-            }
-            .tab:hover {
-                background-color: #e8e8e8;
-            }
-            .tab.active {
-                background-color: white;
-                border-color: #3498db;
-                border-top: 3px solid #3498db;
-                color: #3498db;
-                margin-bottom: -2px;
-                padding-bottom: 12px;
-            }
-            .tab-content {
-                display: none;
-            }
-            .tab-content.active {
-                display: block;
-            }
-            
-            /* Markdown view styles */
-            .markdown-view {
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-                background-color: #f8f9fa;
-                padding: 20px;
-                border-radius: 5px;
-                overflow-x: auto;
-                position: relative;
-            }
-            .markdown-view pre {
-                margin: 0;
-                white-space: pre-wrap;
-            }
-            .markdown-copy-button {
-                position: absolute;
-                top: 10px;
-                right: 10px;
-                background-color: #3498db;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                font-size: 14px;
-                border-radius: 5px;
-                cursor: pointer;
-                transition: background-color 0.3s;
-                display: flex;
-                align-items: center;
-                gap: 5px;
-            }
-            .markdown-copy-button:hover {
-                background-color: #2980b9;
-            }
-            .markdown-copy-button:active {
-                transform: scale(0.98);
-            }
-            .markdown-copy-button svg {
-                width: 16px;
-                height: 16px;
-                fill: currentColor;
-            }
-            
-            /* Existing table styles */
-            .tbl-element-concerns {
-                width: 100%;
-                border-collapse: collapse;
-                margin: 25px 0;
-                font-size: 0.9em;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-                border-radius: 5px;
-                overflow: hidden;
-            }
-            .tbl-element-concerns thead tr {
-                background-color: #3498db;
-                color: #ffffff;
-                text-align: left;
-                font-weight: bold;
-            }
-            .tbl-element-concerns th,
-            .tbl-element-concerns td {
-                padding: 12px 15px;
-            }
-            .tbl-element-concerns tbody tr {
-                border-bottom: 1px solid #dddddd;
-            }
-            .tbl-element-concerns tbody tr:nth-of-type(even) {
-                background-color: #f3f3f3;
-            }
-            .tbl-element-concerns tbody tr:last-of-type {
-                border-bottom: 2px solid #3498db;
-            }
-            .tbl-element-concerns tbody tr:hover {
-                background-color: #e6f7ff;
-                cursor: pointer;
-            }
-            .tbl-element-concerns strong {
-                color: #e74c3c;
-            }
-            .tbl-element-concerns ul {
-                margin: 0;
-                padding-left: 20px;
-            }
-            .tbl-element-concerns li {
-                margin-bottom: 5px;
-            }
-            .tbl-element-concerns li:last-child {
-                margin-bottom: 0;
-            }
-            .copy-icon {
-                display: inline-block;
-                width: 16px;
-                height: 16px;
-                margin-left: 5px;
-                cursor: pointer;
-                vertical-align: text-bottom;
-                transition: opacity 0.2s;
-                stroke: #3498db;
-            }
-            .copy-icon:hover {
-                opacity: 0.7;
-            }
-            .notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background-color: #2ecc71;
-                color: white;
-                padding: 10px 20px;
-                border-radius: 5px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-                opacity: 0;
-                transition: opacity 0.3s;
-                z-index: 1000;
-            }
-            .notification.show {
-                opacity: 1;
-            }
-            .clear-button {
-                background-color: rgb(51, 151, 217);
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                font-size: 14px;
-                border-radius: 5px;
-                cursor: pointer;
-                margin: 10px 0;
-                transition: background-color 0.3s;
-            }
-            .clear-button:hover {
-                background-color: #5a6268;
-            }
-            .clear-button:active {
-                transform: scale(0.98);
-            }
-        `),
+				b.Style().T(tableCSS),
 			),
 			b.Body().R(
-				b.Script().T(`
-					function switchTab(tabName) {
-						// Remove active class from all tabs and contents
-						const tabs = document.querySelectorAll('.tab');
-						const contents = document.querySelectorAll('.tab-content');
-						
-						tabs.forEach(tab => tab.classList.remove('active'));
-						contents.forEach(content => content.classList.remove('active'));
-						
-						// Add active class to selected tab and content
-						document.getElementById(tabName + '-tab').classList.add('active');
-						document.getElementById(tabName + '-content').classList.add('active');
-					}
-					
-					function copyToClipboard(text) {
-						navigator.clipboard.writeText(text).then(function() {
-							showNotification('Copied: ' + text);
-						}).catch(function(err) {
-							console.error('Failed to copy: ', err);
-							// Fallback for older browsers
-							const textArea = document.createElement("textarea");
-							textArea.value = text;
-							textArea.style.position = "fixed";
-							textArea.style.left = "-999999px";
-							document.body.appendChild(textArea);
-							textArea.focus();
-							textArea.select();
-							try {
-								document.execCommand('copy');
-								showNotification('Copied: ' + text);
-							} catch (err) {
-								console.error('Fallback copy failed: ', err);
-							}
-							document.body.removeChild(textArea);
-						});
-					}
-					
-					function showNotification(message) {
-						const notification = document.createElement('div');
-						notification.className = 'notification';
-						notification.textContent = message;
-						document.body.appendChild(notification);
-						
-						// Trigger reflow to enable transition
-						notification.offsetHeight;
-						notification.classList.add('show');
-						
-						setTimeout(function() {
-							notification.classList.remove('show');
-							setTimeout(function() {
-								document.body.removeChild(notification);
-							}, 300);
-						}, 2000);
-					}
-					
-					function clearIssues() {
-						fetch('/debug/clear-issues')
-							.then(response => {
-								if (response.ok) {
-									showNotification('Issues cleared successfully');
-									setTimeout(function() {
-										window.location.reload();
-									}, 1000);
-								} else {
-									showNotification('Failed to clear issues');
-								}
-							})
-							.catch(error => {
-								console.error('Error clearing issues:', error);
-								showNotification('Error clearing issues');
-							});
-					}
-					
-					function copyMarkdownContent() {
-						const markdownContent = document.getElementById('markdown-content-pre').textContent;
-						copyToClipboard(markdownContent);
-					}
-				`),
+				b.Script().T(tableJS),
 				b.H2().T("Element Concerns"),
 				b.P().R(
 					b.F("Total issues: %d", len(dedupedConcerns)),
@@ -520,13 +280,13 @@ func buildDedupKey(el Element, concernKey string) string {
 	if strings.HasPrefix(concernKey, concernOpenTag) {
 		return el.location + "|" + el.name + "|open_tag_not_closed"
 	}
-	
+
 	// For other issues, concatenate all issue texts
 	if len(el.issues) > 0 {
 		issueText := strings.Join(el.issues, ";")
 		return el.location + "|" + el.name + "|" + issueText
 	}
-	
+
 	// Fallback
 	return el.location + "|" + el.name + "|unknown"
 }
