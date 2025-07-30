@@ -77,7 +77,7 @@ func TestHtmlElements(t *testing.T) {
 		{name: "Strong", function: func(b *Builder) Element { return b.Strong() }, want: "<strong.*></strong>"},
 		{name: "Summary", function: func(b *Builder) Element { return b.Summary() }, want: "<summary.*></summary>"},
 		{name: "Svg", function: func(b *Builder) Element { return b.Svg() }, want: "<svg.*></svg>"},
-		{name: "Textarea", function: func(b *Builder) Element { return b.TextArea() }, want: "<textarea.*></textarea>"},
+		{name: "TextArea", function: func(b *Builder) Element { return b.TextArea() }, want: "<textarea.*></textarea>"},
 		{name: "Time", function: func(b *Builder) Element { return b.Time() }, want: "<time.*></time>"},
 		{name: "Video", function: func(b *Builder) Element { return b.Video() }, want: "<video.*></video>"},
 		{name: "Picture", function: func(b *Builder) Element { return b.Picture() }, want: "<picture.*></picture>"},
