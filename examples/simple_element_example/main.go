@@ -1,5 +1,5 @@
 // Package main demonstrates the Element library for programmatic HTML generation.
-// This example shows how to use Element with the rweb web server to create
+// This examples shows how to use Element with the rweb web server to create
 // dynamic HTML pages without templates, using Go's natural function execution order.
 package main
 

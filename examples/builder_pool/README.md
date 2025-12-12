@@ -9,7 +9,7 @@ The `element` library provides a `sync.Pool`-based builder pool that reduces mem
 ## Quick Start
 
 ```bash
-cd example/builder_pool
+cd examples/builder_pool
 go run main.go
 ```
 
