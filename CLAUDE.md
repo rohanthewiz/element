@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Overview
 
 Element is a Go library for generating HTML programmatically without templates. It uses a builder pattern and leverages Go's function execution order to create HTML structure naturally.
@@ -26,13 +24,10 @@ go test -run TestElementBasic ./...
 ### Building Examples
 ```bash
 # Build the simple example
-cd example/simple_element_example && go build
+cd examples/simple_element_example && go build
 
 # Build interfaces example
-cd example/interfaces && go build
-
-# Build builder functions example
-cd example/using_builder_funcs && go build
+cd examples/interfaces && go build
 ```
 
 ### Module Management
@@ -45,6 +40,7 @@ go mod verify
 ```
 
 ## Code Architecture
+See ai_docs/ARCHITECTURE.md
 
 ### Core Components
 
@@ -56,7 +52,7 @@ go mod verify
 2. **Element Structure** (`element.go`)
    - Core Element struct that represents HTML elements
    - Elements are opened immediately when created
-   - Closing is deferred until `.R()` or `.T()` is called
+   - Closing is deferred until `.R()` or `.T()` or `.F()` is called
 
 3. **Component System** (`component.go`)
    - Interface for reusable HTML components
@@ -75,75 +71,19 @@ go mod verify
 2. **Termination Methods**:
    - `.R(children...)` - Renders children then closes the element
    - `.T(text...)` - For elements with only text content
-   - Single-tag elements (like `<br>`) don't require termination
+   - `.F(format, params...)` - For elements only text content -- formatted
+   - Single-tag elements (like `<br>`) don't require termination, however so the developer doesn't have to track single vs paired elements, it is recommended to close single tag elements with `.R()`
 
 3. **No Reflection**: Pure compiled Go without reflection, annotations, or "weird rules" for maximum performance.
 
 ### Testing Approach
-
-- Unit tests are in `*_test.go` files alongside source files
-- Tests focus on HTML output correctness
-- Debug mode testing verifies error detection capabilities
+- 
 - Example applications serve as integration tests
 
 ## Important Notes
 
-- Always use the Builder pattern (`element.NewBuilder()`) rather than creating Elements directly
-- The library has been production-tested for 7+ years at ccswm.org
-- Performance is a key consideration - avoid adding features that require reflection or multiple passes
 - Keep the API light and unobtrusive
-
-## DebugShow Enhancement Plan
-
-### Current State (as of 2025-06-21)
-
-The `DebugShow()` function in `element_debug.go` has been enhanced with:
-1. **Tabbed interface** - HTML view (default) and Markdown view
-2. **HTML view** - Shows styled table with issues, copy functionality for element IDs, and "Clear Issues" button
-3. **Markdown view** - Shows markdown table format with a blue "Copy" button in top-right corner
-4. **Terminal output** - Always outputs markdown table to console
-5. **Uses Class builder methods** - e.g., `DivClass()`, `ButtonClass()`, `TableClass()`
-
-### Issue Deduplication Plan
-
-**Problem**: Multiple identical issues can appear for the same file location when elements are created in loops or repeated code patterns. Element IDs are randomly generated on each page refresh, so they cannot be used for deduplication.
-
-**Deduplication Key Components**:
-1. **File location** - `el.location` (e.g., "element_test.go:123")
-2. **Element name** - `el.name` (e.g., "div", "span")
-3. **Issue text** - The actual issue message from `el.issues[]`
-4. **Function context** - `el.function` (the function where the element was created)
-
-**Implementation Strategy**:
-1. Create a deduplication map with composite key: `location + "|" + name + "|" + issueText`
-2. Track count of duplicates for each unique issue
-3. Display deduplicated issues with occurrence count
-4. In the concerns map iteration, group by the deduplication key
-5. Show format like: "**div** tag not closed (3 occurrences)"
-
-**Data Structures Needed**:
-```go
-type DeduplicatedIssue struct {
-    Key      string   // Composite key for deduplication
-    Element  Element  // First occurrence of the element
-    Count    int      // Number of occurrences
-    IssueText string  // The issue message
-}
-```
-
-**UI Changes**:
-- Add a new column "Count" or incorporate count into existing columns
-- In markdown view, show count in parentheses
-- In HTML view, could add a badge or number indicator
-
-**Code Locations to Modify**:
-1. `DebugShow()` function around lines 150-460
-2. The loop that builds HTML table (around line 425)
-3. The loop that builds markdown content (around line 164)
-4. Consider adding a toggle for deduplication on/off
-
-**Testing Considerations**:
-- Test with elements created in loops
-- Test with identical issues in different functions
-- Ensure deduplication doesn't hide important context
-- Verify both HTML and Markdown views show counts correctly
+- Always use the Builder pattern (`element.NewBuilder()`) rather than creating Elements directly
+- Performance is a key consideration
+  - avoid adding features that require reflection or multiple passes
+  - Prefer to use the Bytes versions of functions to write to the response buffer without string conversion 
