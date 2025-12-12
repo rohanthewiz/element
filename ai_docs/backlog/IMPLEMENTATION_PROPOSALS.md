@@ -2,7 +2,7 @@
 
 > Detailed implementation proposals for high-value architectural improvements.
 
-This document expands on the improvement opportunities identified in [ARCHITECTURE.md](./ARCHITECTURE.md), providing implementation details, code examples, and considerations for three key enhancements.
+This document expands on the improvement opportunities identified in [ARCHITECTURE.md](../ARCHITECTURE.md), providing implementation details, code examples, and considerations for three key enhancements.
 
 ---
 
