@@ -7,6 +7,13 @@ import (
 	"github.com/rohanthewiz/serr"
 )
 
+var singleTags = map[string]bool{
+	"img": true, "br": true, "hr": true, "meta": true,
+	"input": true, "link": true, "t": true,
+	"area": true, "base": true, "col": true, "embed": true,
+	"keygen": true, "param": true, "source": true, "track": true, "wbr": true,
+}
+
 type Element struct {
 	name string // just the base of the element e.g. td, h1
 	id   string // id is the unique element id
