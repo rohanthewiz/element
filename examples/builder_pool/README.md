@@ -129,7 +129,7 @@ http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 
 ## Debug Mode
 
-When debug mode is enabled (`element.DebugSet()`), builders are **not** returned to the pool. This prevents debug state from leaking between requests and makes debugging easier.
+TODO verify this as I am feeling that the only debug state maintained is element concerns... // When debug mode is enabled (`element.DebugSet()`), builders are **not** returned to the pool. This prevents debug state from leaking between requests and makes debugging easier.
 
 ```go
 // In debug mode, this effectively becomes NewBuilder()
@@ -137,7 +137,7 @@ b := element.AcquireBuilder()
 defer element.ReleaseBuilder(b)  // Builder is discarded, not pooled
 ```
 
-## Best Practices
+## Best Practices - Important!
 
 1. **Always use defer** - Ensures the builder is released even if a panic occurs:
    ```go
