@@ -25,6 +25,11 @@ func NewBuilder() (b *Builder) {
 	return
 }
 
+// B is a convenience function for NewBuilder
+func B() (b *Builder) {
+	return NewBuilder()
+}
+
 // Input / 0utput
 
 // WriteString writes directly to the string builder

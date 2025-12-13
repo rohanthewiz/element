@@ -2,13 +2,15 @@ package element
 
 // ELEMENT CONVENIENCE FUNCTIONS
 
-// Vars returns a builder plus it's convenience methods for creating elements and text
+// Vars returns a builder plus it's convenience methods for creating elements and text.
+// We are deprecating this. Just use the builder for all the things, so prefer NewBuilder() or B()
 func Vars() (b *Builder, e elementFunc, t textFunc) {
 	b = NewBuilder()
 	return b, b.Ele, b.Text
 }
 
 // V is a short form of Vars which returns a builder and it's convenience methods
+// We are deprecating this. Just use the builder for all the things, so prefer NewBuilder() or B()
 func V() (b *Builder, e elementFunc, t textFunc) {
 	return Vars()
 }
