@@ -1,6 +1,7 @@
 package element
 
 import (
+	"bytes"
 	_ "embed"
 	"fmt"
 	"strings"
@@ -174,7 +175,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
 		b, _, _ := Vars()
 
 		// Build markdown content
-		var markdownContent strings.Builder
+		var markdownContent bytes.Buffer
 		markdownContent.WriteString("## Element Concerns\n\n")
 		markdownContent.WriteString(fmt.Sprintf("Total issues: %d\n\n", len(dedupedConcerns)))
 		markdownContent.WriteString("| Key | Details | Issues |\n")

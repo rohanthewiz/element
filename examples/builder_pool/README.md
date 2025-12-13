@@ -78,10 +78,10 @@ Use regular `NewBuilder()` when:
 
 The builder pool provides:
 
-1. **Reduced allocations** - Reuses `Builder` and `strings.Builder` instances
+1. **Reduced allocations** - Reuses `Builder` and `bytes.Buffer` instances
 2. **Lower GC pressure** - Fewer objects for the garbage collector to track
 3. **More stable latency** - Fewer GC pauses means more consistent response times
-4. **Capacity reuse** - The internal `strings.Builder` retains its grown capacity
+4. **Capacity reuse** - The internal `bytes.Buffer` retains its grown capacity
 
 ### Benchmark Results
 
@@ -92,7 +92,7 @@ BenchmarkBuilderAllocation-16    56412    19684 ns/op   5541 B/op   80 allocs/op
 BenchmarkBuilderPooled-16        62487    19716 ns/op   5457 B/op   76 allocs/op
 ```
 
-The pooled version saves 4 allocations per operation (the `Builder` struct and `strings.Builder`).
+The pooled version saves 4 allocations per operation (the `Builder` struct and `bytes.Buffer`).
 
 ## Load Testing
 

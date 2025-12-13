@@ -29,7 +29,7 @@ Simply create an element and render it:
 (Please see the full examples in the example/ folder)
 
 ## How it works
-- Element maintains an underlying `strings.Builder`, to which it appends HTML as you go.
+- Element maintains an underlying `bytes.Buffer`, to which it appends HTML as you go.
 - When you call `b.P()` an opening paragraph tag is immediately added to the string builder.
 - `b.P()` returns an element.Element.
 - Elements may have children, so we don't render their closing tags as yet. This is where `R()` comes in. 

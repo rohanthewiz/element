@@ -22,7 +22,7 @@ This document expands on the improvement opportunities identified in [ARCHITECTU
 
 ### Problem Statement
 
-Every HTTP request that renders HTML creates a new `Builder`, which internally allocates a fresh `strings.Builder`. In high-traffic applications, this creates allocation pressure:
+Every HTTP request that renders HTML creates a new `Builder`, which internally allocates a fresh `bytes.Buffer`. In high-traffic applications, this creates allocation pressure:
 
 ```go
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -350,7 +350,7 @@ Update the `New()` function in `element.go`:
 ```go
 // In element.go - modify attribute handling
 
-func New(s *strings.Builder, el string, attrs ...any) Element {
+func New(s *bytes.Buffer, el string, attrs ...any) Element {
     // ... existing setup code ...
 
     s.WriteString("<")
@@ -669,7 +669,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 This causes:
 - **High TTFB** (Time To First Byte) - User sees blank screen until entire page is ready
-- **High memory usage** - Entire page held in `strings.Builder`
+- **High memory usage** - Entire page held in `bytes.Buffer`
 - **Poor perceived performance** - No progressive rendering
 
 ### Proposed Solution

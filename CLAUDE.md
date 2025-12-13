@@ -46,7 +46,7 @@ See ai_docs/ARCHITECTURE.md
 
 1. **Builder Pattern** (`builder.go`, `builder_elements.go`)
    - Central to the library's API
-   - Maintains an underlying `strings.Builder` for efficient HTML generation
+   - Maintains an underlying `bytes.Buffer` for efficient HTML generation
    - Single-pass rendering with minimal memory allocation
 
 2. **Element Structure** (`element.go`)

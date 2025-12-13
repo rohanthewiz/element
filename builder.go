@@ -1,20 +1,20 @@
 package element
 
 import (
-	"strings"
+	"bytes"
 )
 
 // Builder has everything we need for building and rendering HTML
 type Builder struct {
-	Ele  elementFunc      // function for building an element
-	Text textFunc         // function for rendering literal text
-	s    *strings.Builder // accumulates our output
+	Ele  elementFunc   // function for building an element
+	Text textFunc      // function for rendering literal text
+	s    *bytes.Buffer // accumulates our output
 }
 
 // NewBuilder returns a builder for creating our HTML
 func NewBuilder() (b *Builder) {
 	b = &Builder{}
-	b.s = &strings.Builder{}
+	b.s = bytes.NewBuffer(make([]byte, 0, 256))
 
 	b.Ele = func(el string, attrPairs ...string) Element {
 		return New(b.s, el, attrPairs...)
@@ -49,7 +49,12 @@ func (b *Builder) String() string {
 	return b.s.String()
 }
 
-// Reset clears the internal strings.Builder
+// Bytes returns the accumulated buffer as bytes
+func (b *Builder) Bytes() []byte {
+	return b.s.Bytes()
+}
+
+// Reset clears the internal bytes.Buffer
 func (b *Builder) Reset() {
 	b.s.Reset()
 }
