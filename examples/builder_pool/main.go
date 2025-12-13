@@ -57,7 +57,7 @@ func pooledHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Write the response
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(b.String()))
+	w.Write(b.Bytes())
 }
 
 // regularHandler shows the traditional approach of creating a new builder each time.
@@ -319,5 +319,5 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(b.String()))
+	w.Write(b.Bytes())
 }

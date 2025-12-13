@@ -101,72 +101,69 @@ func rootHandler(c rweb.Context) error {
 	list2 := ListOfThings{Name: "More Items", Things: []string{"Item 1", "Item 2", "Item 3", "Item 4", "Item 5"}}
 	list3 := ListOfThings{Name: "Just Numbers", Numbers: []float64{17.0, 5.1, 98.7, 3.1415927}}
 
-	b := element.B()
+	b := element.AcquireBuilder() // get from pool
+	defer element.ReleaseBuilder(b)
 
 	b.Html().R(
 		b.Head().R(
-			b.Title().R(
-				b.F("%s", siteName),
-			), // this is the title of the page tab)), // this is the title of the page tab
-			b.Style().R(
-				// t can render a list of strings
-				t(localStyles, styleCSS), // include styles from local and our styles.css file
-			),
+			b.Title().F("%s", siteName),
+			b.Style().T(localStyles, styleCSS), // include styles from local and our styles.css file
 		),
 
 		b.Body().R(
-			e("div", "class", "title").R(
+			b.Div("class", "title").R(
 				b.F("%s", siteName),
 			),
 
-			b.Div("class", "container").R(
-				// Show some lists
+			b.DivClass("container").R(
+				// Render multiple components
 				element.RenderComponents(b, list, list2, list3),
+				b.Hr().R(),
+
 				b.P("style", "font-weight:bold").R(
-					t("Hello there big world!"), b.Br().R(),
+					b.T("Hello there big world!"), b.Br(),
 					b.F("%s", time.Now().String()),
 				),
 				b.Wrap(func() {
 					if 2 > 1 {
-						t("Yup. Two is greater than 1.")
+						b.Span().T("Yup. Two is greater than 1.")
 					}
 				}),
-				b.Aside("style", "display:inline-block;float:right;padding:1rem").R(
-					t("This is an aside!")),
 
-				b.Table().R(
-					b.THead().R(
-						b.Tr("class", "table-head").R(
-							b.Th().R(t("Header 1")),
-							b.Th().R(t("Header 2")),
-							b.Th().R(t("Header 3")),
-						),
-					),
-					b.TBody().R(
-						b.Tr().R(
-							b.Td().R(t("Row 1, Col 1")),
-							b.Td().R(t("Row 1, Col 2")),
-							b.Td().R(t("Row 1, Col 3")),
-						),
-						b.Tr().R(
-							b.Td().R(t("Row 2, Col 1")),
-							b.Td().R(t("Row 2, Col 2")),
-							b.Td().R(t("Row 2, Col 3")),
-						),
+				b.Aside("style", "display:inline-block;float:right;padding:1rem").
+					T("This is an aside!"),
+			),
+
+			b.Table().R(
+				b.THead().R(
+					b.Tr("class", "table-head").R(
+						b.Th().T("Header 1"),
+						b.Th().T("Header 2"),
+						b.Th().T("Header 3"),
 					),
 				),
-				b.Pre().R(
-					t(`This is a preformatted block of text.
-    It will be rendered as a block of text with  line breaks. 
-    This is a preformatted block of text. It will be rendered as a block of text with  line breaks.`),
-				),
-				b.Div("class", "footer").R(
-					b.F("Copyright &copy; %s &mdash; %s",
-						time.Now().Format("2006"), "GodsCoders"),
+				b.TBody().R(
+					b.Tr().R(
+						b.Td().T("Row 1, Col 1"),
+						b.Td().T("Row 1, Col 2"),
+						b.Td().T("Row 1, Col 3"),
+					),
+					b.Tr().R(
+						b.Td().T("Row 2, Col 1"),
+						b.Td().T("Row 2, Col 2"),
+						b.Td().T("Row 2, Col 3"),
+					),
 				),
 			),
+
+			b.Pre().T(`This is a preformatted block of text.
+				It will be rendered as a block of text with  line breaks. 
+				This is a preformatted block of text. It will be rendered as a block of text with  line breaks.`),
+
+			b.DivClass("footer").F("Copyright &copy; %s &mdash; %s",
+				time.Now().Format("2006"), "GodsCoders"),
 		),
 	)
 
-	return c.WriteHTML(b.String())
+	return c.WriteHTMLBytes(b.Bytes())
 }
