@@ -81,7 +81,7 @@ type Element struct {
     name       string            // Tag name (div, p, span, etc.)
     id         string            // Debug-mode tracking ID
     attrs      map[string]string // Element attributes
-    sb         *strings.Builder  // Reference to builder's buffer
+    sb         *bytes.Buffer  // Reference to builder's buffer
     issues     []string          // Debug-mode issues
     function   string            // Creation context (debug)
     location   string            // File:line (debug)
@@ -102,7 +102,7 @@ The `Builder` is the primary API entry point:
 type Builder struct {
     Ele  elementFunc         // Element creation function
     Text textFunc            // Text node function
-    s    *strings.Builder    // Internal HTML accumulator
+    s    *bytes.Buffer    // Internal HTML accumulator
 }
 ```
 
@@ -163,7 +163,7 @@ The debug system (`element_debug.go`) provides runtime issue detection:
 
 ### 1. Performance
 - **Single-pass generation** - No intermediate AST or multiple passes
-- **`strings.Builder`** - Efficient string concatenation with minimal allocation
+- **`bytes.Buffer`** - Efficient string concatenation with minimal allocation
 - **No reflection** - Compile-time type safety, no runtime overhead
 
 ### 2. Developer Experience
@@ -189,7 +189,7 @@ The debug system (`element_debug.go`) provides runtime issue detection:
 
 #### 1. Builder Pool for High-Throughput Scenarios
 
-**Problem:** Each request creates a new Builder with fresh `strings.Builder` allocation.
+**Problem:** Each request creates a new Builder with fresh `bytes.Buffer` allocation.
 
 **Solution:** Add optional `sync.Pool`-based builder acquisition:
 

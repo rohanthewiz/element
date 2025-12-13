@@ -101,7 +101,7 @@ func rootHandler(c rweb.Context) error {
 	list2 := ListOfThings{Name: "More Items", Things: []string{"Item 1", "Item 2", "Item 3", "Item 4", "Item 5"}}
 	list3 := ListOfThings{Name: "Just Numbers", Numbers: []float64{17.0, 5.1, 98.7, 3.1415927}}
 
-	b, e, t := element.Vars()
+	b := element.B()
 
 	b.Html().R(
 		b.Head().R(

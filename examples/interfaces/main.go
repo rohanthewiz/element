@@ -17,11 +17,10 @@ func main() {
 	s.Use(rweb.RequestInfo) // Stats Middleware
 
 	s.Get("/", func(ctx rweb.Context) (err error) {
-		b, _, _ := element.Vars()
-
 		bob := Cat{Color: "yellow", Lazy: true}
 		phil := Dog{Color: "brown", Weight: 1.0}
 
+		b := element.NewBuilder()
 		b.Body().R(
 			b.H2().T("Rendering Animals"),
 			element.RenderComponents(b, bob),

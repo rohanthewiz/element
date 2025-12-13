@@ -1,6 +1,7 @@
 package element
 
 import (
+	"bytes"
 	"regexp"
 	"strings"
 	"testing"
@@ -10,7 +11,7 @@ import (
 // Maybe just to use a single attribute pair or test only the length of the output if multiple attributes are required
 
 func TestRender(t *testing.T) {
-	s := &strings.Builder{}
+	s := &bytes.Buffer{}
 
 	New(s, "span").R()
 	want := `<span.*></span>`
@@ -114,7 +115,7 @@ func TestElement_F(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sb := &strings.Builder{}
+			sb := &bytes.Buffer{}
 			el := New(sb, "div")
 			el.F(tt.format, tt.args...)
 
@@ -131,7 +132,7 @@ func TestElement_F(t *testing.T) {
 /*func TestFor(t *testing.T) {
 	var testAnimals = []string{"cat", "mouse", "dog"}
 
-	s := &strings.Builder{}
+	s := &bytes.Buffer{}
 
 	// Div with text and element children
 	New(s, "div", "id", "container", "class", "active").R(

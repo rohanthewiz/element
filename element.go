@@ -1,6 +1,7 @@
 package element
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -22,7 +23,7 @@ type Element struct {
 	attrs      map[string]string
 	function   string // function in which the element is created
 	location   string // file:line_nbr of the element creation
-	sb         *strings.Builder
+	sb         *bytes.Buffer
 	issues     []string // issues can hold any issues with the element
 }
 
@@ -31,7 +32,7 @@ func (el Element) Name() string {
 }
 
 // New creates a new element
-func New(s *strings.Builder, el string, attrs ...string) (e Element) {
+func New(s *bytes.Buffer, el string, attrs ...string) (e Element) {
 	if s == nil {
 		fmt.Println("Please supply a pointer to a string builder to element.New():", el)
 	}
@@ -72,7 +73,7 @@ func (el Element) HasAttribute(key, value string) bool {
 }
 
 // Text is an element core function which creates a new text element in the string builder
-func Text(s *strings.Builder, texts ...string) (x any) {
+func Text(s *bytes.Buffer, texts ...string) (x any) {
 	if s == nil {
 		fmt.Println("Please supply a pointer to a string builder to element.Text()")
 	}

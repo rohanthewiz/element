@@ -11,24 +11,28 @@ type elementFunc func(el string, attrPairs ...string) Element
 type textFunc func(attrPairs ...string) any
 
 // BUILDER CONVENIENCE METHODS
+// (We shouldn't have much need for these anymore as we do want to build everything from the builder to get the advantages like debugging)
 
 // Funcs is a convenience method for returning
 // the builder methods b.Ele and b.Text
-// that are used for creating elements and literal text
+// that are used for creating elements and literal text.
+// We are deprecating this. Just use the builder for all the things
 func (b *Builder) Funcs() (ele elementFunc, text textFunc) {
 	return b.Ele, b.Text
 }
 
 // Vars is a convenience method for returning
 // the builder methods b.Ele and b.Text
-// that are used for creating elements and literal text
+// that are used for creating elements and literal text.
+// We are deprecating this. Just use the builder for all the things
 func (b *Builder) Vars() (ele elementFunc, text textFunc) {
 	return b.Ele, b.Text
 }
 
 // V is a convenience method for returning
 // the builder methods b.Ele and b.Text
-// that are used for creating elements and literal text
+// that are used for creating elements and literal text.
+// We are deprecating this. Just use the builder for all the things
 func (b *Builder) V() (ele elementFunc, text textFunc) {
 	return b.Ele, b.Text
 }

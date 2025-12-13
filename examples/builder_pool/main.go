@@ -144,7 +144,7 @@ func renderFeatureList(b *element.Builder) any {
 			b.Li().T("Reduced memory allocations per request"),
 			b.Li().T("Lower GC pressure in high-throughput scenarios"),
 			b.Li().T("More stable latency (fewer GC pauses)"),
-			b.Li().T("Reuses strings.Builder capacity"),
+			b.Li().T("Reuses bytes.Buffer capacity"),
 			b.Li().T("Thread-safe for concurrent use"),
 		),
 	)
