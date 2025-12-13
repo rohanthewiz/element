@@ -316,9 +316,9 @@ Here's what the formatted output can look like:
 - Use Builder to create elements -- this is the new way that comes with good benefits.
 - You can create elements directly with Element, but there should be no need to do that now. Using Builder provides more features including convenience (less typing) and great debugging.
 - Single tag elements (like `br`) don't need to call `.R()`, however most other elements are dual tag and so must call `.R()`
-- Practically, just include `.R()` for all elements unless you are terminating an element with just pure text, in which case you can terminate with `.T()`.
+- Practically, just include `.R()` for all elements unless you are terminating an element with just pure text, in which case you can terminate with `.T()` or `.F()`.
 - Use `go fmt` to format go code as normal
-- Enjoy the full power and freedom of Go, say goodbye to the jungle of the Frontend!
+- Embrace the full power, safety and speed of Go. Say goodbye to the jungle of frontend frameworks!
 
 ## Enabling debugging
 - Example uses rweb - `go get github.com/rohanthewiz/rweb`
@@ -357,6 +357,6 @@ Here's what the formatted output can look like:
 - See `example/simple_element_example/main.go` for a full example
 
 ## Contributing
-If you have ideas, let me know. PRs are welcome, but keep the below in mind.
-- The idea is to keep this as *light* and unobtrusive as possible. Thanks!
-- Also, if possible, try to achieve full coverage of any new code added -- again Goland has all the tools needed for test coverage.
+If you have ideas, let me know. Keep the below in mind.
+- The idea is to keep this as *light* and unobtrusive as possible - like Go. Thanks!
+- Also, if possible, try to achieve full coverage of any new code added. Goland had all the tools needed for test / coverage long before AI!

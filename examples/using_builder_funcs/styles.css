@@ -43,6 +43,10 @@ div.card {
     text-align: start;
 }
 
+aside {
+    background-color:#538b8f;
+}
+
 .footer {
     font-size: 0.8rem;
     text-align: center;

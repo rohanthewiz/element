@@ -258,7 +258,7 @@ func otherPageHandler(c rweb.Context) error {
 // 3. Adds any additional head content (like <title>)
 // 4. Renders the body component
 func otherHTMLPage() (out string) {
-	b := element.NewBuilder()
+	b := element.B() // short for element.NewBuilder()
 
 	// HtmlPage is a convenience method that generates a complete HTML page
 	// Parameters: CSS styles, additional head content, body component
