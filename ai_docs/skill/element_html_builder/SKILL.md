@@ -1,3 +1,8 @@
+---
+name: element-html-builder
+description: Element is a zero dependency library to efficiently generate HTML programmatically, without templates in Go
+---
+
 # Element Library: Programmatic HTML Generation in Go
 
 > A comprehensive guide to using `github.com/rohanthewiz/element` for building HTML without templates.
@@ -14,7 +19,7 @@ Element is a Go library that generates HTML programmatically by leveraging Go's 
 
 ### Creating a Builder
 
-Always use the Builder - never create Elements directly.
+Start with a builder for creating elements
 
 ```go
 import "github.com/rohanthewiz/element"
