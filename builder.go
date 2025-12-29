@@ -9,6 +9,10 @@ type Builder struct {
 	Ele  elementFunc   // function for building an element
 	Text textFunc      // function for rendering literal text
 	s    *bytes.Buffer // accumulates our output
+
+	// Asset tracking (optional, enabled via EnableAssetTracking())
+	assetRegistry map[string]assetEntry // tracks component assets by ID
+	assetsEnabled bool                  // whether asset tracking is enabled
 }
 
 // NewBuilder returns a builder for creating our HTML
@@ -57,4 +61,9 @@ func (b *Builder) Bytes() []byte {
 // Reset clears the internal bytes.Buffer
 func (b *Builder) Reset() {
 	b.s.Reset()
+}
+
+// WriteByte writes a single byte directly to the buffer
+func (b *Builder) WriteByte(c byte) error {
+	return b.s.WriteByte(c)
 }
