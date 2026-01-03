@@ -95,7 +95,7 @@ b.P().F("You have %d items", count)
 
 ### Self-Closing Elements
 
-Elements like `<br>`, `<img>`, `<input>`, `<hr>`, `<meta>` don't require termination, but you **can** call `R()` for consistency:
+Elements like `<br>`, `<img>`, `<input>`, `<hr>`, `<meta>` don't require termination, but you **should** call `R()` for consistency:
 
 ```go
 b.Br()                              // <br>
