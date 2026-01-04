@@ -1,0 +1,6 @@
+github.com/rohanthewiz/element v0.5.4 h1:GuUkF8/y39opotrVYrfrnygCAVVpyF/aPXyKNJKZnd0=
+github.com/rohanthewiz/element v0.5.4/go.mod h1:cA57S9UGRSaWrMmGC1M+8QCQw/y8kgODiBB0KEwIyzo=
+github.com/rohanthewiz/rweb v0.1.21-0.20251212221405-68035af7d9e4 h1:ynAVUyCSK1XS27d5Ocp9sdDO+Y+/RDwZQ96Lv9FahEA=
+github.com/rohanthewiz/rweb v0.1.21-0.20251212221405-68035af7d9e4/go.mod h1:esRbqdso5FllxreXnmoRNz3XJv4Otr2OIDUX81wRr0c=
+github.com/rohanthewiz/serr v1.2.20 h1:/oMu0SQ5LjN7b3Tl8uKcJRlptpqQyRJbyV01G8ZgGNw=
+github.com/rohanthewiz/serr v1.2.20/go.mod h1:WYBghPccoTAUknotbanGZzWnIFREXYI5ULwf5sjznxY=
