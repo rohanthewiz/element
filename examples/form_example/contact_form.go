@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/rohanthewiz/element"
-	"github.com/rohanthewiz/element/components/form_field"
+	"github.com/rohanthewiz/element/components"
 )
 
 // EMPTY STRUCT for FORM COMPONENT
