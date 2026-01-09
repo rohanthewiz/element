@@ -1,7 +1,19 @@
 # Simple HTML generator
 Forget templates, and new templating languages to generate decent HTML pages. 
 Element generates HTML nicely, simply, from Go code. Everything is pure compiled Go -- no reflection, funny annotations or weird rules.
-This has been in production for at least 7 years! (ccswm.org)
+This has been in production for at least 8 years! (ccswm.org)
+
+## Benefits
+
+1. You never leave the safety, speed, and familiarity of Go
+    - The full power of Go at your finger tips
+    - Compiles single-pass with the rest of your Go program -- no weird annotations or build steps
+    - You don't have to learn some half-baked templating language
+    - You rip at Go speed the whole time
+2. Server-side by nature, not an after thought
+3. Zero dependencies, like Node, so you don't add unnecessary dependencies and complexities into your critical projects!
+4. Buffer pools for super high traffic situations
+5. Easy to use, formatting naturally to HTML tree structure
 
 ## Usage
 Simply create an element and render it: 
@@ -10,7 +22,7 @@ Simply create an element and render it:
 	b := element.NewBuilder()
 
 	// Body(), like most builder methods, writes the *opening* tag to the underlying string builder
-	// and is terminated with R(), which allows children to be rendered, and any closing tag appended,
+	// and is terminated with R(), which allows children to be rendered, then any closing tag appended,
 	// or could be terminated with T(args...string), if the children are all literal text.
 	b.Body().R(
 		// DivClass is a convenience method for outputting and element with at least a "class" attribute
@@ -67,7 +79,47 @@ Simply create an element and render it:
 - `F()` can also terminate an opened element with a single formatted string. Example: `b.Span().F("The value is: %0.1f", value)` 
 - In debug mode, we do peek at the arguments passed to `R()` to help identify any issue in children elements.
 
-## Example
+## Examples
+
+### Building with Multiple Functions
+Just pass the builder around (it is a pointer) and create elements in the desired order. Again things are written immediately to the builder's buffer.
+
+If you are calling directly from a render tree, as in the example below, you will need to return something to satisfy the calling function (in this case the container div's `R()`), but the calling function doesn't do anything with its arguments, they are there just to establish calling order.
+
+```go
+package main
+
+func main() {
+    b := element.B()
+    
+    b.DivClass("container").R(
+    b.H2().T("Section 1"),
+    generateList(b),
+    )
+
+    fmt.Println(b.Pretty())
+    /* // Output:
+    <div class="container">
+      <h2>Section 1</h2>
+      <ul>
+        <li>Item 1</li>
+        <li>Item 2</li>
+      </ul>
+    </div>
+    */
+}
+
+func generateList(b *element.Builder) (x any) { // we don't care about the return
+	// Everything is rendered in the builder immediately!
+	b.Ul().R(
+		b.Li().T("Item 1"),
+		b.Li().T("Item 2"),
+	)
+	return
+}
+````
+
+### A Full Example
 
 We use short method names and some aliases to keep the code as unobtrusive as possible.
 **See the example:** https://github.com/rohanthewiz/element/tree/master/example/simple_element_example for a full, ready-to-compile example app.
@@ -256,6 +308,7 @@ func (ob otherBody) Render(b *element.Builder) (x any) {
 
 The bonus is that our HTML is already somewhat minified to one line so it's very efficient.
 Here's what the formatted output can look like:
+(Note that Element no longer generates data-ele-id's in normal mode.)
 
 ```html
 <!-- Formatted with JetBrains' Goland (Code | Reformat Code) -->
@@ -357,6 +410,6 @@ Here's what the formatted output can look like:
 - See `example/simple_element_example/main.go` for a full example
 
 ## Contributing
-If you have ideas, let me know. Keep the below in mind.
+If you have ideas, let me know, but keep the below in mind.
 - The idea is to keep this as *light* and unobtrusive as possible - like Go. Thanks!
 - Also, if possible, try to achieve full coverage of any new code added. Goland had all the tools needed for test / coverage long before AI!
