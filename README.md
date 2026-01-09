@@ -2,7 +2,8 @@
 Forget complexity of frontend frameworks and templates to generate decent HTML pages! 
 Element generates HTML nicely, and simply from Go code. Everything is pure compiled Go without reflection, annotations or weird rules. This has been in use in production for several years.
 
-This library includes AI-agent documentation at ai_docs/SKILL.md"
+- **This library includes AI-agent documentation at `ai_docs/SKILL.md`**.
+- Can we make this a standard, so there is **one, easily discoverable, source of truth for a library's SKILL**?
 
 ## Benefits
 
