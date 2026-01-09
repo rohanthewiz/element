@@ -1,7 +1,8 @@
 # Simple HTML generator
-Forget templates, and new templating languages to generate decent HTML pages. 
-Element generates HTML nicely, simply, from Go code. Everything is pure compiled Go -- no reflection, funny annotations or weird rules.
-This has been in production for at least 8 years! (ccswm.org)
+Forget complexity of frontend frameworks and templates to generate decent HTML pages! 
+Element generates HTML nicely, and simply from Go code. Everything is pure compiled Go without reflection, annotations or weird rules. This has been in use in production for several years.
+
+This library includes AI-agent documentation at ai_docs/SKILL.md"
 
 ## Benefits
 
@@ -10,13 +11,12 @@ This has been in production for at least 8 years! (ccswm.org)
     - Compiles single-pass with the rest of your Go program -- no weird annotations or build steps
     - You don't have to learn some half-baked templating language
     - You rip at Go speed the whole time
-2. Server-side by nature, not an after thought
-3. Zero dependencies, like Node, so you don't add unnecessary dependencies and complexities into your critical projects!
-4. Buffer pools for super high traffic situations
-5. Easy to use, formatting naturally to HTML tree structure
+2. Server-side by nature -- not an after thought
+3. Zero dependencies, like Node, so you don't add vulnerabilities and complexities into your critical projects!
+4. Buffer pools for super-high traffic situations
+5. Easy to use with the natural formatting of an HTML tree structure
 
 ## Usage
-Simply create an element and render it: 
 
 ```go
 	b := element.NewBuilder()
@@ -38,7 +38,8 @@ Simply create an element and render it:
 	b.String()
 	//-> <body><div class="container"><span>Some text</span><p><a href="http://example.com">Example.com</a></p></div></body>
 ```
-(Please see the full examples in the example/ folder)
+
+See the full examples in the examples folder.
 
 ## How it works
 - Element maintains an underlying `bytes.Buffer`, to which it appends HTML as you go.
@@ -82,7 +83,7 @@ Simply create an element and render it:
 ## Examples
 
 ### Building with Multiple Functions
-Just pass the builder around (it is a pointer) and create elements in the desired order. Again things are written immediately to the builder's buffer.
+Simply pass the builder around (it is a pointer), and create elements in the desired order. Again, things are written immediately to the builder's buffer.
 
 If you are calling directly from a render tree, as in the example below, you will need to return something to satisfy the calling function (in this case the container div's `R()`), but the calling function doesn't do anything with its arguments, they are there just to establish calling order.
 
@@ -93,8 +94,8 @@ func main() {
     b := element.B()
     
     b.DivClass("container").R(
-    b.H2().T("Section 1"),
-    generateList(b),
+        b.H2().T("Section 1"),
+        generateList(b),
     )
 
     fmt.Println(b.Pretty())
@@ -122,7 +123,7 @@ func generateList(b *element.Builder) (x any) { // we don't care about the retur
 ### A Full Example
 
 We use short method names and some aliases to keep the code as unobtrusive as possible.
-**See the example:** https://github.com/rohanthewiz/element/tree/master/example/simple_element_example for a full, ready-to-compile example app.
+**See the examples folder** https://github.com/rohanthewiz/element/tree/master/examples for full, ready-to-compile examples.
 
 ```go
 package main
