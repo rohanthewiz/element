@@ -58,3 +58,9 @@ func (b *Builder) Bytes() []byte {
 func (b *Builder) Reset() {
 	b.s.Reset()
 }
+
+// Pretty returns the HTML with pretty formatting (indentation and line breaks)
+// This is useful for debugging or when you need human-readable HTML output
+func (b *Builder) Pretty() string {
+	return PrettyHTML(b.s.String())
+}

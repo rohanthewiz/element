@@ -147,3 +147,96 @@ func TestBuilder_HtmlPage(t *testing.T) {
 		})
 	}
 }
+
+func generateList(b *Builder) any {
+	b.Ul().R(
+		b.Li().T("Item 1"),
+		b.Li().T("Item 2"),
+	)
+	return nil
+}
+
+func TestBuilder_Pretty(t *testing.T) {
+	tests := []struct {
+		name string
+		html func() *Builder
+		want string
+	}{
+		{
+			name: "Simple nested structure",
+			html: func() *Builder {
+				b := NewBuilder()
+				b.DivClass("container").R(
+					b.H2().T("Section 1"),
+					generateList(b),
+				)
+				return b
+			},
+			want: `<div class="container">
+  <h2>Section 1</h2>
+  <ul>
+    <li>Item 1</li>
+    <li>Item 2</li>
+  </ul>
+</div>
+`,
+		},
+		{
+			name: "Inline elements",
+			html: func() *Builder {
+				b := NewBuilder()
+				b.P().R(
+					b.Text("This is "),
+					b.Strong().T("bold"),
+					b.Text(" and "),
+					b.Em().T("italic"),
+					b.Text(" text."),
+				)
+				return b
+			},
+			want: `<p>This is <strong>bold</strong> and <em>italic</em> text.</p>
+`,
+		},
+		{
+			name: "Complex nested structure",
+			html: func() *Builder {
+				b := NewBuilder()
+				b.Html().R(
+					b.Head().R(
+						b.Title().T("Test Page"),
+					),
+					b.Body().R(
+						b.Div().R(
+							b.H1().T("Title"),
+							b.P().T("Paragraph"),
+						),
+					),
+				)
+				return b
+			},
+			want: `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test Page</title>
+  </head>
+  <body>
+    <div>
+      <h1>Title</h1>
+      <p>Paragraph</p>
+    </div>
+  </body>
+</html>
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := tt.html()
+			got := b.Pretty()
+			if got != tt.want {
+				t.Errorf("Pretty() = \n%q\n, want \n%q", got, tt.want)
+			}
+		})
+	}
+}
