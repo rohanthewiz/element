@@ -1,5 +1,5 @@
 # Simple HTML generator
-Forget complexity of frontend frameworks and templates to generate decent HTML pages! 
+Forget the complexity of frontend frameworks and templates to generate decent HTML pages! 
 Element generates HTML nicely, and simply from Go code. Everything is pure compiled Go without reflection, annotations or weird rules. This has been in use in production for several years.
 
 - **This library includes AI-agent documentation at `ai_docs/SKILL.md`**.
@@ -8,14 +8,14 @@ Element generates HTML nicely, and simply from Go code. Everything is pure compi
 ## Benefits
 
 1. You never leave the safety, speed, and familiarity of Go
-    - The full power of Go at your finger tips
+    - The full power of Go is at your finger tips
     - Compiles single-pass with the rest of your Go program -- no weird annotations or build steps
     - You don't have to learn some half-baked templating language
     - You rip at Go speed the whole time
 2. Server-side by nature -- not an after thought
-3. Zero dependencies, like Node, so you don't add vulnerabilities and complexities into your critical projects!
+3. Zero dependencies, (yep, no Node and friends), so you don't add vulnerabilities and complexities into your critical projects!
 4. Buffer pools for super-high traffic situations
-5. Easy to use with the natural formatting of an HTML tree structure
+5. Easy to use with Go intellisense, and natural nesting paralleling the HTML tree structure
 
 ## Usage
 
@@ -43,17 +43,18 @@ Element generates HTML nicely, and simply from Go code. Everything is pure compi
 See the full examples in the examples folder.
 
 ## How it works
-- Element maintains an underlying `bytes.Buffer`, to which it appends HTML as you go.
-- When you call `b.P()` an opening paragraph tag is immediately added to the string builder.
+- Element maintains an underlying `bytes.Buffer`, to which it appends elements as you go.
+- When you call `b.P()` an opening paragraph tag is immediately added to the internal buffer.
 - `b.P()` returns an element.Element.
 - Elements may have children, so we don't render their closing tags as yet. This is where `R()` comes in. 
 - `R()` causes the calling function (of the element) to wait until all/any children (lexically, arguments) are resolved (rendered).
-    before calling `close()` on the parent element.
+    before calling `close()` on the parent element, rendering it's closing tag.
 - In other words, element leverages the natural order of function and argument execution (a tree, AST) to properly layout HTML elements (also a tree).
-- Element therefore is natural Go, not a templating or pseudo language shimmed in, but pure, one-shot compiled Go!
+- Element therefore, is natural Go, not a templating or pseudo language shimmed in, but pure, one-shot compiled Go!
 - Also, as everything is written in a single pass with very little memory allocation, it runs at the full speed of Go!
 
 ## Core principles of Element
+- (See also the SKILL.md in `ai_docs/SKILL.md`)
 - Element takes a code-first approach to producing HTML.
 - First we get a builder from Element: `b := element.NewBuilder()`.
 - Note: Builder will render element tags to an internal string builder.
