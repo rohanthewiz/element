@@ -11,19 +11,19 @@ description: Element is a zero dependency library to efficiently generate HTML, 
 
 Element is a zero-dependency Go library that generates HTML programmatically by leveraging Go's natural function execution order. Instead of templates, you write Go code that mirrors HTML's tree structure.
 
-### Benefits
+## Benefits
 
 1. You never leave the safety, speed, and familiarity of Go
     - Compiles single-pass with the rest of your Go program -- no extra annotations or build steps
     - All of Go is available at any point in your code
-3. Zero dependencies
-4. Buffer pools for super-high traffic situations
-5. Go's formatting naturally follows the HTML tree structure
+2. Zero dependencies
+3. Buffer pools for super-high traffic situations
+4. Go's formatting naturally follows the HTML tree structure
 
 ## Installation
 
 ```bash
-go get github.com/rohanthewiz/element
+go get -u github.com/rohanthewiz/element
 ```
 
 ## General Strategy
@@ -51,7 +51,7 @@ Go's function argument evaluation order means children are processed (and their 
 
 ### Terminate all tags
 
-Every non-self-closing element **must** be terminated with `R()`, `T()`, or `F()`. Self-closing elements (`Br`, `Img`, `Input`, `Hr`, `Meta`) don't require termination, but to keep things consistent, close self-closing tags with a sole `R()` or `T()`.
+Every non-self-closing element **must** be terminated with `R()`, `T()`, or `F()`. Self-closing elements like `Br`, `Img`, `Input`, `Hr`, and `Meta` don't require termination, but to keep things consistent, close these tags with a sole `R()` or `T()`.
 
 ## Basic Usage
 
@@ -112,6 +112,39 @@ b.Html().R(
     ),
 )
 html := b.String()
+```
+
+### Building with Multiple Functions
+
+```go
+func main() {
+	b := element.B()
+
+	b.DivClass("container").R(
+		b.H2().T("Section 1"),
+		generateList(b),
+	)
+
+	fmt.Println(b.Pretty())
+	/* // Output:
+	<div class="container">
+	  <h2>Section 1</h2>
+	  <ul>
+	    <li>Item 1</li>
+	    <li>Item 2</li>
+	  </ul>
+	</div>
+	 */
+}
+
+func generateList(b *element.Builder) (x any) { // we don't care about the return
+	// Everything is rendered in the builder immediately!
+	b.Ul().R(
+		b.Li().T("Item 1"),
+		b.Li().T("Item 2"),
+	)
+	return
+}
 ```
 
 ## API Reference
@@ -225,7 +258,11 @@ b.Ul().R(
 // Output: <ul><li>Apple</li><li>Banana</li><li>Cherry</li></ul>
 ```
 
-### Reusable Components
+### Standard Components
+
+A growing list of ready-to-use components will be found in [element/components](https://github.com/rohanthewiz/element/tree/master/components)
+
+### Custom Components
 
 Implement the `Component` interface for reusable HTML fragments:
 
@@ -284,39 +321,6 @@ b.Form("method", "post", "action", "/submit").R(
     b.Br(),
     b.ButtonClass("btn", "type", "submit").T("Submit"),
 )
-```
-
-### Building with Multiple Functions
-
-```go
-func main() {
-	b := element.B()
-
-	b.DivClass("container").R(
-		b.H2().T("Section 1"),
-		generateList(b),
-	)
-
-	fmt.Println(b.Pretty())
-	/* // Output:
-	<div class="container">
-	  <h2>Section 1</h2>
-	  <ul>
-	    <li>Item 1</li>
-	    <li>Item 2</li>
-	  </ul>
-	</div>
-	 */
-}
-
-func generateList(b *element.Builder) (x any) { // we don't care about the return
-	// Everything is rendered in the builder immediately!
-	b.Ul().R(
-		b.Li().T("Item 1"),
-		b.Li().T("Item 2"),
-	)
-	return
-}
 ```
 
 ### HTTP Handler with Pooling
