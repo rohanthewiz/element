@@ -466,6 +466,10 @@ b.P().T("Second")
 html2 := b.String()  // "<p>Second</p>"
 ```
 
+### Note
+
+- Builder has no method `Textarea()` it is `TextArea()`
+
 ## Integration Notes
 
 ### With github.com/rohanthewiz/rweb
