@@ -1,4 +1,4 @@
-package alert
+package components
 
 import (
 	"fmt"

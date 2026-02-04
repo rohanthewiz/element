@@ -1,4 +1,4 @@
-package card
+package components
 
 import "github.com/rohanthewiz/element"
 

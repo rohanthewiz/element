@@ -1,4 +1,4 @@
-package nav
+package components
 
 import "github.com/rohanthewiz/element"
 

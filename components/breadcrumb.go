@@ -1,4 +1,4 @@
-package breadcrumb
+package components
 
 import "github.com/rohanthewiz/element"
 

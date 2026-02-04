@@ -1,4 +1,4 @@
-package definition_list
+package components
 
 import "github.com/rohanthewiz/element"
 
