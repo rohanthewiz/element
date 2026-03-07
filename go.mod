@@ -4,4 +4,4 @@ go 1.22
 
 toolchain go1.24.2
 
-require github.com/rohanthewiz/serr v1.2.2
+require github.com/rohanthewiz/serr v1.3.0
