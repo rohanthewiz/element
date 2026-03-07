@@ -71,6 +71,8 @@ b := element.AcquireBuilder()
 defer element.ReleaseBuilder(b)
 ```
 
+> **Deprecated:** `element.Vars()`, `element.V()`, `b.Funcs()`, `b.Vars()`, `b.V()` are deprecated. Use `element.B()` or `element.NewBuilder()` instead.
+
 ### Simple Elements
 
 ```go
@@ -99,10 +101,11 @@ html := b.String()
 
 ```go
 b := element.B()
+// b.Html() automatically prepends <!DOCTYPE html> — no separate DOCTYPE needed
 b.Html().R(
     b.Head().R(
         b.Title().T("My Page"),
-        b.Meta("charset", "utf-8"),
+        b.Meta("charset", "utf-8").R(),
     ),
     b.Body().R(
         b.DivClass("container").R(
@@ -185,17 +188,22 @@ b.ButtonClass("btn primary")      // <button class="btn primary">
 | Function                                | Description                              |
 | --------------------------------------- | ---------------------------------------- |
 | `b.T(strings...)`                       | Write raw text directly to buffer        |
+| `b.F(format, args...)`                  | Write formatted text directly to buffer  |
 | `b.Wrap(func())`                        | Execute arbitrary Go code in render tree |
 | `element.ForEach(slice, func(item))`    | Generic iteration helper                 |
 | `element.RenderComponents(b, comps...)` | Render multiple components               |
+| `b.RenderComps(comps...)`               | Builder method equivalent of above       |
 
 ### Output Methods
 
-| Method       | Description                          |
-| ------------ | ------------------------------------ |
-| `b.String()` | Get HTML as string                   |
-| `b.Bytes()`  | Get HTML as []byte (better for HTTP) |
-| `b.Reset()`  | Clear buffer for reuse               |
+| Method               | Description                                     |
+| -------------------- | ----------------------------------------------- |
+| `b.String()`         | Get HTML as string                              |
+| `b.Bytes()`          | Get HTML as []byte (better for HTTP)            |
+| `b.Pretty()`         | Get HTML as indented/formatted string (debug)   |
+| `b.Reset()`          | Clear buffer for reuse                          |
+| `b.WriteString(s)`   | Write raw string directly to buffer             |
+| `b.WriteBytes(b)`    | Write raw bytes directly to buffer              |
 
 ## Common Patterns
 
@@ -260,7 +268,24 @@ b.Ul().R(
 
 ### Standard Components
 
-A growing list of ready-to-use components will be found in [element/components](https://github.com/rohanthewiz/element/tree/master/components)
+Import the components sub-package:
+
+```go
+import "github.com/rohanthewiz/element/components"
+```
+
+| Component | Description |
+| --------- | ----------- |
+| `Alert` | Styled notification banner (info/success/warning/error), optional dismiss button |
+| `Breadcrumb` | Navigation breadcrumb trail with configurable separator |
+| `Card` | Container with optional header, body (text or component), and footer |
+| `DefinitionList` | `<dl>` term/definition pairs |
+| `FormField` | Label + input + optional help text / error message |
+| `Nav` | Navigation bar with brand and list of links; marks active item |
+| `Pagination` | Page navigation with prev/next/first/last and page number links |
+| `Table` | Table with headers, 2D row data, optional striped/bordered styling |
+
+Source: [element/components](https://github.com/rohanthewiz/element/tree/master/components)
 
 ### Custom Components
 
@@ -314,11 +339,11 @@ b.Table().R(
 ```go
 b.Form("method", "post", "action", "/submit").R(
     b.Label("for", "email").T("Email:"),
-    b.Input("type", "email", "id", "email", "name", "email"),
-    b.Br(),
+    b.Input("type", "email", "id", "email", "name", "email").R(),
+    b.Br().R(),
     b.Label("for", "password").T("Password:"),
-    b.Input("type", "password", "id", "password", "name", "password"),
-    b.Br(),
+    b.Input("type", "password", "id", "password", "name", "password").R(),
+    b.Br().R(),
     b.ButtonClass("btn", "type", "submit").T("Submit"),
 )
 ```
@@ -357,12 +382,12 @@ func (pb PageBody) Render(b *element.Builder) (x any) {
 
 func generatePage() string {
     b := element.B()
-    b.HtmlPage(
-        "body { font-family: sans-serif; }",  // CSS
-        "<title>My Page</title>",              // Head content (raw HTML), minus the '<style>' tag
+    // HtmlPage returns the full HTML string directly
+    return b.HtmlPage(
+        "body { font-family: sans-serif; }",  // CSS (inner content of <style>)
+        "<title>My Page</title>",              // Head content (raw HTML), excluding <style>
         PageBody{Title: "Home"},               // Body component
     )
-    return b.String()
 }
 ```
 
@@ -595,6 +620,7 @@ Debug mode detects:
 | Multiple components   | `element.RenderComponents(b, c1, c2)`       |
 | Get HTML string       | `b.String()`                                |
 | Get HTML bytes        | `b.Bytes()`                                 |
+| Pretty-print HTML     | `b.Pretty()`                                |
 | Reset builder         | `b.Reset()`                                 |
 
 ## Links
