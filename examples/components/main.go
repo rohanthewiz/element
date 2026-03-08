@@ -56,8 +56,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	// Build the page
 	b.Html().R(
 		b.Head().R(
-			b.Meta("charset", "utf-8"),
-			b.Meta("name", "viewport", "content", "width=device-width, initial-scale=1"),
+			b.Meta("charset", "utf-8").R(),
+			b.Meta("name", "viewport", "content", "width=device-width, initial-scale=1").R(),
 			b.Title().T("Element Components Demo"),
 			b.Style().T(getStyles()),
 		),

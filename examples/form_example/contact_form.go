@@ -5,6 +5,7 @@ import (
 	"github.com/rohanthewiz/element/components"
 )
 
+
 // EMPTY STRUCT for FORM COMPONENT
 // ContactForm is a stateless component - no data fields needed
 // All form structure and attributes are defined in the Render method
@@ -29,7 +30,7 @@ func (cf ContactForm) Render(b *element.Builder) (x any) {
 		//   placeholder="Name" - hint text shown when field is empty
 		b.Input("type", "text", "name", "sender", "placeholder", "Your name").R(),
 
-		form_field.FormField{
+		components.FormField{
 			Label:       "Email Address",
 			Name:        "email",
 			Type:        "email",

@@ -67,16 +67,14 @@ type ListOfThings struct {
 }
 
 func (l ListOfThings) Render(b *element.Builder) (x any) {
-	t := b.Text
-
 	b.Div("class", "card").R( // wrapper
-		b.H3().R(t(l.Name)),
+		b.H3().T(l.Name),
 
 		b.Wrap(func() {
 			b.Ul().R(
 				element.ForEach(l.Things,
 					func(item string) {
-						b.Li().R(t(item))
+						b.Li().T(item)
 					}),
 			)
 		}),
@@ -86,7 +84,7 @@ func (l ListOfThings) Render(b *element.Builder) (x any) {
 				b.Ul().R(
 					element.ForEach(l.Numbers,
 						func(number float64) {
-							b.Li().R(b.F("%0.2f", number))
+							b.Li().F("%0.2f", number)
 						}),
 				)
 			}
@@ -121,7 +119,7 @@ func rootHandler(c rweb.Context) error {
 				b.Hr().R(),
 
 				b.P("style", "font-weight:bold").R(
-					b.T("Hello there big world!"), b.Br(),
+					b.T("Hello there big world!"), b.Br().R(),
 					b.F("%s", time.Now().String()),
 				),
 				b.Wrap(func() {

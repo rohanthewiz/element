@@ -457,7 +457,7 @@ func (f FormField) Render(b *element.Builder) (x any) {
 			if f.Required {
 				attrs = append(attrs, "required", "required")
 			}
-			b.Input(attrs...)
+			b.Input(attrs...).R()
 			return
 		}(),
 		// Error message

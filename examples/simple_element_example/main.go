@@ -157,7 +157,7 @@ func generateHTML(animals []string, colors []string) string {
 				b.P().R(
 					b.T("ABC Company"),
 					// Self-closing tags like <br> don't require R() or T(), but if unsure if an element is self-closing use R() anyway and it will do the right thing.
-					b.Br(),
+					b.Br().R(),
 					// Wrap allows arbitrary Go code to generate content
 					b.Wrap(func() {
 						// Generate comma-separated numbers programmatically

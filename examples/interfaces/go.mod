@@ -7,4 +7,4 @@ require (
 	github.com/rohanthewiz/rweb v0.1.21-0.20250726222422-cf0b26f60f9d
 )
 
-require github.com/rohanthewiz/serr v1.2.20 // indirect
+require github.com/rohanthewiz/serr v1.3.0 // indirect

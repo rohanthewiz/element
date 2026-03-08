@@ -71,14 +71,14 @@ func regularHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Write the response
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(b.String()))
+	w.Write(b.Bytes())
 }
 
 // renderPage builds a sample HTML page with the given title and message.
 func renderPage(b *element.Builder, title, message string) {
 	b.Html().R(
 		b.Head().R(
-			b.Meta("charset", "utf-8"),
+			b.Meta("charset", "utf-8").R(),
 			b.Title().T(title),
 			b.Style().T(`
 				body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
@@ -157,7 +157,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	b.Html().R(
 		b.Head().R(
-			b.Meta("charset", "utf-8"),
+			b.Meta("charset", "utf-8").R(),
 			b.Title().T("Builder Pool Example"),
 			b.Style().T(`
 				body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
@@ -224,7 +224,7 @@ ab -n 10000 -c 100 http://localhost:8080/regular`),
 	)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(b.String()))
+	w.Write(b.Bytes())
 }
 
 // statsHandler shows memory statistics.
@@ -240,9 +240,9 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 
 	b.Html().R(
 		b.Head().R(
-			b.Meta("charset", "utf-8"),
+			b.Meta("charset", "utf-8").R(),
 			b.Title().T("Memory Statistics"),
-			b.Meta("http-equiv", "refresh", "content", "5"),
+			b.Meta("http-equiv", "refresh", "content", "5").R(),
 			b.Style().T(`
 				body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
 				h1 { color: #333; }

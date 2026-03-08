@@ -2,9 +2,7 @@ github.com/rohanthewiz/assert v0.1.2 h1:coi0nUTAuqgpxoa7THQynDnBKUzV9Bid+tNaocUk
 github.com/rohanthewiz/assert v0.1.2/go.mod h1:Xix0OMMRN0aGkE207Wk5GJk0eWlpcNGph0+kYpuq+vQ=
 github.com/rohanthewiz/element v0.5.5-0.20251213020556-28fe7777520b h1:BaHddT5EbaE+0XDDIJvVUyxmXKE9Fsv2+HNg0V21RCA=
 github.com/rohanthewiz/element v0.5.5-0.20251213020556-28fe7777520b/go.mod h1:cA57S9UGRSaWrMmGC1M+8QCQw/y8kgODiBB0KEwIyzo=
-github.com/rohanthewiz/rweb v0.1.21-0.20250726222422-cf0b26f60f9d h1:l1bIfM9AKtBSbHx4nkwlsCii7JA+CPlwMihXLE5Oa+M=
-github.com/rohanthewiz/rweb v0.1.21-0.20250726222422-cf0b26f60f9d/go.mod h1:SdkvSM89cA18qlEm6oh8o7CpKaOCWgdNBzPeiF6I/As=
 github.com/rohanthewiz/rweb v0.1.21-0.20251212221405-68035af7d9e4 h1:ynAVUyCSK1XS27d5Ocp9sdDO+Y+/RDwZQ96Lv9FahEA=
 github.com/rohanthewiz/rweb v0.1.21-0.20251212221405-68035af7d9e4/go.mod h1:esRbqdso5FllxreXnmoRNz3XJv4Otr2OIDUX81wRr0c=
-github.com/rohanthewiz/serr v1.2.20 h1:/oMu0SQ5LjN7b3Tl8uKcJRlptpqQyRJbyV01G8ZgGNw=
-github.com/rohanthewiz/serr v1.2.20/go.mod h1:WYBghPccoTAUknotbanGZzWnIFREXYI5ULwf5sjznxY=
+github.com/rohanthewiz/serr v1.3.0 h1:gCKIHw0XFOmPifLq0oocx5RDi6iT7AxzVGT+9z3liO4=
+github.com/rohanthewiz/serr v1.3.0/go.mod h1:l01AbjXw1zP0kxe5tX5s/sADHiBbl0Rwfo/igde4b88=
