@@ -63,7 +63,7 @@ func (b *Builder) T(strs ...string) (x any) {
 // Wrap allows some Go code inside a render tree, so some logic can be performed in the process of rendering
 // Example:
 //
-//		b, _, t := Vars()
+//		b := NewBuilder()
 //	 	isEvening := true
 //
 //		b.Div().R(

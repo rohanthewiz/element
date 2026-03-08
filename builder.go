@@ -40,7 +40,7 @@ func (b *Builder) WriteString(s string) (err error) {
 
 // WriteBytes writes bytes directly to the string builder
 func (b *Builder) WriteBytes(byts []byte) (err error) {
-	_, _ = b.s.Write(byts)
+	_, err = b.s.Write(byts)
 	return
 }
 

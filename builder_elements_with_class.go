@@ -234,6 +234,24 @@ func (b *Builder) H4Class(class string, attrPairs ...string) Element {
 	return New(b.s, "h4", append([]string{"class", class}, attrPairs...)...)
 }
 
+// H5Class creates a fifth-level heading element with a class
+//
+// Example:
+//
+//	b.H5Class("detail-title")
+func (b *Builder) H5Class(class string, attrPairs ...string) Element {
+	return New(b.s, "h5", append([]string{"class", class}, attrPairs...)...)
+}
+
+// H6Class creates a sixth-level heading element with a class
+//
+// Example:
+//
+//	b.H6Class("fine-print-title")
+func (b *Builder) H6Class(class string, attrPairs ...string) Element {
+	return New(b.s, "h6", append([]string{"class", class}, attrPairs...)...)
+}
+
 // HrClass creates a horizontal rule element with a class
 //
 // Example:
@@ -630,13 +648,9 @@ func (b *Builder) DialogClass(class string, attrPairs ...string) Element {
 	return New(b.s, "dialog", append([]string{"class", class}, attrPairs...)...)
 }
 
-// FieldsetClass creates a container for related form elements with a class
-//
-// Example:
-//
-//	b.FieldsetClass("form-group", "name", "personal-info")
+// Deprecated: use FieldSetClass instead
 func (b *Builder) FieldsetClass(class string, attrPairs ...string) Element {
-	return New(b.s, "fieldset", append([]string{"class", class}, attrPairs...)...)
+	return b.FieldSetClass(class, attrPairs...)
 }
 
 // FigCaptionClass creates a caption for a figure element with a class

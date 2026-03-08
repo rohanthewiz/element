@@ -195,6 +195,18 @@ func TestElementsWithClass(t *testing.T) {
 			elementTag: "h4",
 			className:  "minor-heading",
 		},
+		// H5 tag tests
+		{
+			name:       "H5Class with only class",
+			elementTag: "h5",
+			className:  "detail-heading",
+		},
+		// H6 tag tests
+		{
+			name:       "H6Class with only class",
+			elementTag: "h6",
+			className:  "fine-heading",
+		},
 		// Hr tag tests
 		{
 			name:       "HrClass with only class",
@@ -661,6 +673,18 @@ func runElementWithClassTest(t *testing.T, tc testElementWithClassCase) {
 			el = b.H4Class(tc.className, tc.additionalArgs...)
 		} else {
 			el = b.H4Class(tc.className)
+		}
+	case "h5":
+		if len(tc.additionalArgs) > 0 {
+			el = b.H5Class(tc.className, tc.additionalArgs...)
+		} else {
+			el = b.H5Class(tc.className)
+		}
+	case "h6":
+		if len(tc.additionalArgs) > 0 {
+			el = b.H6Class(tc.className, tc.additionalArgs...)
+		} else {
+			el = b.H6Class(tc.className)
 		}
 	case "hr":
 		if len(tc.additionalArgs) > 0 {

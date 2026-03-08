@@ -43,6 +43,8 @@ func TestHtmlElements(t *testing.T) {
 		{name: "H2", function: func(b *Builder) Element { return b.H2() }, want: "<h2.*></h2>"},
 		{name: "H3", function: func(b *Builder) Element { return b.H3() }, want: "<h3.*></h3>"},
 		{name: "H4", function: func(b *Builder) Element { return b.H4() }, want: "<h4.*></h4>"},
+		{name: "H5", function: func(b *Builder) Element { return b.H5() }, want: "<h5.*></h5>"},
+		{name: "H6", function: func(b *Builder) Element { return b.H6() }, want: "<h6.*></h6>"},
 		{name: "Hr", function: func(b *Builder) Element { return b.Hr() }, want: "<hr.*>"},
 		{name: "Ol", function: func(b *Builder) Element { return b.Ol() }, want: "<ol.*></ol>"},
 		{name: "Ul", function: func(b *Builder) Element { return b.Ul() }, want: "<ul.*></ul>"},

@@ -293,6 +293,24 @@ func (b *Builder) H4(attrPairs ...string) Element {
 	return New(b.s, "h4", attrPairs...)
 }
 
+// H5 creates a fifth-level heading element
+//
+// Example:
+//
+//	b.H5("class", "detail-title")
+func (b *Builder) H5(attrPairs ...string) Element {
+	return New(b.s, "h5", attrPairs...)
+}
+
+// H6 creates a sixth-level heading element
+//
+// Example:
+//
+//	b.H6("class", "fine-print-title")
+func (b *Builder) H6(attrPairs ...string) Element {
+	return New(b.s, "h6", attrPairs...)
+}
+
 // Hr creates a horizontal rule (line) element
 //
 // Example:
@@ -730,13 +748,9 @@ func (b *Builder) Dialog(attrPairs ...string) Element {
 	return New(b.s, "dialog", attrPairs...)
 }
 
-// Fieldset creates a container for grouping related form elements
-//
-// Example:
-//
-//	b.Fieldset("name", "personal-info", "class", "form-group")
+// Deprecated: use FieldSet instead
 func (b *Builder) Fieldset(attrPairs ...string) Element {
-	return New(b.s, "fieldset", attrPairs...)
+	return b.FieldSet(attrPairs...)
 }
 
 // FigCaption creates a caption for a figure element

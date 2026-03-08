@@ -112,7 +112,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
 		fmt.Println(msg)
 
 		// Still return HTML for backward compatibility
-		b, _, _ := Vars()
+		b := NewBuilder()
 		b.Body().R(
 			b.P("style", "font-weight:bold").T(msg),
 		)
@@ -172,7 +172,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
 		// TextOnly mode - just return empty string since we already printed to terminal
 		return ""
 	} else {
-		b, _, _ := Vars()
+		b := NewBuilder()
 
 		// Build markdown content
 		var markdownContent bytes.Buffer
