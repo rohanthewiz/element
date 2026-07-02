@@ -14,8 +14,9 @@ Element generates HTML nicely, and simply from Go code. Everything is pure compi
     - You rip at Go speed the whole time
 2. Server-side by nature -- not an after thought
 3. Zero dependencies, (yep, no Node and friends), so you don't add vulnerabilities and complexities into your critical projects!
-4. Buffer pools for super-high traffic situations
+4. Buffer pools and component caching for super-high traffic situations
 5. Easy to use with Go intellisense, and natural nesting paralleling the HTML tree structure
+6. Deterministic output -- attributes render in the order you pass them
 
 ## Usage
 
@@ -368,16 +369,88 @@ Here's what the formatted output can look like:
 </html>
 ```
 
+## Performance
+
+### Builder pooling
+
+For high-throughput HTTP handlers, acquire builders from the built-in pool to reduce GC pressure:
+
+```go
+func handler(w http.ResponseWriter, r *http.Request) {
+	b := element.AcquireBuilder()
+	defer element.ReleaseBuilder(b)
+
+	b.Html().R(
+		b.Body().R(
+			b.H1().T("Hello"),
+		),
+	)
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write(b.Bytes()) // Bytes() avoids a string conversion
+}
+```
+
+### Component caching
+
+Static components (nav bars, footers, icon sets) are often rebuilt on every request
+even though their output never changes. Wrap them with `element.Cached` to render
+once and replay the cached bytes on every subsequent render -- about 20x faster
+with a single allocation:
+
+```go
+type Footer struct{}
+
+func (f Footer) Render(b *element.Builder) (x any) {
+	b.DivClass("footer").T("About | Privacy | Logout")
+	return
+}
+
+// Package level: shared across requests; Footer renders exactly once
+var cachedFooter = element.Cached(Footer{})
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	b := element.AcquireBuilder()
+	defer element.ReleaseBuilder(b)
+
+	b.Body().R(
+		b.H1().T("Fresh dynamic content"),
+		cachedFooter.Render(b), // replayed from cache after the first render
+	)
+	w.Write(b.Bytes())
+}
+```
+
+Notes on `Cached`:
+- Safe for concurrent use
+- In debug mode the cache is bypassed so element concern tracking still works
+- There is no invalidation -- only cache components whose output never changes
+- See `examples/cached_component` for a runnable demo with a render counter
+
+Benchmarks (Apple M1 Pro):
+
+| Benchmark | ns/op | allocs/op |
+|---|---|---|
+| Div with two spans | ~574 | 12 |
+| Div with two spans, pooled builder | ~443 | 7 |
+| Footer component, uncached | ~879 | 13 |
+| Footer component, cached | ~44 | 1 |
+
 ## Hints
 - Use Builder to create elements -- this is the new way that comes with good benefits.
 - You can create elements directly with Element, but there should be no need to do that now. Using Builder provides more features including convenience (less typing) and great debugging.
 - Single tag elements (like `br`) don't need to call `.R()`, however most other elements are dual tag and so must call `.R()`
 - Practically, just include `.R()` for all elements unless you are terminating an element with just pure text, in which case you can terminate with `.T()` or `.F()`.
 - Use `go fmt` to format go code as normal
+- Wrap static components with `element.Cached()` and use `element.AcquireBuilder()` in hot paths (see Performance above)
 - Embrace the full power, safety and speed of Go. Say goodbye to the jungle of frontend frameworks!
 
 ## Enabling debugging
 - Example uses rweb - `go get github.com/rohanthewiz/rweb`
+- Debug mode adds `data-ele-id` attributes and captures caller file:line info (stack walks),
+  so it is noticeably slower -- use it during development only. In normal mode this overhead
+  is skipped entirely. Debug mode is safe with concurrent rendering, and `element.Cached`
+  components bypass their cache while debugging so concern tracking still works.
 
 ### Turn Element debugging on
 
