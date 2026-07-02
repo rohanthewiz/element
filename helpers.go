@@ -6,11 +6,15 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 // Seed once, e.g., globally or pass the *rand.Rand instance
 var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+// seededRandLock protects seededRand which is not safe for concurrent use
+var seededRandLock sync.Mutex
 
 // Satisfy the Stringer interface
 func (el Element) String() string {
@@ -34,16 +38,27 @@ func (el Element) IsSingleTag() bool {
 	return false
 }
 
-// stringlistToMap generates a map from a list of key values
-// Even number of items required or results may be fatal
-func stringlistToMap(e Element, items ...string) map[string]string {
-	m := map[string]string{}
+// lowerName lowercases an element name, avoiding an allocation
+// when the name is already lowercase (the common case)
+func lowerName(s string) string {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 'A' && s[i] <= 'Z' {
+			return strings.ToLower(s)
+		}
+	}
+	return s
+}
 
+// normalizeAttrPairs validates a list of key values into attribute pairs,
+// preserving insertion order so rendered output is deterministic.
+// Duplicate keys keep their first position with the last value winning.
+// Even number of items required or the last item is dropped
+func normalizeAttrPairs(e Element, items []string) []string {
 	if len(items)%2 != 0 {
 		issue := fmt.Sprintf(`Even number of arguments required for Element attributes.
 Args: %q dropping %q`, items, items[len(items)-1])
 
-		if debugMode {
+		if IsDebugMode() {
 			fmt.Printf("![%s] %s\n", e.id, issue)
 			e.issues = append(e.issues, issue)
 			concerns.UpsertConcern(concernOther, e)
@@ -52,19 +67,27 @@ Args: %q dropping %q`, items, items[len(items)-1])
 		items = items[:len(items)-1] // drop the last item
 	}
 
-	if debugMode {
-		items = append(items, "data-ele-id", e.id) // Add the data-ele-id attribute
+	pairs := make([]string, 0, len(items)+2)
+	for i := 0; i+1 < len(items); i += 2 {
+		pairs = upsertPair(pairs, items[i], items[i+1])
 	}
 
-	key := ""
-	for i, item := range items {
-		if i%2 == 0 {
-			key = item
-		} else {
-			m[key] = item
+	if IsDebugMode() {
+		pairs = upsertPair(pairs, "data-ele-id", e.id) // Add the data-ele-id attribute
+	}
+	return pairs
+}
+
+// upsertPair appends a key/value pair, or updates the value in place
+// if the key is already present
+func upsertPair(pairs []string, key, value string) []string {
+	for i := 0; i+1 < len(pairs); i += 2 {
+		if pairs[i] == key {
+			pairs[i+1] = value
+			return pairs
 		}
 	}
-	return m
+	return append(pairs, key, value)
 }
 
 /*// genRandString is a fast generator of a random string
@@ -81,7 +104,9 @@ func genRandString(length int) string {
 // Length specifies the number of bytes to generate, however output is trimmed of any "=" padding
 func genRandomId(length int) string {
 	byts := make([]byte, length)
+	seededRandLock.Lock()
 	seededRand.Read(byts) // Use the seeded generator
+	seededRandLock.Unlock()
 	b64 := base64.URLEncoding.EncodeToString(byts)
 	return strings.TrimRight(b64, "=") // Remove any padding
 }

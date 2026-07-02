@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 const (
@@ -20,19 +21,19 @@ var tableJS string
 //go:embed assets/debug_table.css
 var tableCSS string
 
-var debugMode = false // we will set to true to enable debug mode
+var debugMode atomic.Bool // set to true to enable debug mode
 
 // DebugSet sets the debug mode to true.
 func DebugSet() {
-	debugMode = true
+	debugMode.Store(true)
 }
 
 func IsDebugMode() bool {
-	return debugMode
+	return debugMode.Load()
 }
 
 func DebugClear() {
-	debugMode = false
+	debugMode.Store(false)
 	concerns.Clear() // Clear the concerns map
 }
 
@@ -41,19 +42,31 @@ func DebugClearIssues() {
 	concerns.Clear()
 }
 
-var concerns = elementConcerns{cmap: make(map[string]Element, 8)}
+var concerns = &elementConcerns{cmap: make(map[string]Element, 8)}
 
 type elementConcerns struct {
 	cmap map[string]Element
 	lock sync.Mutex // mutex to protect the map
 }
 
+// snapshot returns a copy of the concerns map, taken under the lock
+func (con *elementConcerns) snapshot() map[string]Element {
+	con.lock.Lock()
+	defer con.lock.Unlock()
+
+	m := make(map[string]Element, len(con.cmap))
+	for k, v := range con.cmap {
+		m[k] = v
+	}
+	return m
+}
+
 // UpsertConcern adds a concern to the concerns map in the form of an element and a possible issue.
 // If the concernType is "open_tag", it will just add the element to the map.
 // If the concernType is "closed_tag", it will check if the element exists in the map and remove it.
 // If the concernType is anything else, it will append the issue to the element's issues.
-func (con elementConcerns) UpsertConcern(concernType string, el Element) {
-	if !debugMode {
+func (con *elementConcerns) UpsertConcern(concernType string, el Element) {
+	if !IsDebugMode() {
 		return
 	}
 
@@ -96,7 +109,7 @@ func (con elementConcerns) UpsertConcern(concernType string, el Element) {
 }
 
 // Clear clears the concerns map
-func (con elementConcerns) Clear() {
+func (con *elementConcerns) Clear() {
 	con.lock.Lock()
 	defer con.lock.Unlock() // Ensure the lock is released after the function returns
 	clear(con.cmap)
@@ -107,7 +120,7 @@ type DebugOptions struct {
 }
 
 func DebugShow(opts ...DebugOptions) (out string) {
-	if !debugMode {
+	if !IsDebugMode() {
 		msg := "Debug mode is not enabled. Set debug mode to true to see element concerns."
 		fmt.Println(msg)
 
@@ -120,12 +133,12 @@ func DebugShow(opts ...DebugOptions) (out string) {
 	}
 
 	// Pause Debug mode so we can check the current concerns
-	debugMode = false
-	defer func() {
-		debugMode = true // Restore debug mode after checking
-	}()
+	debugMode.Store(false)
+	defer debugMode.Store(true) // Restore debug mode after checking
 
-	if len(concerns.cmap) <= 0 {
+	currentConcerns := concerns.snapshot()
+
+	if len(currentConcerns) <= 0 {
 		msg := "No element concerns found."
 		fmt.Println(msg)
 		return msg // No concerns to report
@@ -135,7 +148,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
 	seenIssues := make(map[string]bool)
 	dedupedConcerns := make(map[string]Element)
 
-	for key, el := range concerns.cmap {
+	for key, el := range currentConcerns {
 		dedupKey := buildDedupKey(el, key)
 		if !seenIssues[dedupKey] {
 			seenIssues[dedupKey] = true
@@ -187,11 +200,7 @@ func DebugShow(opts ...DebugOptions) (out string) {
 				issuesText = fmt.Sprintf("**%s** tag not closed", el.name)
 			} else {
 				if len(el.issues) > 0 {
-					issueList := make([]string, len(el.issues))
-					for i, issue := range el.issues {
-						issueList[i] = issue
-					}
-					issuesText = strings.Join(issueList, ", ")
+					issuesText = strings.Join(el.issues, ", ")
 				}
 			}
 			markdownContent.WriteString(fmt.Sprintf("| %s | %s | %s |\n", key, el.detailsHtml(), issuesText))

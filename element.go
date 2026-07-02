@@ -3,7 +3,6 @@ package element
 import (
 	"bytes"
 	"fmt"
-	"strings"
 
 	"github.com/rohanthewiz/serr"
 )
@@ -20,9 +19,9 @@ type Element struct {
 	id   string // id is the unique element id
 	// seq        int    // seq holds the order of the element - order is not guaranteed, but it is useful for debugging
 	arrayAttrs []string
-	attrs      map[string]string
-	function   string // function in which the element is created
-	location   string // file:line_nbr of the element creation
+	attrPairs  []string // key/value attribute pairs in insertion order (deterministic output)
+	function   string   // function in which the element is created
+	location   string   // file:line_nbr of the element creation
 	sb         *bytes.Buffer
 	issues     []string // issues can hold any issues with the element
 }
@@ -37,19 +36,20 @@ func New(s *bytes.Buffer, el string, attrs ...string) (e Element) {
 		fmt.Println("Please supply a pointer to a string builder to element.New():", el)
 	}
 
-	e = Element{sb: s, name: strings.ToLower(el)}
+	e = Element{sb: s, name: lowerName(el)}
 	e.id = e.name
 	if IsDebugMode() {
 		e.id += "-" + genRandomId(6) // generate a random id for the element
-	}
 
-	e.function = serr.FunctionName(serr.FrameLevels.FrameLevel3)
-	e.location = serr.FunctionLoc(serr.FrameLevels.FrameLevel3)
+		// Stack walks are expensive, so only capture caller info when debugging
+		e.function = serr.FunctionName(serr.FrameLevels.FrameLevel3)
+		e.location = serr.FunctionLoc(serr.FrameLevels.FrameLevel3)
+	}
 
 	if e.IsText() {
 		e.arrayAttrs = attrs // plain text will use the original list
 	} else {
-		e.attrs = stringlistToMap(e, attrs...)
+		e.attrPairs = normalizeAttrPairs(e, attrs)
 	}
 
 	e.writeOpeningTag() // write opening tag right away
@@ -63,11 +63,10 @@ func New(s *bytes.Buffer, el string, attrs ...string) (e Element) {
 }
 
 func (el Element) HasAttribute(key, value string) bool {
-	if el.attrs == nil {
-		return false
-	}
-	if val, ok := el.attrs[key]; ok && val == value {
-		return true
+	for i := 0; i+1 < len(el.attrPairs); i += 2 {
+		if el.attrPairs[i] == key && el.attrPairs[i+1] == value {
+			return true
+		}
 	}
 	return false
 }
@@ -168,18 +167,25 @@ func (el Element) writeOpeningTag() {
 				el.sb.WriteString(a)
 			}
 		} else {
-			el.sb.WriteString("<" + el.name)
-			for k, v := range el.attrs {
-				el.sb.WriteString(fmt.Sprintf(` %s="%s"`, k, v))
+			el.sb.WriteByte('<')
+			el.sb.WriteString(el.name)
+			for i := 0; i+1 < len(el.attrPairs); i += 2 {
+				el.sb.WriteByte(' ')
+				el.sb.WriteString(el.attrPairs[i])
+				el.sb.WriteString(`="`)
+				el.sb.WriteString(el.attrPairs[i+1])
+				el.sb.WriteByte('"')
 			}
-			el.sb.WriteString(">")
+			el.sb.WriteByte('>')
 		}
 	}
 }
 
 func (el Element) close() {
 	if !el.IsSingleTag() {
-		el.sb.WriteString("</" + el.name + ">")
+		el.sb.WriteString("</")
+		el.sb.WriteString(el.name)
+		el.sb.WriteByte('>')
 	}
 }
 

@@ -8,3 +8,8 @@
 # Ignore binaries
 element
 examples/main
+examples/builder_pool/builder_pool
+examples/components/components
+examples/form_example/form_example
+examples/interfaces/ex_interfaces
+examples/simple_element_example/simple_element_example
