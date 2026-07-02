@@ -17,8 +17,9 @@ Element is a zero-dependency Go library that generates HTML programmatically by 
     - Compiles single-pass with the rest of your Go program -- no extra annotations or build steps
     - All of Go is available at any point in your code
 2. Zero dependencies
-3. Buffer pools for super-high traffic situations
+3. Buffer pools and component caching for super-high traffic situations
 4. Go's formatting naturally follows the HTML tree structure
+5. Deterministic output: attributes render in the order you pass them
 
 ## Installation
 
@@ -193,6 +194,7 @@ b.ButtonClass("btn primary")      // <button class="btn primary">
 | `element.ForEach(slice, func(item))`    | Generic iteration helper                 |
 | `element.RenderComponents(b, comps...)` | Render multiple components               |
 | `b.RenderComps(comps...)`               | Builder method equivalent of above       |
+| `element.Cached(comp)`                  | Render-once wrapper for static components |
 
 ### Output Methods
 
@@ -217,6 +219,14 @@ b.Div("id", "main", "class", "container", "data-role", "content").R()
 
 b.A("href", "/about", "class", "nav-link").T("About Us")
 // Output: <a href="/about" class="nav-link">About Us</a>
+```
+
+Attributes render in the order passed (deterministic output — safe for exact-string tests).
+If a key is repeated, the last value wins at the key's first position:
+
+```go
+b.Div("class", "one", "id", "main", "class", "two").R()
+// Output: <div class="two" id="main"></div>
 ```
 
 ### Mixed Content (Text and Elements)
@@ -312,6 +322,44 @@ b.Div().R(
     card.Render(b),
 )
 ```
+
+### Component Caching
+
+Wrap a **static** component with `element.Cached` to render it once and replay
+the cached bytes on every subsequent render (~20x faster, single allocation).
+Ideal for nav bars, footers, and other fragments that never change:
+
+```go
+type Footer struct{}
+
+func (f Footer) Render(b *element.Builder) (x any) {
+    b.FooterClass("footer").R(
+        b.P().T("Built with Element"),
+    )
+    return
+}
+
+// Package level: shared across requests; underlying component renders once
+var cachedFooter = element.Cached(Footer{})
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    b := element.AcquireBuilder()
+    defer element.ReleaseBuilder(b)
+
+    b.Body().R(
+        b.H1().T("Fresh dynamic content"),
+        cachedFooter.Render(b), // replayed from cache after the first render
+    )
+    w.Write(b.Bytes())
+}
+```
+
+Notes:
+
+- Safe for concurrent use
+- In debug mode the cache is bypassed so concern tracking still works
+- No invalidation — if the output can change, don't cache it
+- See `examples/cached_component` for a runnable demo
 
 ### Building Tables
 
@@ -474,6 +522,17 @@ w.Write([]byte(b.String()))
 w.Write(b.Bytes())
 ```
 
+### ❌ Caching Dynamic Components
+
+```go
+// WRONG: Cached renders once and reuses the bytes forever --
+// this timestamp will be frozen at the first render
+var clock = element.Cached(Clock{}) // Clock renders time.Now()
+
+// CORRECT: Only cache components whose output never changes
+var footer = element.Cached(Footer{})
+```
+
 ### ❌ Forgetting to Reset Reused Builders
 
 ```go
@@ -602,6 +661,15 @@ Debug mode detects:
 - Children on self-closing elements
 - Unwrapped text content
 
+Debug mode notes:
+
+- Elements get a `data-ele-id` attribute and caller file:line info is captured
+  (stack walks), so debug mode is noticeably slower — enable it during
+  development only. In normal mode this overhead is skipped entirely.
+- `element.Cached` components bypass their cache in debug mode so concern
+  tracking still works.
+- Debug mode is safe to use with concurrent rendering.
+
 ## Quick Reference
 
 | Task                  | Code                                        |
@@ -618,6 +686,7 @@ Debug mode detects:
 | Iterate slice         | `element.ForEach(items, func(i T) { ... })` |
 | Render component      | `comp.Render(b)`                            |
 | Multiple components   | `element.RenderComponents(b, c1, c2)`       |
+| Cache static component | `cached := element.Cached(comp)`           |
 | Get HTML string       | `b.String()`                                |
 | Get HTML bytes        | `b.Bytes()`                                 |
 | Pretty-print HTML     | `b.Pretty()`                                |
