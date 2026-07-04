@@ -233,3 +233,17 @@ func TestPagination_Render_PageRangeAtEnd(t *testing.T) {
 		t.Errorf("Should show page 9, got: %s", got)
 	}
 }
+
+func TestPagination_AriaCurrentAndRel(t *testing.T) {
+	b := element.NewBuilder()
+	Pagination{CurrentPage: 3, TotalPages: 10, BaseURL: "/page/%d", Class: "compact"}.Render(b)
+	got := b.String()
+
+	for _, want := range []string{
+		`aria-current="page"`, `rel="prev"`, `rel="next"`, `class="pagination compact"`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("Pagination.Render() missing %q\ngot: %s", want, got)
+		}
+	}
+}

@@ -33,11 +33,17 @@ func (bc Breadcrumb) Render(b *element.Builder) (x any) {
 
 					b.LiClass("breadcrumb-item").R(
 						func() (x any) {
-							if isLast || item.Href == "" {
+							switch {
+							case isLast:
 								// Current page - no link
 								b.SpanClass("breadcrumb-current", "aria-current", "page").T(item.Label)
-							} else {
+							case item.Href == "":
+								// Unlinked intermediate item
+								b.SpanClass("breadcrumb-current").T(item.Label)
+							default:
 								b.A("href", item.Href).T(item.Label)
+							}
+							if !isLast {
 								b.SpanClass("breadcrumb-separator", "aria-hidden", "true").T(" " + separator + " ")
 							}
 							return

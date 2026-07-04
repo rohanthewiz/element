@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/rohanthewiz/element"
 )
@@ -17,6 +18,7 @@ type Pagination struct {
 	BaseURL     string // URL pattern with %d placeholder for page number
 	ShowFirst   bool   // Show "First" link
 	ShowLast    bool   // Show "Last" link
+	Class       string // Additional CSS classes
 }
 
 // Render implements the element.Component interface.
@@ -25,7 +27,12 @@ func (p Pagination) Render(b *element.Builder) (x any) {
 		return // Don't render if only one page
 	}
 
-	b.NavClass("pagination", "aria-label", "Page navigation").R(
+	navClass := "pagination"
+	if p.Class != "" {
+		navClass += " " + p.Class
+	}
+
+	b.NavClass(navClass, "aria-label", "Page navigation").R(
 		b.UlClass("pagination-list").R(
 			// First page link
 			func() (x any) {
@@ -40,7 +47,7 @@ func (p Pagination) Render(b *element.Builder) (x any) {
 			func() (x any) {
 				if p.CurrentPage > 1 {
 					b.Li().R(
-						b.AClass("pagination-link", "href", fmt.Sprintf(p.BaseURL, p.CurrentPage-1)).T("‹ Prev"),
+						b.AClass("pagination-link", "href", fmt.Sprintf(p.BaseURL, p.CurrentPage-1), "rel", "prev").T("‹ Prev"),
 					)
 				}
 				return
@@ -55,11 +62,11 @@ func (p Pagination) Render(b *element.Builder) (x any) {
 					if i == p.CurrentPage {
 						liClass += " active"
 						b.LiClass(liClass).R(
-							b.SpanClass("pagination-current").T(fmt.Sprintf("%d", i)),
+							b.SpanClass("pagination-current", "aria-current", "page").T(strconv.Itoa(i)),
 						)
 					} else {
 						b.LiClass(liClass).R(
-							b.AClass("pagination-link", "href", fmt.Sprintf(p.BaseURL, i)).T(fmt.Sprintf("%d", i)),
+							b.AClass("pagination-link", "href", fmt.Sprintf(p.BaseURL, i)).T(strconv.Itoa(i)),
 						)
 					}
 				}
@@ -69,7 +76,7 @@ func (p Pagination) Render(b *element.Builder) (x any) {
 			func() (x any) {
 				if p.CurrentPage < p.TotalPages {
 					b.Li().R(
-						b.AClass("pagination-link", "href", fmt.Sprintf(p.BaseURL, p.CurrentPage+1)).T("Next ›"),
+						b.AClass("pagination-link", "href", fmt.Sprintf(p.BaseURL, p.CurrentPage+1), "rel", "next").T("Next ›"),
 					)
 				}
 				return

@@ -142,3 +142,20 @@ func TestBreadcrumb_Render_SeparatorAriaHidden(t *testing.T) {
 		t.Errorf("Separator should have aria-hidden=true, got: %s", got)
 	}
 }
+
+func TestBreadcrumb_MiddleItemWithoutHref(t *testing.T) {
+	b := element.NewBuilder()
+	Breadcrumb{Items: []BreadcrumbItem{
+		{Label: "Home", Href: "/"},
+		{Label: "Archive", Href: ""}, // unlinked, but not the current page
+		{Label: "2026", Href: ""},
+	}}.Render(b)
+	got := b.String()
+
+	if strings.Count(got, `aria-current="page"`) != 1 {
+		t.Errorf("only the last item should have aria-current, got: %s", got)
+	}
+	if strings.Count(got, "breadcrumb-separator") != 2 {
+		t.Errorf("expected a separator after each non-last item, got: %s", got)
+	}
+}

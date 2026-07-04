@@ -369,6 +369,46 @@ Here's what the formatted output can look like:
 </html>
 ```
 
+## Ready-made Components
+
+The `components` package ships a set of reusable, dependency-free components:
+
+- **Interactive, zero JavaScript** — `Tabs` (CSS-only radio pattern), `Accordion`
+  (native `<details>`/`<summary>` with optional exclusive-open), `Modal`
+  (native Popover API: the browser handles open/close, Esc, and click-outside),
+  and `Dropdown` (native `<details>` disclosure menu)
+- **Data display** — `Table` (column alignment, caption, footer rows, empty
+  message, per-row class hook, and cells that can hold any `element.Component`),
+  `Card`, `DefinitionList`, `Badge`, `ProgressBar`
+- **Navigation** — `Nav`, `Breadcrumb`, `Pagination` (with proper
+  `aria-current`/`rel` attributes)
+- **Forms** — `FormField`, `SelectField`, `TextAreaField`, `CheckboxField`,
+  `RadioGroup`, `Button` — labels, required markers, help text, and errors
+  wired up with `aria-describedby`/`aria-invalid`
+
+```go
+import "github.com/rohanthewiz/element/components"
+
+components.Table{
+    Caption: "Q3 user activity",
+    Columns: []components.Column{
+        {Header: "ID", Align: "right"},
+        {Header: "Name"},
+        {Header: "Status", Align: "center"},
+    },
+    Rows: [][]any{
+        // Cells take scalars or any element.Component
+        {1, "Alice", components.Badge{Text: "Active", Type: components.AlertSuccess}},
+    },
+    Striped: true,
+    Hover:   true,
+}.Render(b)
+```
+
+Components emit semantic class names and leave cosmetics to your stylesheet —
+see `examples/components` for a live demo of every component plus a complete
+copy-paste-friendly stylesheet.
+
 ## Performance
 
 ### Builder pooling

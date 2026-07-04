@@ -12,6 +12,21 @@ type Component interface {
 	Render(b *Builder) (x any)
 }
 
+// CompFunc adapts a plain function to the Component interface,
+// similar to http.HandlerFunc. Handy for one-off, inline components:
+//
+//	greeting := element.CompFunc(func(b *element.Builder) (x any) {
+//		b.H1().T("Hello!")
+//		return
+//	})
+//	greeting.Render(b)
+type CompFunc func(b *Builder) (x any)
+
+// Render implements the Component interface
+func (f CompFunc) Render(b *Builder) (x any) {
+	return f(b)
+}
+
 // RenderComponents is a convenience function for rendering a list of components in a tree of elements
 func RenderComponents(b *Builder, comps ...Component) (x any) {
 	for _, comp := range comps {

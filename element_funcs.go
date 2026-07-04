@@ -30,3 +30,17 @@ func ForEach[T any](items []T, each func(item T)) (x any) {
 	}
 	return
 }
+
+// ForEach2 is like ForEach, but also provides the item's index.
+// Example:
+//
+//	items := []string{"item1", "item2"}
+//	ForEach2(items, func(item string, i int) {
+//		b.P().F("%d. %s", i+1, item)
+//	})
+func ForEach2[T any](items []T, each func(item T, index int)) (x any) {
+	for i, itm := range items {
+		each(itm, i)
+	}
+	return
+}

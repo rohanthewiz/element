@@ -208,3 +208,23 @@ func TestFormField_Render_NotRequired(t *testing.T) {
 		t.Errorf("Non-required FormField should not have required span, got: %s", got)
 	}
 }
+
+func TestFormField_AriaAndExtras(t *testing.T) {
+	b := element.NewBuilder()
+	FormField{
+		Label: "Email", Name: "email", ID: "signup-email",
+		Error: "Invalid email", Disabled: true,
+		Attrs: []string{"autocomplete", "off"},
+	}.Render(b)
+	got := b.String()
+
+	for _, want := range []string{
+		`id="signup-email"`, `for="signup-email"`,
+		`aria-invalid="true"`, `aria-describedby="signup-email-error"`,
+		`id="signup-email-error"`, `disabled="disabled"`, `autocomplete="off"`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("FormField.Render() missing %q\ngot: %s", want, got)
+		}
+	}
+}

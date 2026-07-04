@@ -22,10 +22,12 @@ const (
 
 // Alert renders a styled notification message.
 type Alert struct {
-	Type        AlertType // Alert style (info, success, warning, error)
-	Title       string    // Optional title
-	Message     string    // Alert message
-	Dismissible bool      // Whether to show a close button
+	Type        AlertType         // Alert style (info, success, warning, error)
+	Title       string            // Optional title
+	Message     string            // Alert message
+	Body        element.Component // Alternative: render a component as the alert body
+	Dismissible bool              // Whether to show a close button
+	Class       string            // Additional CSS classes
 }
 
 // Render implements the element.Component interface.
@@ -38,6 +40,9 @@ func (a Alert) Render(b *element.Builder) (x any) {
 	if a.Dismissible {
 		alertClass += " alert-dismissible"
 	}
+	if a.Class != "" {
+		alertClass += " " + a.Class
+	}
 
 	b.DivClass(alertClass, "role", "alert").R(
 		// Optional title
@@ -48,8 +53,15 @@ func (a Alert) Render(b *element.Builder) (x any) {
 			}
 			return
 		}(),
-		// Message
-		b.T(a.Message),
+		// Message / body component
+		func() (x any) {
+			if a.Body != nil {
+				a.Body.Render(b)
+			} else {
+				b.T(a.Message)
+			}
+			return
+		}(),
 		// Dismiss button
 		func() (x any) {
 			if a.Dismissible {

@@ -1,6 +1,8 @@
 # Element Components Example
 
-This example demonstrates reusable UI components built with the Element library.
+This example demonstrates the ready-made UI components in
+`github.com/rohanthewiz/element/components` — including the interactive ones
+that need **no JavaScript** (Tabs, Accordion, Modal, Dropdown).
 
 ## Running the Example
 
@@ -13,137 +15,63 @@ Then visit: http://localhost:8080
 
 ## Components Included
 
-### Table Component
+| Component | Highlights |
+|---|---|
+| `Table` | Column alignment/classes, caption, footer rows, empty message, per-row class hook, `element.Component` values in cells, responsive wrapper |
+| `Tabs` | CSS-only radio-button pattern — zero JS; emits its own scoped show/hide rules |
+| `Accordion` | Native `<details>`/`<summary>`; `Exclusive` keeps one section open via the `name` attribute |
+| `Modal` | Native Popover API — browser handles open/close, Esc, click-outside; style the overlay with `.modal::backdrop` |
+| `Dropdown` | Native `<details>` disclosure menu with links and dividers |
+| `Nav`, `Breadcrumb`, `Pagination` | Navigation with proper `aria-current`/`rel` attributes |
+| `Alert`, `Badge`, `Button`, `ProgressBar` | Status and action elements with variant classes |
+| `Card`, `DefinitionList` | Content containers |
+| `FormField`, `SelectField`, `TextAreaField`, `CheckboxField`, `RadioGroup` | Form controls with labels, required markers, help text, and error display wired up with `aria-describedby`/`aria-invalid` |
 
-Renders an HTML table with customizable headers and data rows.
+## Usage Pattern
+
+Import the package and render components inside any element tree:
 
 ```go
-table := Table{
-    Headers:  []string{"ID", "Name", "Status"},
-    Rows:     [][]any{
-        {1, "Alice", "Active"},
-        {2, "Bob", "Pending"},
+import "github.com/rohanthewiz/element/components"
+
+components.Table{
+    Caption: "Q3 user activity",
+    Columns: []components.Column{
+        {Header: "ID", Align: "right"},
+        {Header: "Name"},
+        {Header: "Status", Align: "center"},
     },
-    Striped:  true,
-    Bordered: true,
-}
-
-b.Div().R(
-    table.Render(b),
-)
-```
-
-### Card Component
-
-A styled card container with optional header and footer.
-
-```go
-card := Card{
-    Title:  "My Card",
-    Body:   "Card content goes here.",
-    Footer: "Last updated: Today",
-}
-```
-
-### Nav Component
-
-A navigation bar with links.
-
-```go
-nav := Nav{
-    Brand: "My Site",
-    Items: []NavItem{
-        {Label: "Home", Href: "/", Active: true},
-        {Label: "About", Href: "/about"},
+    Rows: [][]any{
+        // Cells can be scalars or any element.Component
+        {1, "Alice", components.Badge{Text: "Active", Type: components.AlertSuccess}},
     },
-}
+    Striped: true,
+    Hover:   true,
+}.Render(b)
 ```
 
-### Alert Component
+Composition works everywhere a body is accepted — tab panels, accordion
+sections, modal bodies, alert bodies, and table cells all take an
+`element.Component`.
 
-Styled notification messages with different severity levels.
+For one-off inline components, adapt a function with `element.CompFunc`:
 
 ```go
-alert := Alert{
-    Type:        AlertSuccess,
-    Title:       "Success!",
-    Message:     "Your changes have been saved.",
-    Dismissible: true,
-}
+element.CompFunc(func(b *element.Builder) (x any) {
+    b.H1().T("Hello!")
+    return
+})
 ```
 
-### Breadcrumb Component
+## Styling
 
-Navigation breadcrumb trail.
+Components emit semantic class names (`.table`, `.tabs`, `.accordion-item`,
+`.modal`, `.form-field`, ...) and leave the cosmetics to your stylesheet.
+`styles.go` in this example contains a complete, copy-paste-friendly
+stylesheet covering every component.
 
-```go
-breadcrumb := Breadcrumb{
-    Items: []BreadcrumbItem{
-        {Label: "Home", Href: "/"},
-        {Label: "Products", Href: "/products"},
-        {Label: "Current Page", Href: ""},
-    },
-}
-```
-
-### DefinitionList Component
-
-A definition list for term/definition pairs.
-
-```go
-dl := DefinitionList{
-    Items: []Definition{
-        {Term: "API", Definition: "Application Programming Interface"},
-        {Term: "SDK", Definition: "Software Development Kit"},
-    },
-}
-```
-
-### Pagination Component
-
-Page navigation controls.
-
-```go
-pagination := Pagination{
-    CurrentPage: 3,
-    TotalPages:  10,
-    BaseURL:     "/page/%d",
-    ShowFirst:   true,
-    ShowLast:    true,
-}
-```
-
-### FormField Component
-
-Form field with label, input, and optional help/error text.
-
-```go
-field := FormField{
-    Label:       "Email",
-    Name:        "email",
-    Type:        "email",
-    Required:    true,
-    HelpText:    "We'll never share your email.",
-}
-```
-
-## Using Components Together
-
-Render multiple components with `element.RenderComponents`:
-
-```go
-b := element.AcquireBuilder()
-defer element.ReleaseBuilder(b)
-
-b.Div().R(
-    element.RenderComponents(b,
-        nav,
-        breadcrumb,
-        Alert{Type: AlertInfo, Message: "Welcome!"},
-        table,
-    ),
-)
-```
+The only CSS a component generates itself is the structural show/hide rules
+for `Tabs`, which are scoped to that instance's `ID`.
 
 ## Creating Your Own Components
 
@@ -168,4 +96,6 @@ func (m MyComponent) Render(b *element.Builder) (x any) {
 }
 ```
 
-All components in this example have no external dependencies beyond the Element library itself, making them easy to copy and adapt for your own projects.
+Note: component text is written as-is (not HTML-escaped), consistent with the
+core library. Escape untrusted user input (e.g. with `html.EscapeString`)
+before placing it in component fields.

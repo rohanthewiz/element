@@ -15,9 +15,10 @@ type NavItem struct {
 
 // Nav renders a navigation bar with links.
 type Nav struct {
-	Items []NavItem // Navigation items
-	Brand string    // Optional brand/logo text
-	Class string    // Additional CSS classes
+	Items     []NavItem // Navigation items
+	Brand     string    // Optional brand/logo text
+	BrandHref string    // Brand link target (default "/")
+	Class     string    // Additional CSS classes
 }
 
 // Render implements the element.Component interface.
@@ -31,7 +32,11 @@ func (n Nav) Render(b *element.Builder) (x any) {
 		// Brand
 		func() (x any) {
 			if n.Brand != "" {
-				b.AClass("nav-brand", "href", "#").T(n.Brand)
+				brandHref := n.BrandHref
+				if brandHref == "" {
+					brandHref = "/"
+				}
+				b.AClass("nav-brand", "href", brandHref).T(n.Brand)
 			}
 			return
 		}(),
