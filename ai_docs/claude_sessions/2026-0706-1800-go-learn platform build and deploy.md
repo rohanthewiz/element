@@ -110,7 +110,33 @@ verify/{verify,one}.mjs · serve/main.go · build.sh · README.md ·
 .github/workflows/pages.yml · .gitignore (go-learn.wasm, wasm_exec.js, _site/,
 .claude/).
 
-## 7. Open ideas (post-v1)
+## 7. ADDENDUM — deployed; web-worker runner became REQUIRED
+
+The full drive did NOT pass on the first architecture: an interpreted
+`for {}` wedged the tab permanently. Probes proved **EvalWithContext
+timeouts never fire in browser wasm** (timer goroutine starves while the
+interpreter spins on the main thread; native is fine) — and the LIVE element
+playground has the same bug (its session note claiming for{} cancellation in
+wasm was verified wrong by direct probe; fix element later with this same
+pattern).
+
+Fix shipped in v1: interpreter moved into a web worker.
+- `engine/worker.js` — importScripts wasm_exec.js, instantiates wasm, posts
+  {ready, version}; {id,src} → synchronous goRun.run → {result} (FIFO).
+- `engine/runner-go.js` — run(src) → Promise; 6s main-thread watchdog →
+  worker.terminate() + silent respawn (NO auto-rerun after respawn, or a
+  still-broken draft re-wedges in a kill loop); queued runs behind a wedge
+  resolve with a restart error; runs requested while (re)spawning queue.
+- kinds/engine/playground went async (stale() guard on ctx; runSeq in
+  playground); index.html no longer loads wasm on the main thread.
+
+Deployed: repo `rohanthewiz/go-learn` (initial commit, master), Pages
+build_type=workflow, `site` workflow (verify → deploy) green, and the full
+26-check drive passed **against the live site** — including
+infinite-loop-killed + worker-respawn, reload persistence, mobile, no
+console errors. https://rohanthewiz.github.io/go-learn/
+
+## 8. Open ideas (post-v1)
 
 Blind-75 expansion (content-only) · hard problems · hidden test cases ·
 web-worker runner (kill hung runs instantly) · shareable URLs · lesson
