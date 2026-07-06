@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>element playground</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2363b3ed'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='16' font-weight='bold' text-anchor='middle' fill='%2314161a'%3Eel%3C/text%3E%3C/svg%3E">
 <style>
   :root {
     --bg: #14161a; --panel: #1c1f26; --edge: #2c313c;
@@ -333,8 +334,10 @@
 
 <div id="loading">loading Go interpreter… (~3&nbsp;MB)</div>
 
-<script src="wasm_exec.js"></script>
+<!-- wasm_exec.js is loaded by worker.js — the interpreter lives in a web
+     worker so a runaway user program (`for {}`) can never freeze the page. -->
 <script src="highlight.js"></script>
+<script src="runner.js"></script>
 <script src="tutorial.js"></script>
 <script>
 (() => {
@@ -421,33 +424,36 @@ func main() {
     },
   };
 
-  // --- run loop (debounced; queued until wasm is ready) -----------------------
+  // --- run loop (debounced; async via the worker-backed runner) ---------------
   // Interpreting a program takes tens of ms, so the debounce is a touch longer
   // than a compiler playground would use.
-  let ready = false, timer = 0;
+  let ready = false, timer = 0, runSeq = 0;
   function schedule() { clearTimeout(timer); timer = setTimeout(run, 300); }
   function run() {
     if (!ready) return;
     try { localStorage.setItem('go-ele-src', src.value); } catch (_) {}
-    const r = eleGo.run(src.value);
     $('srcstat').textContent = src.value.length + ' chars';
-    if (r.error !== undefined) {
-      errBox.textContent = (r.line ? 'line ' + r.line + ':' + r.col + ' — ' : '') + r.error
-        + (r.stderr ? '\n' + r.stderr : '');
-      errBox.style.display = 'block';
-      $('outstat').textContent = '';
-      $('outstat').className = 'stat';
-      out.style.opacity = '0.45';
-      return;
-    }
-    errBox.style.display = 'none';
-    out.style.opacity = '';
-    lastHTML = r.html;
-    lastPretty = r.pretty !== undefined ? r.pretty : r.html;
-    renderOut();
-    if (view === 'preview') preview.srcdoc = lastHTML;
-    $('outstat').textContent = r.html.length + ' chars · ' + r.ms.toFixed(1) + ' ms';
-    $('outstat').className = 'stat ok';
+    const seq = ++runSeq;
+    eleRun.run(src.value).then(r => {
+      if (seq !== runSeq) return; // superseded by a newer run
+      if (r.error !== undefined) {
+        errBox.textContent = (r.line ? 'line ' + r.line + ':' + r.col + ' — ' : '') + r.error
+          + (r.stderr ? '\n' + r.stderr : '');
+        errBox.style.display = 'block';
+        $('outstat').textContent = '';
+        $('outstat').className = 'stat';
+        out.style.opacity = '0.45';
+        return;
+      }
+      errBox.style.display = 'none';
+      out.style.opacity = '';
+      lastHTML = r.html;
+      lastPretty = r.pretty !== undefined ? r.pretty : r.html;
+      renderOut();
+      if (view === 'preview') preview.srcdoc = lastHTML;
+      $('outstat').textContent = r.html.length + ' chars · ' + r.ms.toFixed(1) + ' ms';
+      $('outstat').className = 'stat ok';
+    });
   }
 
   // --- wiring ----------------------------------------------------------------
@@ -521,11 +527,11 @@ func main() {
   });
 
   let examplesByName = {};
-  window.eleGoReady = () => {
+  eleRun.onBoot(() => {
     ready = true;
-    $('version').textContent = 'build ' + eleGo.version;
+    $('version').textContent = 'build ' + eleRun.version();
     const sel = $('example');
-    for (const ex of eleGo.examples()) {
+    for (const ex of eleRun.examples()) {
       examplesByName[ex.name] = ex;
       const opt = document.createElement('option');
       opt.value = ex.name;
@@ -537,7 +543,7 @@ func main() {
     setTimeout(() => el.remove(), 220);
     run();
     tutorial = eleTutorial.init();
-  };
+  });
 
   let saved = null;
   try { saved = localStorage.getItem('go-ele-src'); } catch (_) {}
@@ -550,17 +556,6 @@ func main() {
   try { tab = localStorage.getItem('go-ele-tab') || 'play'; } catch (_) {}
   if (location.hash === '#tutorial') tab = 'tutorial';
   switchTab(tab);
-
-  const go = new Go();
-  // Prefer streaming; fall back for servers that mislabel .wasm's MIME type.
-  const load = WebAssembly.instantiateStreaming
-    ? WebAssembly.instantiateStreaming(fetch('ele.wasm'), go.importObject)
-        .catch(() => fetch('ele.wasm').then(r => r.arrayBuffer())
-          .then(buf => WebAssembly.instantiate(buf, go.importObject)))
-    : fetch('ele.wasm').then(r => r.arrayBuffer())
-        .then(buf => WebAssembly.instantiate(buf, go.importObject));
-  load.then(r => go.run(r.instance))
-    .catch(err => { $('loading').textContent = 'failed to load ele.wasm — ' + err; });
 })();
 </script>
 </body>

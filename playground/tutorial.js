@@ -1186,41 +1186,48 @@ function init() {
     else outEl.textContent = lastShown;
   }
 
+  // Runs are async (the interpreter lives in a web worker — see runner.js);
+  // runSeq drops superseded results, and a lesson switch mid-flight makes
+  // the old result stale.
+  let runSeq = 0;
   function run() {
-    if (!window.eleGo) return;
+    if (!window.eleRun) return;
     const l = LESSONS[cur];
-    const r = eleGo.run(ta.value);
-    if (r.error !== undefined) {
-      errEl.textContent = (r.line ? 'line ' + r.line + ':' + r.col + ' — ' : '') + r.error
-        + (r.stderr ? '\n' + r.stderr : '');
-      errEl.style.display = 'block';
-      outEl.style.opacity = '0.45';
-    } else {
-      errEl.style.display = 'none';
-      outEl.style.opacity = '';
-      lastRaw = r.html;
-      // The pane shows the pretty form for readability; checks and the
-      // preview always work from the raw output.
-      lastShown = (l.rawOut || r.pretty === undefined) ? r.html : r.pretty;
-      renderOut();
-      if (view === 'preview') previewEl.srcdoc = lastRaw;
-      if (l.check) {
-        const flat = r.html.replace(/\s+/g, ' ');
-        if (l.check(r.html, flat)) {
-          if (!done.has(l.id)) { done.add(l.id); saveDone(); renderNav(); }
-          statEl.textContent = '✓ task complete';
-          statEl.className = 'stat ok';
-          return;
+    const seq = ++runSeq;
+    eleRun.run(ta.value).then(r => {
+      if (seq !== runSeq || LESSONS[cur] !== l) return;
+      if (r.error !== undefined) {
+        errEl.textContent = (r.line ? 'line ' + r.line + ':' + r.col + ' — ' : '') + r.error
+          + (r.stderr ? '\n' + r.stderr : '');
+        errEl.style.display = 'block';
+        outEl.style.opacity = '0.45';
+      } else {
+        errEl.style.display = 'none';
+        outEl.style.opacity = '';
+        lastRaw = r.html;
+        // The pane shows the pretty form for readability; checks and the
+        // preview always work from the raw output.
+        lastShown = (l.rawOut || r.pretty === undefined) ? r.html : r.pretty;
+        renderOut();
+        if (view === 'preview') previewEl.srcdoc = lastRaw;
+        if (l.check) {
+          const flat = r.html.replace(/\s+/g, ' ');
+          if (l.check(r.html, flat)) {
+            if (!done.has(l.id)) { done.add(l.id); saveDone(); renderNav(); }
+            statEl.textContent = '✓ task complete';
+            statEl.className = 'stat ok';
+            return;
+          }
         }
       }
-    }
-    if (l.check) {
-      statEl.textContent = done.has(l.id) ? '✓ solved earlier' : '○ not yet';
-      statEl.className = done.has(l.id) ? 'stat ok' : 'stat';
-    } else {
-      statEl.textContent = '';
-      statEl.className = 'stat';
-    }
+      if (l.check) {
+        statEl.textContent = done.has(l.id) ? '✓ solved earlier' : '○ not yet';
+        statEl.className = done.has(l.id) ? 'stat ok' : 'stat';
+      } else {
+        statEl.textContent = '';
+        statEl.className = 'stat';
+      }
+    });
   }
 
   let timer = 0;
