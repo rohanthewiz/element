@@ -26,7 +26,12 @@ for f in ../components/*.go; do
 done
 cp ../assets/debug_table.js ../assets/debug_table.css "$srcfs/element/assets/"
 
+(cd wasm && go mod download github.com/rohanthewiz/serr)   # cold caches (CI)
 serr_dir=$(cd wasm && go list -m -f '{{.Dir}}' github.com/rohanthewiz/serr)
+if [ -z "$serr_dir" ] || [ ! -d "$serr_dir" ]; then
+  echo "error: cannot locate serr module source (got: '$serr_dir')" >&2
+  exit 1
+fi
 for f in "$serr_dir"/*.go; do
   case "$f" in *_test.go) continue ;; esac
   cp "$f" "$srcfs/serr/"
