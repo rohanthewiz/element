@@ -181,7 +181,6 @@
   #tut-doc {
     width: 42%; max-width: 36rem; min-width: 17rem; flex: none;
     overflow-y: auto; padding: 1rem 1.25rem 2.5rem;
-    border-right: 1px solid var(--edge);
   }
   #tut-doc h2 { font-size: 1.18rem; margin: .1rem 0 .65rem; }
   #tut-doc h3 { font-size: .95rem; margin: 1.05rem 0 .35rem; }
@@ -241,7 +240,7 @@
     main#view-tutorial { flex-direction: column; overflow-y: auto; }
     #tut-nav { width: auto; flex: none; border-right: 0; border-bottom: 1px solid var(--edge); max-height: 22vh; }
     #tut-cols { flex-direction: column; }
-    #tut-doc { width: auto; max-width: none; min-width: 0; border-right: 0; border-bottom: 1px solid var(--edge); max-height: 45vh; flex: none; }
+    #tut-doc { width: auto !important; max-width: none !important; min-width: 0; border-right: 0; border-bottom: 1px solid var(--edge); max-height: 45vh; flex: none !important; }
     #tut-bench .pane.src { min-height: 11rem; }
     #tut-bench .pane.dst { min-height: 9rem; }
   }
@@ -294,6 +293,7 @@
   <section id="tut-main">
     <div id="tut-cols">
       <article id="tut-doc"></article>
+      <div class="split" id="tsplit" title="drag to resize · double-click to reset"></div>
       <div id="tut-bench">
         <div id="tut-task-bar">
           <span class="lbl">try it</span>
@@ -476,15 +476,17 @@ func main() {
     schedule();
   });
 
-  // --- pane splitter -----------------------------------------------------------
-  // Drag to resize the editor/output split (persisted as a % of the row);
-  // double-click resets to 50/50. Hidden under the 900px stacked layout,
-  // where an !important rule also neutralizes the inline width.
-  (() => {
-    const bar = $('split'), left = bar.previousElementSibling, row = bar.parentElement;
-    const apply = pct => { left.style.flex = 'none'; left.style.width = pct + '%'; };
+  // --- pane splitters ----------------------------------------------------------
+  // Drag to resize a two-pane row (persisted as a % of the row); double-click
+  // resets to the stylesheet default. Hidden under the 900px stacked layout,
+  // where !important rules also neutralize the inline width.
+  function makeSplitter(bar, key) {
+    const left = bar.previousElementSibling, row = bar.parentElement;
+    const apply = pct => {
+      left.style.flex = 'none'; left.style.width = pct + '%'; left.style.maxWidth = 'none';
+    };
     let saved = NaN;
-    try { saved = parseFloat(localStorage.getItem('go-ele-split')); } catch (_) {}
+    try { saved = parseFloat(localStorage.getItem(key)); } catch (_) {}
     if (saved >= 20 && saved <= 80) apply(saved);
     bar.addEventListener('pointerdown', e => {
       e.preventDefault();
@@ -497,16 +499,18 @@ func main() {
       const r = row.getBoundingClientRect();
       const pct = Math.min(80, Math.max(20, (e.clientX - r.left) / r.width * 100));
       apply(pct);
-      try { localStorage.setItem('go-ele-split', pct.toFixed(1)); } catch (_) {}
+      try { localStorage.setItem(key, pct.toFixed(1)); } catch (_) {}
     });
     const end = () => { bar.classList.remove('drag'); document.body.classList.remove('splitting'); };
     bar.addEventListener('pointerup', end);
     bar.addEventListener('pointercancel', end);
     bar.addEventListener('dblclick', () => {
-      left.style.flex = ''; left.style.width = '';
-      try { localStorage.removeItem('go-ele-split'); } catch (_) {}
+      left.style.flex = ''; left.style.width = ''; left.style.maxWidth = '';
+      try { localStorage.removeItem(key); } catch (_) {}
     });
-  })();
+  }
+  makeSplitter($('split'), 'go-ele-split');
+  makeSplitter($('tsplit'), 'go-ele-tut-split');
 
   $('example').addEventListener('change', e => {
     const ex = examplesByName[e.target.value];

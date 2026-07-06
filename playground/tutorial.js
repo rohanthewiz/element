@@ -8,8 +8,10 @@
 //   task     — one-line exercise shown above the editor
 //   check    — (html, flat) => bool; flat is the program's output with
 //              whitespace collapsed to single spaces. Passing marks the
-//              lesson complete.
+//              lesson complete. Checks always receive the RAW output.
 //   solution — source the "solution" button loads
+//   rawOut   — show the program's raw output instead of the pretty-printed
+//              form (for lessons where the raw text IS the point)
 //
 // The data half is plain JS so the verification harness can run every
 // starter and solution through the real interpreter in CI/dev.
@@ -823,6 +825,7 @@ func main() {
 }
 `,
   task: 'Fix both issues (wrap the string in b.T(), move the <p> out of the <br>) so the report prints: No element concerns found.',
+  rawOut: true, // the report is text — show it exactly as printed
   check: (html, flat) => /No element concerns found\./.test(flat),
   solution: `package main
 
@@ -953,8 +956,10 @@ b.Pretty()  // <div>
             //   <p>hi</p>
             // </div>`),
 `<p>Formatting happens on the way out — the builder still stores the compact form, and <code>PrettyHTML(s)</code> is available as a standalone function for HTML from anywhere.</p>
-<div class="tip">Pretty output is for eyes, not for diffing or storage: whitespace inside <code>&lt;pre&gt;</code> and inline text can matter in HTML, so ship <code>b.String()</code>.</div>`,
+<div class="tip">Pretty output is for eyes, not for diffing or storage: whitespace inside <code>&lt;pre&gt;</code> and inline text can matter in HTML, so ship <code>b.String()</code>.</div>
+<p><em>Note:</em> this tutorial's output pane normally pretty-prints for readability (it runs <code>PrettyHTML</code> for you, like the Playground tab's <code>pretty</code> checkbox) — <strong>this lesson alone shows your program's raw output</strong>, so you can see exactly what <code>b.String()</code> vs <code>b.Pretty()</code> produce.</p>`,
   ],
+  rawOut: true, // showing raw vs pretty IS the lesson
   code: `package main
 
 import (
@@ -1114,7 +1119,7 @@ function init() {
   catch (_) { done = new Set(); }
   let cur = Math.min(LESSONS.length - 1,
     Math.max(0, parseInt(store.read('go-ele-tut-cur', '0'), 10) || 0));
-  let lastHTML = '';
+  let lastRaw = '', lastShown = '';
 
   const hlOn = () => !document.body.classList.contains('nohl');
   const repaint = eleHi.editor(ta, hlCode, hlOn);
@@ -1127,7 +1132,7 @@ function init() {
     previewEl.hidden = v !== 'preview';
     $('tview-html').classList.toggle('on', v === 'html');
     $('tview-preview').classList.toggle('on', v === 'preview');
-    if (v === 'preview') previewEl.srcdoc = lastHTML;
+    if (v === 'preview') previewEl.srcdoc = lastRaw;
     store.write('go-ele-tut-view', v);
   }
   $('tview-html').addEventListener('click', () => setView('html'));
@@ -1177,8 +1182,8 @@ function init() {
 
   function renderOut() {
     outEl.innerHTML = '';
-    if (hlOn()) outEl.innerHTML = eleHi.html(lastHTML, true);
-    else outEl.textContent = lastHTML;
+    if (hlOn()) outEl.innerHTML = eleHi.html(lastShown, true);
+    else outEl.textContent = lastShown;
   }
 
   function run() {
@@ -1193,9 +1198,12 @@ function init() {
     } else {
       errEl.style.display = 'none';
       outEl.style.opacity = '';
-      lastHTML = r.html;
+      lastRaw = r.html;
+      // The pane shows the pretty form for readability; checks and the
+      // preview always work from the raw output.
+      lastShown = (l.rawOut || r.pretty === undefined) ? r.html : r.pretty;
       renderOut();
-      if (view === 'preview') previewEl.srcdoc = lastHTML;
+      if (view === 'preview') previewEl.srcdoc = lastRaw;
       if (l.check) {
         const flat = r.html.replace(/\s+/g, ' ');
         if (l.check(r.html, flat)) {
