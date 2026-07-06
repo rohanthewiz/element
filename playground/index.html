@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>element playground</title>
+<style>
+  :root {
+    --bg: #14161a; --panel: #1c1f26; --edge: #2c313c;
+    --fg: #d8dde6; --dim: #8b93a3; --accent: #63b3ed;
+    --err-bg: #3b1f24; --err-edge: #a33c4b; --err-fg: #ffb4bd;
+    --ok: #7ec699;
+    /* syntax tokens */
+    --tk-com: #6b7280; --tk-str: #98c379; --tk-num: #d19a66;
+    --tk-kw: #c678dd;  --tk-at: #c678dd;  --tk-sel: #e06c75;
+    --tk-cls: #d19a66; --tk-pse: #56b6c2; --tk-amp: #c678dd;
+    --tk-prop: #61afef; --tk-fn: #56b6c2; --tk-var: #e5c07b;
+    --tk-op: #8b93a3;  --tk-int: #ffd580;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f5f6f8; --panel: #ffffff; --edge: #d7dbe2;
+      --fg: #22262e; --dim: #667085; --accent: #2b6cb0;
+      --err-bg: #fdeef0; --err-edge: #d3546a; --err-fg: #9b1c32;
+      --ok: #2f855a;
+      --tk-com: #8a919e; --tk-str: #22863a; --tk-num: #aa5d00;
+      --tk-kw: #8250df;  --tk-at: #8250df;  --tk-sel: #ca4956;
+      --tk-cls: #b76b01; --tk-pse: #0e7490; --tk-amp: #8250df;
+      --tk-prop: #0550ae; --tk-fn: #0e7490; --tk-var: #947100;
+      --tk-op: #667085;  --tk-int: #b25e09;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 14px/1.45 system-ui, sans-serif;
+    display: flex; flex-direction: column;
+  }
+
+  /* --- syntax token colors ------------------------------------------------ */
+  .t-com { color: var(--tk-com); font-style: italic; }
+  .t-str { color: var(--tk-str); }
+  .t-num { color: var(--tk-num); }
+  .t-kw  { color: var(--tk-kw); }
+  .t-at  { color: var(--tk-at); font-weight: 600; }
+  .t-sel { color: var(--tk-sel); }
+  .t-cls { color: var(--tk-cls); }
+  .t-pse { color: var(--tk-pse); }
+  .t-amp { color: var(--tk-amp); font-weight: 600; }
+  .t-prop { color: var(--tk-prop); }
+  .t-fn  { color: var(--tk-fn); }
+  .t-var { color: var(--tk-var); }
+  .t-op  { color: var(--tk-op); }
+  .t-int { color: var(--tk-int); font-weight: 600; }
+  .t-id  { color: var(--fg); }
+  .t-col {
+    text-decoration-line: underline; text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+  }
+  .t-col i {
+    display: inline-block; width: .68em; height: .68em; margin-right: .28em;
+    border-radius: 2px; border: 1px solid rgba(127,127,127,.45); vertical-align: baseline;
+  }
+
+  /* --- header --------------------------------------------------------------- */
+  header {
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    padding: .55rem .9rem; border-bottom: 1px solid var(--edge);
+    background: var(--panel);
+  }
+  header h1 { font-size: 1rem; margin: 0; font-weight: 600; }
+  header h1 span { color: var(--accent); }
+  header .meta { color: var(--dim); font-size: .8rem; }
+  header label { color: var(--dim); font-size: .85rem; display: inline-flex; align-items: center; gap: .3rem; cursor: pointer; }
+  header select {
+    background: var(--bg); color: var(--fg); border: 1px solid var(--edge);
+    border-radius: 5px; padding: .25rem .4rem; font-size: .85rem;
+  }
+  header .spacer { flex: 1; }
+  header a { color: var(--accent); text-decoration: none; font-size: .85rem; }
+  nav.tabs { display: inline-flex; gap: .1rem; background: var(--bg); border: 1px solid var(--edge); border-radius: 7px; padding: .14rem; }
+  nav.tabs button {
+    border: 0; background: transparent; color: var(--dim); cursor: pointer;
+    font: inherit; font-size: .85rem; padding: .22rem .7rem; border-radius: 5px;
+  }
+  nav.tabs button.on { background: var(--panel); color: var(--fg); box-shadow: 0 0 0 1px var(--edge); }
+  body[data-tab="tutorial"] .playctl { display: none; }
+
+  /* --- shared pane chrome ----------------------------------------------------- */
+  main { flex: 1; display: flex; min-height: 0; }
+  main[hidden] { display: none; }
+  .pane { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .pane + .pane { border-left: 1px solid var(--edge); }
+  .pane .bar {
+    padding: .3rem .9rem; font-size: .75rem; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--dim);
+    border-bottom: 1px solid var(--edge); background: var(--panel);
+    display: flex; gap: .8rem; align-items: baseline;
+  }
+  .pane .bar .stat { margin-left: auto; text-transform: none; letter-spacing: 0; }
+  .pane .bar .stat.ok { color: var(--ok); }
+  .bar .viewswitch { display: inline-flex; gap: .55rem; text-transform: none; letter-spacing: 0; }
+  .bar .viewswitch button {
+    border: 0; background: transparent; color: var(--dim); cursor: pointer;
+    font: inherit; font-size: .78rem; padding: 0; text-transform: uppercase; letter-spacing: .06em;
+  }
+  .bar .viewswitch button.on { color: var(--accent); }
+
+  /* --- overlay editor (highlighted textarea) --------------------------------- */
+  .editor { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+  .editor pre.hl, .editor textarea {
+    position: absolute; inset: 0; margin: 0; padding: .8rem .9rem; border: 0;
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre; tab-size: 4;
+  }
+  .editor pre.hl { overflow: hidden; pointer-events: none; color: var(--fg); }
+  .editor textarea {
+    width: 100%; height: 100%; resize: none; outline: none; overflow: auto;
+    background: transparent; color: transparent; caret-color: var(--fg);
+  }
+  .editor textarea::selection { background: rgba(99,179,237,.28); }
+  body.nohl .editor pre.hl { display: none; }
+  body.nohl .editor textarea { color: var(--fg); }
+
+  pre.out {
+    flex: 1; margin: 0; padding: .8rem .9rem; border: 0;
+    background: transparent; color: var(--fg);
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap; word-break: break-word; overflow: auto; tab-size: 4; outline: none;
+  }
+  iframe.preview {
+    flex: 1; border: 0; width: 100%; min-height: 0; background: #fff;
+  }
+  pre.err {
+    display: none; margin: 0; padding: .6rem .9rem;
+    background: var(--err-bg); color: var(--err-fg);
+    border-top: 1px solid var(--err-edge);
+    font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap; max-height: 11rem; overflow: auto;
+  }
+  #loading {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: var(--bg); color: var(--dim); font-size: .95rem; z-index: 10;
+    transition: opacity .2s;
+  }
+
+  /* --- tutorial --------------------------------------------------------------- */
+  #tut-nav {
+    width: 230px; flex: none; overflow-y: auto;
+    border-right: 1px solid var(--edge); background: var(--panel);
+  }
+  #tut-nav ol { list-style: none; margin: 0; padding: .35rem 0; }
+  #tut-nav li {
+    padding: .4rem .75rem .4rem .6rem; font-size: .84rem; cursor: pointer;
+    color: var(--dim); display: flex; gap: .45rem; align-items: baseline;
+    border-left: 2px solid transparent; user-select: none;
+  }
+  #tut-nav li:hover { color: var(--fg); }
+  #tut-nav li.cur {
+    color: var(--fg); background: rgba(99,179,237,.09);
+    border-left-color: var(--accent);
+  }
+  #tut-nav li .n { color: var(--dim); font-size: .72rem; min-width: 1.1rem; text-align: right; }
+  #tut-nav li .tick { margin-left: auto; color: var(--ok); }
+  #tut-main { flex: 1; display: flex; min-width: 0; flex-direction: column; }
+  #tut-cols { flex: 1; display: flex; min-height: 0; }
+  #tut-doc {
+    width: 42%; max-width: 36rem; min-width: 17rem; flex: none;
+    overflow-y: auto; padding: 1rem 1.25rem 2.5rem;
+    border-right: 1px solid var(--edge);
+  }
+  #tut-doc h2 { font-size: 1.18rem; margin: .1rem 0 .65rem; }
+  #tut-doc h3 { font-size: .95rem; margin: 1.05rem 0 .35rem; }
+  #tut-doc p, #tut-doc li { font-size: .875rem; line-height: 1.6; }
+  #tut-doc ul { padding-left: 1.2rem; margin: .4rem 0 .8rem; }
+  #tut-doc li { margin: .2rem 0; }
+  #tut-doc a { color: var(--accent); }
+  #tut-doc code {
+    background: rgba(127,127,127,.15); padding: .07em .32em; border-radius: 3px;
+    font: .84em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  #tut-doc pre.snip {
+    margin: .55rem 0 .9rem; padding: .6rem .75rem; overflow-x: auto;
+    background: var(--panel); border: 1px solid var(--edge); border-radius: 6px;
+    font: 12.5px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  #tut-doc pre.snip code { background: none; padding: 0; font: inherit; }
+  #tut-doc .tip {
+    border-left: 3px solid var(--accent); border-radius: 0 5px 5px 0;
+    padding: .45rem .65rem; margin: .8rem 0;
+    background: rgba(99,179,237,.08); font-size: .84rem; line-height: 1.55;
+  }
+  #tut-bench { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  #tut-task-bar {
+    padding: .5rem .9rem; font-size: .85rem; background: var(--panel);
+    border-bottom: 1px solid var(--edge); display: flex; gap: .8rem; align-items: baseline;
+  }
+  #tut-task-bar .lbl {
+    font-size: .7rem; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--accent); flex: none;
+  }
+  #tut-task { flex: 1; }
+  #tut-check.ok { color: var(--ok); }
+  #tut-check { color: var(--dim); flex: none; font-size: .8rem; }
+  #tut-bench .pane { border-left: 0; }
+  #tut-bench .pane.src { flex: 1.25; min-height: 0; }
+  #tut-bench .pane.dst { flex: 1; border-top: 1px solid var(--edge); min-height: 0; }
+  #tut-foot {
+    display: flex; gap: .5rem; align-items: center;
+    padding: .45rem .9rem; border-top: 1px solid var(--edge); background: var(--panel);
+  }
+  #tut-foot button {
+    border: 1px solid var(--edge); background: var(--bg); color: var(--fg);
+    font: inherit; font-size: .82rem; border-radius: 5px; padding: .28rem .7rem; cursor: pointer;
+  }
+  #tut-foot button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  #tut-foot button:disabled { opacity: .4; cursor: default; }
+  #tut-foot .spacer { flex: 1; }
+  #tut-foot #tut-pos { color: var(--dim); font-size: .8rem; }
+  #tut-foot #tut-prev, #tut-foot #tut-next { font-weight: 600; }
+
+  @media (max-width: 900px) {
+    main#view-play { flex-direction: column; }
+    #view-play .pane + .pane { border-left: 0; border-top: 1px solid var(--edge); }
+    main#view-tutorial { flex-direction: column; overflow-y: auto; }
+    #tut-nav { width: auto; flex: none; border-right: 0; border-bottom: 1px solid var(--edge); max-height: 22vh; }
+    #tut-cols { flex-direction: column; }
+    #tut-doc { width: auto; max-width: none; min-width: 0; border-right: 0; border-bottom: 1px solid var(--edge); max-height: 45vh; flex: none; }
+    #tut-bench .pane.src { min-height: 11rem; }
+    #tut-bench .pane.dst { min-height: 9rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>element <span>playground</span></h1>
+  <nav class="tabs">
+    <button id="tab-play" class="on">Playground</button>
+    <button id="tab-tutorial">Tutorial</button>
+  </nav>
+  <label class="playctl" for="example">example
+    <select id="example"><option value="">— pick —</option></select>
+  </label>
+  <label><input type="checkbox" id="hl" checked> highlight</label>
+  <span class="spacer"></span>
+  <span class="meta" id="version"></span>
+  <a href="https://github.com/rohanthewiz/element">github.com/rohanthewiz/element</a>
+</header>
+
+<main id="view-play">
+  <section class="pane">
+    <div class="bar">go in<span class="stat" id="srcstat"></span></div>
+    <div class="editor">
+      <pre class="hl" aria-hidden="true"><code id="srcHl"></code></pre>
+      <textarea id="src" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"
+        placeholder="// write a Go main program that prints HTML"></textarea>
+    </div>
+    <pre id="error" class="err"></pre>
+  </section>
+  <section class="pane">
+    <div class="bar">
+      <span class="viewswitch">
+        <button id="view-html" class="on">html out</button>
+        <button id="view-preview">preview</button>
+      </span>
+      <span class="stat" id="outstat"></span>
+    </div>
+    <pre class="out" id="out"></pre>
+    <iframe class="preview" id="preview" hidden sandbox="allow-scripts" title="rendered output"></iframe>
+  </section>
+</main>
+
+<main id="view-tutorial" hidden>
+  <aside id="tut-nav"><ol id="tut-navlist"></ol></aside>
+  <section id="tut-main">
+    <div id="tut-cols">
+      <article id="tut-doc"></article>
+      <div id="tut-bench">
+        <div id="tut-task-bar">
+          <span class="lbl">try it</span>
+          <span id="tut-task"></span>
+          <span id="tut-check"></span>
+        </div>
+        <section class="pane src">
+          <div class="editor">
+            <pre class="hl" aria-hidden="true"><code id="tsrcHl"></code></pre>
+            <textarea id="tsrc" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea>
+          </div>
+          <pre id="terr" class="err"></pre>
+        </section>
+        <section class="pane dst">
+          <div class="bar">
+            <span class="viewswitch">
+              <button id="tview-html" class="on">html out</button>
+              <button id="tview-preview">preview</button>
+            </span>
+          </div>
+          <pre class="out" id="tout"></pre>
+          <iframe class="preview" id="tpreview" hidden sandbox="allow-scripts" title="rendered lesson output"></iframe>
+        </section>
+      </div>
+    </div>
+    <footer id="tut-foot">
+      <button id="tut-reset" title="Restore the lesson's starter code">reset</button>
+      <button id="tut-solution" title="Load the solution">solution</button>
+      <button id="tut-toplay" title="Copy this code into the Playground tab">open in playground</button>
+      <span class="spacer"></span>
+      <button id="tut-prev">← prev</button>
+      <span id="tut-pos"></span>
+      <button id="tut-next">next →</button>
+    </footer>
+  </section>
+</main>
+
+<div id="loading">loading Go interpreter… (~3&nbsp;MB)</div>
+
+<script src="wasm_exec.js"></script>
+<script src="highlight.js"></script>
+<script src="tutorial.js"></script>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const src = $('src'), out = $('out'), errBox = $('error'), preview = $('preview');
+  const DEFAULT = `// welcome to element — build HTML with plain Go
+package main
+
+import (
+	"fmt"
+
+	"github.com/rohanthewiz/element"
+)
+
+func main() {
+	b := element.NewBuilder()
+
+	b.DivClass("greeting").R(
+		b.H1().T("Hello from element"),
+		b.P().R(
+			b.T("The tree "),
+			b.Em().T("is"),
+			b.T(" the Go code."),
+		),
+	)
+
+	fmt.Println(b.String())
+}
+`;
+
+  // --- syntax highlighting ---------------------------------------------------
+  const hlBox = $('hl');
+  try { hlBox.checked = localStorage.getItem('go-ele-hl') !== '0'; } catch (_) {}
+  const hlOn = () => hlBox.checked;
+  document.body.classList.toggle('nohl', !hlOn());
+  const repaintSrc = eleHi.editor(src, $('srcHl'), hlOn);
+  let lastHTML = '';
+  function renderOut() {
+    if (hlOn()) out.innerHTML = eleHi.html(lastHTML, true);
+    else out.textContent = lastHTML;
+  }
+
+  // --- html / preview sub-views ------------------------------------------------
+  let view = 'html';
+  try { view = localStorage.getItem('go-ele-view') || 'html'; } catch (_) {}
+  function setView(v) {
+    view = v;
+    out.hidden = v !== 'html';
+    preview.hidden = v !== 'preview';
+    $('view-html').classList.toggle('on', v === 'html');
+    $('view-preview').classList.toggle('on', v === 'preview');
+    if (v === 'preview') preview.srcdoc = lastHTML;
+    try { localStorage.setItem('go-ele-view', v); } catch (_) {}
+  }
+  $('view-html').addEventListener('click', () => setView('html'));
+  $('view-preview').addEventListener('click', () => setView('preview'));
+
+  // --- tabs --------------------------------------------------------------------
+  let tutorial = null;
+  function switchTab(name) {
+    document.body.dataset.tab = name;
+    $('view-play').hidden = name !== 'play';
+    $('view-tutorial').hidden = name !== 'tutorial';
+    $('tab-play').classList.toggle('on', name === 'play');
+    $('tab-tutorial').classList.toggle('on', name === 'tutorial');
+    try { localStorage.setItem('go-ele-tab', name); } catch (_) {}
+  }
+  $('tab-play').addEventListener('click', () => switchTab('play'));
+  $('tab-tutorial').addEventListener('click', () => switchTab('tutorial'));
+  window.playHooks = {
+    openInPlayground(code) {
+      src.value = code;
+      repaintSrc();
+      switchTab('play');
+      run();
+    },
+  };
+
+  // --- run loop (debounced; queued until wasm is ready) -----------------------
+  // Interpreting a program takes tens of ms, so the debounce is a touch longer
+  // than a compiler playground would use.
+  let ready = false, timer = 0;
+  function schedule() { clearTimeout(timer); timer = setTimeout(run, 300); }
+  function run() {
+    if (!ready) return;
+    try { localStorage.setItem('go-ele-src', src.value); } catch (_) {}
+    const r = eleGo.run(src.value);
+    $('srcstat').textContent = src.value.length + ' chars';
+    if (r.error !== undefined) {
+      errBox.textContent = (r.line ? 'line ' + r.line + ':' + r.col + ' — ' : '') + r.error
+        + (r.stderr ? '\n' + r.stderr : '');
+      errBox.style.display = 'block';
+      $('outstat').textContent = '';
+      $('outstat').className = 'stat';
+      out.style.opacity = '0.45';
+      return;
+    }
+    errBox.style.display = 'none';
+    out.style.opacity = '';
+    lastHTML = r.html;
+    renderOut();
+    if (view === 'preview') preview.srcdoc = lastHTML;
+    $('outstat').textContent = r.html.length + ' chars · ' + r.ms.toFixed(1) + ' ms';
+    $('outstat').className = 'stat ok';
+  }
+
+  // --- wiring ----------------------------------------------------------------
+  src.addEventListener('input', schedule);
+  hlBox.addEventListener('change', () => {
+    try { localStorage.setItem('go-ele-hl', hlOn() ? '1' : '0'); } catch (_) {}
+    document.body.classList.toggle('nohl', !hlOn());
+    repaintSrc();
+    renderOut();
+    if (tutorial) tutorial.repaint();
+  });
+
+  // Tab inserts a real tab (it's Go); Cmd/Ctrl+Enter runs immediately.
+  src.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); run(); return; }
+    if (e.key !== 'Tab') return;
+    e.preventDefault();
+    const { selectionStart: s, selectionEnd: t, value } = src;
+    src.value = value.slice(0, s) + '\t' + value.slice(t);
+    src.selectionStart = src.selectionEnd = s + 1;
+    repaintSrc();
+    schedule();
+  });
+
+  $('example').addEventListener('change', e => {
+    const ex = examplesByName[e.target.value];
+    if (!ex) return;
+    src.value = ex.source;
+    repaintSrc();
+    run();
+  });
+
+  let examplesByName = {};
+  window.eleGoReady = () => {
+    ready = true;
+    $('version').textContent = 'build ' + eleGo.version;
+    const sel = $('example');
+    for (const ex of eleGo.examples()) {
+      examplesByName[ex.name] = ex;
+      const opt = document.createElement('option');
+      opt.value = ex.name;
+      opt.textContent = ex.name;
+      sel.appendChild(opt);
+    }
+    const el = $('loading');
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 220);
+    run();
+    tutorial = eleTutorial.init();
+  };
+
+  let saved = null;
+  try { saved = localStorage.getItem('go-ele-src'); } catch (_) {}
+  src.value = saved || DEFAULT;
+  repaintSrc();
+  setView(view);
+
+  // Restore the last-open tab; #tutorial in the URL forces the tutorial.
+  let tab = 'play';
+  try { tab = localStorage.getItem('go-ele-tab') || 'play'; } catch (_) {}
+  if (location.hash === '#tutorial') tab = 'tutorial';
+  switchTab(tab);
+
+  const go = new Go();
+  // Prefer streaming; fall back for servers that mislabel .wasm's MIME type.
+  const load = WebAssembly.instantiateStreaming
+    ? WebAssembly.instantiateStreaming(fetch('ele.wasm'), go.importObject)
+        .catch(() => fetch('ele.wasm').then(r => r.arrayBuffer())
+          .then(buf => WebAssembly.instantiate(buf, go.importObject)))
+    : fetch('ele.wasm').then(r => r.arrayBuffer())
+        .then(buf => WebAssembly.instantiate(buf, go.importObject));
+  load.then(r => go.run(r.instance))
+    .catch(err => { $('loading').textContent = 'failed to load ele.wasm — ' + err; });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+# Deploys the WASM playground to GitHub Pages.
+# Requires Pages to be enabled for the repo with source = "GitHub Actions"
+# (Settings → Pages → Build and deployment). Until then this workflow's deploy
+# step will fail harmlessly; delete the file if Pages is not wanted.
+name: playground
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'playground/**'
+      - 'components/**'
+      - 'assets/**'
+      - '*.go'
+      - 'go.mod'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: playground/wasm/go.mod
+      - name: Build playground
+        run: ./playground/build.sh
+      - name: Stage site
+        run: |
+          mkdir -p _site
+          cp playground/index.html playground/*.js playground/ele.wasm _site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

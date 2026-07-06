@@ -1,0 +1,4 @@
+github.com/rohanthewiz/serr v1.3.0 h1:gCKIHw0XFOmPifLq0oocx5RDi6iT7AxzVGT+9z3liO4=
+github.com/rohanthewiz/serr v1.3.0/go.mod h1:l01AbjXw1zP0kxe5tX5s/sADHiBbl0Rwfo/igde4b88=
+github.com/traefik/yaegi v0.16.2-0.20260209085605-fcb76d1ece0c h1:htRmijmYfl6o44qr+narOX1invzz9J9FnAqCqH7ARio=
+github.com/traefik/yaegi v0.16.2-0.20260209085605-fcb76d1ece0c/go.mod h1:4eVhbPb3LnD2VigQjhYbEJ69vDRFdT2HQNrXx8eEwUY=
