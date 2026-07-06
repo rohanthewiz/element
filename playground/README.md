@@ -20,8 +20,10 @@ generics, components package, debug mode and all.
     literals, and the Go 1.21 `clear`/`min`/`max` builtins yaegi lacks get
     shims) and interprets one user program per call with a 5s timeout.
   - `main_js.go` — the browser API: `eleGo.run(src)` →
-    `{html, stderr, ms} | {error, line, col}`, `eleGo.examples()`,
-    `eleGo.version`. Stdout is the output.
+    `{html, pretty, stderr, ms} | {error, line, col}`, `eleGo.examples()`,
+    `eleGo.version`. Stdout is the output; `pretty` is the same output
+    re-indented with `element.PrettyHTML` (the page's "pretty" checkbox,
+    on by default — previews and lesson checks use the raw `html`).
   - `main_native.go` — the same runner as a CLI (`go run ./wasm < prog.go`),
     used by the verification harness.
   - `snippets/*/main.go` — the examples menu; each is a standalone,

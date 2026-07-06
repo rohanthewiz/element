@@ -92,6 +92,19 @@
   main[hidden] { display: none; }
   .pane { flex: 1; display: flex; flex-direction: column; min-width: 0; }
   .pane + .pane { border-left: 1px solid var(--edge); }
+
+  /* --- pane splitter ----------------------------------------------------------- */
+  .split {
+    flex: none; width: 7px; cursor: col-resize; touch-action: none;
+    background: linear-gradient(to right,
+      transparent 3px, var(--edge) 3px, var(--edge) 4px, transparent 4px);
+  }
+  .split:hover, .split.drag {
+    background: linear-gradient(to right,
+      transparent 2px, var(--accent) 2px, var(--accent) 5px, transparent 5px);
+  }
+  body.splitting { user-select: none; cursor: col-resize; }
+  body.splitting iframe.preview { pointer-events: none; }
   .pane .bar {
     padding: .3rem .9rem; font-size: .75rem; letter-spacing: .06em;
     text-transform: uppercase; color: var(--dim);
@@ -222,7 +235,9 @@
 
   @media (max-width: 900px) {
     main#view-play { flex-direction: column; }
-    #view-play .pane + .pane { border-left: 0; border-top: 1px solid var(--edge); }
+    .split { display: none; }
+    #view-play .pane { width: auto !important; flex: 1 !important; }
+    #view-play .pane ~ .pane { border-left: 0; border-top: 1px solid var(--edge); }
     main#view-tutorial { flex-direction: column; overflow-y: auto; }
     #tut-nav { width: auto; flex: none; border-right: 0; border-bottom: 1px solid var(--edge); max-height: 22vh; }
     #tut-cols { flex-direction: column; }
@@ -243,6 +258,7 @@
   <label class="playctl" for="example">example
     <select id="example"><option value="">— pick —</option></select>
   </label>
+  <label class="playctl"><input type="checkbox" id="pretty" checked> pretty</label>
   <label><input type="checkbox" id="hl" checked> highlight</label>
   <span class="spacer"></span>
   <span class="meta" id="version"></span>
@@ -259,6 +275,7 @@
     </div>
     <pre id="error" class="err"></pre>
   </section>
+  <div class="split" id="split" title="drag to resize · double-click to reset"></div>
   <section class="pane">
     <div class="bar">
       <span class="viewswitch">
@@ -355,10 +372,17 @@ func main() {
   const hlOn = () => hlBox.checked;
   document.body.classList.toggle('nohl', !hlOn());
   const repaintSrc = eleHi.editor(src, $('srcHl'), hlOn);
-  let lastHTML = '';
+
+  // --- pretty toggle (display-only: raw html still feeds the preview) ---------
+  const prettyBox = $('pretty');
+  try { prettyBox.checked = localStorage.getItem('go-ele-pretty') !== '0'; } catch (_) {}
+  const prettyOn = () => prettyBox.checked;
+
+  let lastHTML = '', lastPretty = '';
   function renderOut() {
-    if (hlOn()) out.innerHTML = eleHi.html(lastHTML, true);
-    else out.textContent = lastHTML;
+    const shown = prettyOn() ? lastPretty : lastHTML;
+    if (hlOn()) out.innerHTML = eleHi.html(shown, true);
+    else out.textContent = shown;
   }
 
   // --- html / preview sub-views ------------------------------------------------
@@ -419,6 +443,7 @@ func main() {
     errBox.style.display = 'none';
     out.style.opacity = '';
     lastHTML = r.html;
+    lastPretty = r.pretty !== undefined ? r.pretty : r.html;
     renderOut();
     if (view === 'preview') preview.srcdoc = lastHTML;
     $('outstat').textContent = r.html.length + ' chars · ' + r.ms.toFixed(1) + ' ms';
@@ -427,6 +452,10 @@ func main() {
 
   // --- wiring ----------------------------------------------------------------
   src.addEventListener('input', schedule);
+  prettyBox.addEventListener('change', () => {
+    try { localStorage.setItem('go-ele-pretty', prettyOn() ? '1' : '0'); } catch (_) {}
+    renderOut();
+  });
   hlBox.addEventListener('change', () => {
     try { localStorage.setItem('go-ele-hl', hlOn() ? '1' : '0'); } catch (_) {}
     document.body.classList.toggle('nohl', !hlOn());
@@ -446,6 +475,38 @@ func main() {
     repaintSrc();
     schedule();
   });
+
+  // --- pane splitter -----------------------------------------------------------
+  // Drag to resize the editor/output split (persisted as a % of the row);
+  // double-click resets to 50/50. Hidden under the 900px stacked layout,
+  // where an !important rule also neutralizes the inline width.
+  (() => {
+    const bar = $('split'), left = bar.previousElementSibling, row = bar.parentElement;
+    const apply = pct => { left.style.flex = 'none'; left.style.width = pct + '%'; };
+    let saved = NaN;
+    try { saved = parseFloat(localStorage.getItem('go-ele-split')); } catch (_) {}
+    if (saved >= 20 && saved <= 80) apply(saved);
+    bar.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      bar.setPointerCapture(e.pointerId);
+      bar.classList.add('drag');
+      document.body.classList.add('splitting');
+    });
+    bar.addEventListener('pointermove', e => {
+      if (!bar.classList.contains('drag')) return;
+      const r = row.getBoundingClientRect();
+      const pct = Math.min(80, Math.max(20, (e.clientX - r.left) / r.width * 100));
+      apply(pct);
+      try { localStorage.setItem('go-ele-split', pct.toFixed(1)); } catch (_) {}
+    });
+    const end = () => { bar.classList.remove('drag'); document.body.classList.remove('splitting'); };
+    bar.addEventListener('pointerup', end);
+    bar.addEventListener('pointercancel', end);
+    bar.addEventListener('dblclick', () => {
+      left.style.flex = ''; left.style.width = '';
+      try { localStorage.removeItem('go-ele-split'); } catch (_) {}
+    });
+  })();
 
   $('example').addEventListener('change', e => {
     const ex = examplesByName[e.target.value];

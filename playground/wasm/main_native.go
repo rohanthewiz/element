@@ -20,6 +20,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/rohanthewiz/element"
 	"github.com/rohanthewiz/element/playground/wasm/runner"
 )
 
@@ -66,5 +67,6 @@ func main() {
 		os.Exit(2)
 	}
 	out["html"] = res.Stdout
+	out["pretty"] = element.PrettyHTML(res.Stdout)
 	_ = enc.Encode(out)
 }

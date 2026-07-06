@@ -4,9 +4,12 @@
 // It installs a global `eleGo` object with:
 //
 //	eleGo.run(src) ->
-//	    {html, stderr, ms} | {error, line, col, stderr, ms}
+//	    {html, pretty, stderr, ms} | {error, line, col, stderr, ms}
 //	eleGo.examples() -> [{name, source}]
 //	eleGo.version -> short vcs revision or "dev"
+//
+// `pretty` is `html` re-indented with element.PrettyHTML — display sugar;
+// previews and lesson checks should keep using the raw `html`.
 //
 // `src` is a complete Go main program; whatever it writes to stdout is
 // returned as `html`. User code may import github.com/rohanthewiz/element
@@ -18,6 +21,7 @@ import (
 	"syscall/js"
 	"time"
 
+	"github.com/rohanthewiz/element"
 	"github.com/rohanthewiz/element/playground/wasm/runner"
 )
 
@@ -58,6 +62,7 @@ func run(_ js.Value, args []js.Value) any {
 		return out
 	}
 	out["html"] = res.Stdout
+	out["pretty"] = element.PrettyHTML(res.Stdout)
 	return out
 }
 
