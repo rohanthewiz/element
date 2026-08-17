@@ -3,6 +3,8 @@ package element
 import (
 	"bytes"
 	"fmt"
+	"html"
+	"strings"
 
 	"github.com/rohanthewiz/serr"
 )
@@ -69,6 +71,63 @@ func (el Element) HasAttribute(key, value string) bool {
 		}
 	}
 	return false
+}
+
+// writeAttrValue writes an attribute value into the double quotes the renderer
+// has already opened, escaping the one character that cannot appear there: a
+// double quote, which would close the attribute early and let everything after
+// it be read as further attributes on the element.
+//
+// This is the only escaping element performs, and it is deliberate on both
+// counts — that it happens at all, and that it stops here.
+//
+// Why it happens: element is otherwise a raw writer, and that is the right
+// default for element *content*, where callers legitimately emit markup —
+// b.Style().T(css) and b.Script().T(js) both depend on it. Attribute values have
+// no equivalent case. A raw double quote inside one is not a stylistic choice,
+// it is broken output, every time. Escaping it therefore cannot change what any
+// correct program renders, only what an incorrect one does.
+//
+// Why only the double quote:
+//
+//   - The angle brackets do not terminate a quoted attribute value. The
+//     tokenizer is looking for the closing quote and nothing else, so a "<" or
+//     ">" is inert here.
+//   - A single quote cannot close a value the renderer opened with a double one.
+//   - The ampersand is the interesting omission. Encoding it would be more
+//     correct in the strict sense — a bare "&" ought to be "&amp;" — but it
+//     would also silently double-encode every caller who already passes
+//     character references, which is exactly what a careful caller does when
+//     building a JS string literal for an inline handler. Their "&#39;" would
+//     render as "&amp;#39;" and appear on screen as text. That is a real
+//     regression traded for a cosmetic fix, and a bare "&" cannot break out of
+//     an attribute value.
+//
+// Callers wanting full entity encoding still have html.EscapeString, and
+// applying it stays correct under this change: an already escaped value has no
+// double quotes left for this function to find.
+//
+// The fast path matters — this runs for every attribute of every element, and
+// almost no value contains a quote — so a value needing no work is written
+// straight through after a single scan, with no allocation.
+func writeAttrValue(sb *bytes.Buffer, val string) {
+	idx := strings.IndexByte(val, '"')
+	if idx < 0 { // the common case
+		sb.WriteString(val)
+		return
+	}
+
+	for {
+		sb.WriteString(val[:idx])
+		sb.WriteString("&#34;")
+		val = val[idx+1:]
+
+		idx = strings.IndexByte(val, '"')
+		if idx < 0 {
+			sb.WriteString(val)
+			return
+		}
+	}
 }
 
 // Text is an element core function which creates a new text element in the string builder
@@ -147,8 +206,36 @@ func (el Element) R(args ...any) (x any) {
 
 // T renders a list of text-only children on an Element
 // Use this when an element has only text children
+//
+// T writes its arguments verbatim. That is what makes b.Style().T(css) and
+// b.Script().T(js) work, and it is why T stays this way. Use TE for text that
+// came from outside the program.
 func (el Element) T(texts ...string) (x any) {
 	el.R(Text(el.sb, texts...))
+	return
+}
+
+// TE renders text-only children with HTML escaping applied — T, for text the
+// program did not author.
+//
+// The difference between T and TE is one character on purpose, because the cost
+// of picking wrong is not symmetric. Reaching for T on a database value, an API
+// response or a request body is how markup in that data becomes markup in the
+// page, and nothing about the output looks wrong until someone puts a tag in it.
+// Reaching for TE on markup you meant to inline fails loudly and immediately —
+// the tags appear on screen as text.
+//
+// There is deliberately no FE counterpart to F. Escaping a format string is
+// ambiguous: the caller means "escape the arguments, not the template", and an
+// API that guesses would be worse than one that makes the intent explicit.
+//
+//	b.Td().TE(fmt.Sprintf("%s (%s)", name, email))
+func (el Element) TE(texts ...string) (x any) {
+	escaped := make([]string, len(texts))
+	for i, t := range texts {
+		escaped[i] = html.EscapeString(t)
+	}
+	el.R(Text(el.sb, escaped...))
 	return
 }
 
@@ -173,7 +260,7 @@ func (el Element) writeOpeningTag() {
 				el.sb.WriteByte(' ')
 				el.sb.WriteString(el.attrPairs[i])
 				el.sb.WriteString(`="`)
-				el.sb.WriteString(el.attrPairs[i+1])
+				writeAttrValue(el.sb, el.attrPairs[i+1])
 				el.sb.WriteByte('"')
 			}
 			el.sb.WriteByte('>')
