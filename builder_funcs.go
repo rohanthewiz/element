@@ -2,6 +2,7 @@ package element
 
 import (
 	"fmt"
+	"html"
 )
 
 // elementFunc build an element
@@ -53,9 +54,23 @@ func (b *Builder) F(format string, args ...any) (x any) {
 
 // T renders a list of strings directly to the builder.
 // It is the fastest way to render text
+//
+// T writes verbatim — see Element.TE for when to reach for the escaping form.
 func (b *Builder) T(strs ...string) (x any) {
 	for _, str := range strs {
 		_ = b.WriteString(str)
+	}
+	return
+}
+
+// TE renders a list of strings directly to the builder with HTML escaping
+// applied. Use it for any text the program did not author itself: database
+// values, API responses, request bodies, file contents.
+//
+// See Element.TE for why this is a separate method rather than a change to T.
+func (b *Builder) TE(strs ...string) (x any) {
+	for _, str := range strs {
+		_ = b.WriteString(html.EscapeString(str))
 	}
 	return
 }
