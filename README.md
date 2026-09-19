@@ -67,6 +67,9 @@ See the full examples in the examples folder.
     - If the children of the current tag will be purely literal text, it is optimal to use the method `T()` to
         - *allow the pure text children to render*. Example: `b.P("id", "special").T("one", "two", "three")`
         - then close out the current element by writing its closing tag (if any) to the internal string builder
+    - If the text children did not come from your own code -- a database value, an API response, request data, file contents -- use `TE()` instead of `T()`
+        - *it renders text exactly like `T()`, but HTML-escapes it first*. Example: `b.Td().TE(user.Name)`
+        - See [Escaping untrusted text](#escaping-untrusted-text) below
     - If the children of the current tag will be a single formatted piece text, we should use the method `F()` to
         - *allow the formatted text to render* similiar to `fmt.Sprintf()`. Example: `b.P("id", "special").F("There are %d items", count)`
         - then close out the current element by writing its closing tag (if any) to the internal string builder
@@ -81,7 +84,31 @@ See the full examples in the examples folder.
 - `R()` receive arguments of `any` type, but they are discarded
 - `T()` like `R()` can terminate an opened element, but `T()` is used when the children are literal text only.
 - `F()` can also terminate an opened element with a single formatted string. Example: `b.Span().F("The value is: %0.1f", value)` 
+- `T()` and `F()` write their text verbatim -- they do **not** escape HTML. `TE()` is the escaping version of `T()`.
 - In debug mode, we do peek at the arguments passed to `R()` to help identify any issue in children elements.
+
+## Escaping untrusted text
+Element is a builder, not an auto-escaping template engine: `T()` and `F()` write their arguments to the page exactly as given, so markup inside a string becomes markup in the page. That is what lets you inline a snippet of HTML through `T()`, and it is also how a user named `<script>...</script>` becomes a script.
+
+`TE()` is `T()` with `html.EscapeString` applied to every argument. It was added as its own method, rather than by changing `T()`, so that existing apps which inline markup through `T()` keep working.
+
+- **A string literal you wrote goes through `T()`. Everything else goes through `TE()`.**
+- Getting it wrong is not symmetric. `T()` on untrusted data looks fine until someone puts a tag in it. `TE()` on markup you meant to inline fails loudly and at once -- the tags show up on screen as text.
+
+```go
+b.Td().TE(user.Name)                            // terminates an element, like T()
+b.TE(comment.Body)                              // builder-level, alongside b.T()
+b.Td().TE(fmt.Sprintf("%s (%s)", name, email))  // format first, then escape
+
+// Your markup around their data: give the data its own element
+b.P().R(
+    b.T("Signed in as "),
+    b.Strong().TE(user.Name),
+)
+```
+
+- There is deliberately no `FE()`. Escaping a format call is ambiguous -- the template, or the arguments? -- so format with `fmt.Sprintf()` and hand the result to `TE()`.
+- Attribute values: Element escapes the double quote, the one character that can end a quoted attribute, so a dynamic attribute value cannot break out of it. Element does not judge the value itself -- a `javascript:` URL in an `href` is still yours to check.
 
 ## Examples
 
@@ -481,6 +508,7 @@ Benchmarks (Apple M1 Pro):
 - You can create elements directly with Element, but there should be no need to do that now. Using Builder provides more features including convenience (less typing) and great debugging.
 - Single tag elements (like `br`) don't need to call `.R()`, however most other elements are dual tag and so must call `.R()`
 - Practically, just include `.R()` for all elements unless you are terminating an element with just pure text, in which case you can terminate with `.T()` or `.F()`.
+- Terminate with `.TE()` rather than `.T()` for any text your program did not author (see [Escaping untrusted text](#escaping-untrusted-text)).
 - Use `go fmt` to format go code as normal
 - Wrap static components with `element.Cached()` and use `element.AcquireBuilder()` in hot paths (see Performance above)
 - Embrace the full power, safety and speed of Go. Say goodbye to the jungle of frontend frameworks!

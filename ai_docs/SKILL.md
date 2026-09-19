@@ -167,8 +167,42 @@ func generateList(b *element.Builder) (x any) { // we don't care about the retur
 | Method               | Use Case                           | Example                    |
 | -------------------- | ---------------------------------- | -------------------------- |
 | `R(children...)`     | Elements with children or empty    | `b.Div().R(b.P().T("hi"))` |
-| `T(strings...)`      | Text-only content (most efficient) | `b.P().T("Hello")`         |
-| `F(format, args...)` | Formatted text (like fmt.Sprintf)  | `b.P().F("Count: %d", 42)` |
+| `T(strings...)`      | Text-only content **you authored** — written verbatim, NOT escaped | `b.P().T("Hello")` |
+| `TE(strings...)`     | Text-only content from anywhere else — HTML-escaped | `b.Td().TE(user.Name)` |
+| `F(format, args...)` | Formatted text (like fmt.Sprintf) — NOT escaped | `b.P().F("Count: %d", 42)` |
+
+### Escaping: T vs TE
+
+`T()` and `F()` write their arguments **verbatim**. Element is a builder, not an
+auto-escaping template engine, so markup inside a string becomes markup in the page.
+`TE()` is `T()` with `html.EscapeString` applied to every argument. It was added as a
+separate method, rather than changing `T()`, so existing apps that inline markup
+through `T()` keep working.
+
+**Rule: a string literal you wrote goes through `T()`; everything else — database
+values, API responses, request data, file contents, error messages, paths — goes
+through `TE()`.** Picking wrong is asymmetric: `T()` on untrusted data is an XSS hole
+that looks fine until someone puts a tag in it, while `TE()` on markup you meant to
+inline fails loudly (the tags show up as text).
+
+```go
+b.Td().TE(user.Name)                              // element terminator
+b.TE(comment.Body)                                // builder-level, alongside b.T()
+b.Td().TE(fmt.Sprintf("%s (%s)", name, email))    // no FE(): format first, then TE
+
+// Mixing your markup with their data: give the data its own element
+b.P().R(
+    b.T("Signed in as "),
+    b.Strong().TE(user.Name),
+)
+```
+
+There is deliberately no `FE()`: escaping a format call is ambiguous (template or
+arguments?), so format with `fmt.Sprintf` and pass the result to `TE()`.
+
+**Attributes:** element escapes `"` in attribute values, which is the only character
+that can break out of a quoted attribute, so dynamic attribute values need no helper.
+It does not validate them — a `javascript:` URL in an `href` is still your problem.
 
 ### Element Methods
 
@@ -441,6 +475,20 @@ func generatePage() string {
 
 ## Anti-Patterns
 
+### ❌ Using T() for Data You Did Not Author
+
+```go
+// WRONG: T() is verbatim — a name of `<script>…</script>` runs in the page
+b.Td().T(user.Name)
+b.Pre().T(string(fileBytes))
+b.DivClass("error").T(err.Error())
+
+// CORRECT: TE() escapes
+b.Td().TE(user.Name)
+b.Pre().TE(string(fileBytes))
+b.DivClass("error").TE(err.Error())
+```
+
 ### ❌ Forgetting to Terminate Elements
 
 ```go
@@ -678,6 +726,7 @@ Debug mode notes:
 | Pooled builder        | `b := element.AcquireBuilder()`             |
 | Element with children | `b.Div().R(children...)`                    |
 | Element with text     | `b.P().T("text")`                           |
+| Escaped text (untrusted) | `b.P().TE(userInput)`                    |
 | Formatted text        | `b.P().F("Count: %d", n)`                   |
 | Add class easily      | `b.DivClass("name")`                        |
 | Multiple attributes   | `b.A("href", "/", "class", "link")`         |
