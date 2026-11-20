@@ -77,7 +77,7 @@ See ai_docs/ARCHITECTURE.md
 3. **No Reflection**: Pure compiled Go without reflection, annotations, or "weird rules" for maximum performance.
 
 ### Testing Approach
-- 
+- `components/multi_checkbox_browser_test.go` runs MultiCheckbox's inline script in headless Chrome (one subtest per check, no automation dependency: `--dump-dom` of a page whose script writes JSON results). It finds Chrome on PATH, in the macOS app bundles, or via `CHROME_BIN`, and skips under `-short` or when there is none
 - Example applications serve as integration tests
 
 ## Important Notes
