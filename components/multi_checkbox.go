@@ -65,11 +65,28 @@ type CheckOption struct {
 //	values()       → the ticked values, in grid order
 //	setValues(arr) → tick exactly these (disabled boxes keep their state)
 //	setOptions(arr)→ replace the boxes with [{value, label, title, count, checked, disabled}];
-//	                 ticks carry over for values still in the list
-//	refresh()      → re-apply the filter and summary after changing boxes by hand
+//	                 ticks carry over for values still in the list; clears a note
+//	setNote(text)  → show text in place of the boxes ("Loading…", an error) without
+//	                 removing them, so their ticks survive a reload; null hides it
+//	refresh()      → re-apply the filter and summary after changing boxes, a hook's
+//	                 inputs, or data-max-count by hand
+//
+// Two optional hooks, assigned on the instance (then call refresh()):
+//
+//	normalize = function (text) → text   the filter text as matched, e.g. strip a
+//	                                     pasted prefix; used by the filter and Enter
+//	total     = function (values) → n    the summary's total in place of the summed
+//	                                     Counts, for totals that depend on more than
+//	                                     the ticked boxes (a "subfolders" toggle);
+//	                                     only used when CountNoun is set
+//
+// The summary re-reads data-max-count every time, so a limit that is only
+// known later (from an API answer) can be set on the root followed by refresh().
 //
 // With StorageKey set, the ticks are remembered in the browser's localStorage
-// and restored on load, where they win over Checked and Selected.
+// and restored on load, where they win over Checked and Selected. When the
+// grid starts empty and is filled by setOptions, they are restored by the
+// first setOptions instead.
 //
 // Layout: a small scoped <style> holds the grid (Columns per row, stepping
 // down to 6 / 4 / 2 as the component narrows, via container queries on
@@ -383,10 +400,14 @@ func (m MultiCheckbox) styleRules(id string) string {
 //
 // Flow:
 //
-//	filter input ──► applyFilter (show = ticked || label matches)
+//	filter input ──► applyFilter (show = ticked || label matches; a note hides all)
 //	box click ─────────────────────────────┐
 //	Tick shown / Clear / Enter / setValues ├─► "change" on root ─► renderSummary + save
 //	setOptions ────────────────────────────┘
+//
+// The hooks live on the instance object (api), which exists before any
+// handler runs, so a caller assigning api.total after init is seen by the
+// next summary without re-wiring anything.
 const multiCheckboxJS = `(function (script) {
   'use strict';
   var M = window.ElementMultiCheckbox;
@@ -407,8 +428,10 @@ const multiCheckboxJS = `(function (script) {
     var noun = ds.noun || 'item', nouns = ds.nouns || noun + 's';
     var ticked = ds.ticked || 'ticked';
     var cNoun = ds.countNoun || '', cNouns = ds.countNouns || cNoun + 's';
-    var max = parseInt(ds.maxCount, 10) || 0;
     var key = ds.storageKey || '';
+    var api = { normalize: null, total: null };
+    var note = null;     // setNote text; while set, it replaces the boxes
+    var pending = null;  // remembered ticks awaiting the first setOptions (grid started empty)
 
     // Boxes are looked up each time rather than cached: setOptions replaces them.
     function each(fn) {
@@ -420,7 +443,11 @@ const multiCheckboxJS = `(function (script) {
       var n = optOf(cb).querySelector('.mcb-name');
       return (n ? n.textContent : cb.value).toLowerCase();
     }
-    function needle() { return filter ? filter.value.trim().toLowerCase() : ''; }
+    function needle() {
+      if (!filter) return '';
+      var t = typeof api.normalize === 'function' ? api.normalize(filter.value) : filter.value;
+      return String(t == null ? '' : t).trim().toLowerCase();
+    }
     function hits(cb, f) { return !f || nameOf(cb).indexOf(f) >= 0; }
     function changed() { root.dispatchEvent(new Event('change', { bubbles: true })); }
     function asSet(list) {
@@ -433,13 +460,13 @@ const multiCheckboxJS = `(function (script) {
     function applyFilter() {
       var f = needle(), total = 0, shown = 0;
       each(function (cb) {
-        var show = cb.checked || hits(cb, f);
+        var show = note === null && (cb.checked || hits(cb, f));
         optOf(cb).hidden = !show;
         total++;
         if (show) shown++;
       });
       if (empty) {
-        empty.textContent = total ? 'No ' + nouns + ' match the filter.' : 'No ' + nouns + '.';
+        empty.textContent = note !== null ? note : total ? 'No ' + nouns + ' match the filter.' : 'No ' + nouns + '.';
         empty.hidden = shown > 0;
       }
     }
@@ -452,10 +479,15 @@ const multiCheckboxJS = `(function (script) {
 
     function renderSummary() {
       if (!summary) return;
-      var n = 0, sum = 0;
+      var n = 0, sum = 0, ticks = [];
       each(function (cb) {
-        if (cb.checked) { n++; sum += parseInt(cb.getAttribute('data-count'), 10) || 0; }
+        if (cb.checked) { n++; ticks.push(cb.value); sum += parseInt(cb.getAttribute('data-count'), 10) || 0; }
       });
+      if (cNoun && typeof api.total === 'function') {
+        var t = Number(api.total(ticks));
+        if (isFinite(t)) sum = t;
+      }
+      var max = parseInt(ds.maxCount, 10) || 0;  // read each time: a caller may set it later
       var measured = cNoun ? sum : n;
       var over = max > 0 && measured > max;
       var t = n ? n + ' ' + (n === 1 ? noun : nouns) + ' ' + ticked : 'No ' + noun + ' ' + ticked;
@@ -483,6 +515,11 @@ const multiCheckboxJS = `(function (script) {
     // Builds the same shape as the Go renderer (see the diagram in MultiCheckbox.Render).
     function setOptions(list) {
       var keep = asSet(values()), name = ds.name || '';
+      if (pending) {
+        for (var k in pending) keep[k] = true;
+        pending = null;
+      }
+      note = null;
       var frag = document.createDocumentFragment();
       (Array.isArray(list) ? list : []).forEach(function (o) {
         o = o || {};
@@ -518,11 +555,19 @@ const multiCheckboxJS = `(function (script) {
       changed();
     }
 
+    function setNote(text) {
+      note = text == null || text === '' ? null : String(text);
+      applyFilter();
+    }
+
     // Restore before the first draw, so the remembered ticks are what is shown.
     if (key) {
       try {
         var saved = JSON.parse(localStorage.getItem(key) || 'null');
-        if (Array.isArray(saved)) tickOnly(asSet(saved));
+        if (Array.isArray(saved)) {
+          if (grid.querySelector('.mcb-cb')) tickOnly(asSet(saved));
+          else pending = asSet(saved);
+        }
       } catch (e) {}
     }
 
@@ -534,7 +579,7 @@ const multiCheckboxJS = `(function (script) {
         if (ev.key !== 'Enter' || ev.isComposing) return;
         ev.preventDefault();
         var f = needle();
-        if (!f) return;
+        if (!f || note !== null) return;  // nothing to pick from while a note replaces the boxes
         var exact = null, only = null, matches = 0;
         each(function (cb) {
           if (exact || cb.disabled) return;
@@ -548,6 +593,7 @@ const multiCheckboxJS = `(function (script) {
 
     var shownBtn = root.querySelector('.mcb-tick-shown');
     if (shownBtn) shownBtn.addEventListener('click', function () {
+      if (note !== null) return;  // a note hides every box, so none is "shown"
       var f = needle(), any = false;
       each(function (cb) {
         if (!cb.disabled && !cb.checked && hits(cb, f)) { cb.checked = true; any = true; }
@@ -571,13 +617,13 @@ const multiCheckboxJS = `(function (script) {
     applyFilter();
     renderSummary();
 
-    root.mcb = {
-      values: values,
-      setValues: setValues,
-      setOptions: setOptions,
-      refresh: function () { applyFilter(); renderSummary(); }
-    };
-    return root.mcb;
+    api.values = values;
+    api.setValues = setValues;
+    api.setOptions = setOptions;
+    api.setNote = setNote;
+    api.refresh = function () { applyFilter(); renderSummary(); };
+    root.mcb = api;
+    return api;
   }
 })(document.currentScript);
 `
