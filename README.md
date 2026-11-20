@@ -413,7 +413,8 @@ The `components` package ships a set of reusable, dependency-free components:
   `RadioGroup`, `Button` — labels, required markers, help text, and errors
   wired up with `aria-describedby`/`aria-invalid`
 - **Picking many from a long list** — `MultiCheckbox`: a checkbox grid with a
-  filter that never hides a ticked box, Tick shown / Clear, and a live
+  filter (comma-separated terms, any of which matches) that never hides a
+  ticked box, Tick shown / Clear, and a live
   "2 folders ticked · 37 DAGs" count. It carries a small inline script, and
   without it falls back to a plain checkbox grid that still submits
 

@@ -325,7 +325,7 @@ import "github.com/rohanthewiz/element/components"
 | `Card` | Container with optional header, body (text or component), and footer |
 | `DefinitionList` | `<dl>` term/definition pairs |
 | `FormField` | Label + input + optional help text / error message |
-| `MultiCheckbox` | Filterable checkbox grid (`[]CheckOption`): filter never hides a ticked box, Tick shown / Clear, live count with optional per-item `Count` totals and `MaxCount` warning; submits as `Name=a&Name=b`; small inline script, JS API on `root.mcb` (`values`, `setValues`, `setOptions`, `setNote`, `refresh`; hooks `normalize` for filter text, `total` for the summary total) |
+| `MultiCheckbox` | Filterable checkbox grid (`[]CheckOption`): filter takes comma-separated terms (any matches; Enter ticks each term's exact or only match) and never hides a ticked box, Tick shown / Clear, live count with optional per-item `Count` totals and `MaxCount` warning; submits as `Name=a&Name=b`; small inline script, JS API on `root.mcb` (`values`, `setValues`, `setOptions`, `setNote`, `refresh`; hooks `normalize` for each filter term, `total` for the summary total) |
 | `Nav` | Navigation bar with brand and list of links; marks active item |
 | `Pagination` | Page navigation with prev/next/first/last and page number links |
 | `Table` | Table with headers, 2D row data, optional striped/bordered styling |

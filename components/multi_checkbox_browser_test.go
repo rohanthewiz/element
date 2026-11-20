@@ -176,6 +176,8 @@ func tail(s string, n int) string {
 //	   a script just before it
 //	c  starts empty with StorageKey (restore waits for setOptions); used for
 //	   setNote, the normalize and total hooks, and a late data-max-count
+//	d  labels that hold commas ("Smith, Jo"), for comma-separated filter
+//	   terms that must not split a label typed in full
 func browserTestPage() string {
 	b := element.NewBuilder()
 	b.Html().R(
@@ -204,6 +206,12 @@ func browserTestPage() string {
 			}.Render(b),
 			b.Script().T(`localStorage.setItem('mcb-test-c', JSON.stringify(['gone', 'p/q']));`),
 			MultiCheckbox{ID: "c", StorageKey: "mcb-test-c", Noun: "folder", CountNoun: "DAG"}.Render(b),
+			MultiCheckbox{
+				ID: "d",
+				Options: []CheckOption{
+					{Value: "Smith, Jo"}, {Value: "Smith, Al"}, {Value: "Jo"}, {Value: "Al Doe"},
+				},
+			}.Render(b),
 			b.Pre("id", "results").R(),
 			b.Script().T(mcbBrowserTestJS),
 		),
@@ -255,6 +263,7 @@ const mcbBrowserTestJS = `(function () {
     instanceA();
     instanceB();
     instanceC();
+    instanceD();
     check('` + browserTestSentinel + `', true);
   } catch (e) {
     check('script threw', false, String((e && e.stack) || e));
@@ -335,6 +344,34 @@ const mcbBrowserTestJS = `(function () {
     type('sales/locked/');
     pressEnter(filter);
     check('A: Enter never ticks a disabled box', api.values().indexOf('sales/locked') < 0, api.values());
+
+    // Comma-separated terms. Cleared first, so the shown lists below are
+    // the filter's doing and not ticked boxes kept on screen.
+    A.querySelector('.mcb-clear').click();
+    type('q1, exports');
+    check('A: a comma list shows the matches of any term', same(shown(), ['exports/db_to_db/acme/prod', 'sales/q1']), shown());
+    type('Q2,, LOCKED ');
+    check('A: terms are trimmed and case-blind, empty terms dropped', same(shown(), ['sales/q2', 'sales/locked']), shown());
+    type(' , ,');
+    check('A: only commas is no filter', shown().length === 5, shown());
+    type('q1, q2, locked');
+    changes = 0;
+    A.querySelector('.mcb-tick-shown').click();
+    check('A: Tick shown ticks the matches of every term, skips disabled, one change',
+      same(api.values(), ['sales/q1', 'sales/q2']) && changes === 1, [api.values(), changes]);
+    A.querySelector('.mcb-clear').click();
+    type('q1, acme/prod, sales/');
+    changes = 0;
+    check('A: Enter on a comma list is prevented', pressEnter(filter), null);
+    check('A: Enter ticks the exact or only match of each term, skips an ambiguous one, one change',
+      same(api.values(), ['acme/prod', 'sales/q1']) && changes === 1, [api.values(), changes]);
+    type('zzz, Q2');
+    pressEnter(filter);
+    check('A: Enter adds to the ticks, a term matching nothing is skipped',
+      same(api.values(), ['acme/prod', 'sales/q1', 'sales/q2']), api.values());
+    changes = 0;
+    pressEnter(filter);
+    check('A: Enter that ticks nothing new fires no change', changes === 0, changes);
 
     // Script API
     type('');
@@ -442,6 +479,35 @@ const mcbBrowserTestJS = `(function () {
     api.setNote('x');
     api.setNote(null);
     check('C: setNote(null) brings the boxes back', empty.hidden && shown().length === 3, shown());
+  }
+
+  // D: labels that hold commas, which a comma list could otherwise never
+  // name in full, and the normalize hook applied to each term.
+  function instanceD() {
+    var D = document.getElementById('d'), api = D.mcb;
+    var filter = D.querySelector('.mcb-filter');
+    function shown() { return shownIn(D); }
+    function type(v) { typeInto(filter, v); }
+
+    // Split, "smith" would be ambiguous and "jo" would name the box Jo.
+    type('Smith, Jo');
+    pressEnter(filter);
+    check('D: Enter on the whole text ticks a label holding a comma, not each part',
+      same(api.values(), ['Smith, Jo']), api.values());
+    D.querySelector('.mcb-clear').click();
+    type('smith, doe');
+    check('D: the display still splits the text into terms', same(shown(), ['Smith, Jo', 'Smith, Al', 'Al Doe']), shown());
+
+    // A hook that strips a pasted "x:" prefix, as a page would strip a path prefix.
+    api.normalize = function (t) {
+      t = String(t).trim();
+      return t.indexOf('x:') === 0 ? t.slice(2) : t;
+    };
+    type('x:jo, x:doe');
+    check('D: normalize applies to every term', same(shown(), ['Smith, Jo', 'Jo', 'Al Doe']), shown());
+    pressEnter(filter);
+    check('D: Enter ticks each normalized term (exact, then only match)', same(api.values(), ['Jo', 'Al Doe']), api.values());
+    api.normalize = null;
   }
 })();
 `

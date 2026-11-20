@@ -221,7 +221,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 							components.MultiCheckbox{
 								ID: "demo-folders", Name: "folder",
 								Label: "Folders:", FilterLabel: "Filter folders:",
-								FilterPlaceholder: "try sales/ or acme/",
+								FilterPlaceholder: "try sales/, acme/",
 								Noun:              "folder", CountNoun: "DAG", MaxCount: 40,
 								Columns:  4,
 								Options:  demoFolders,
@@ -235,7 +235,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 									)
 									return
 								}),
-								HelpText: "The filter only changes what is shown; a ticked folder stays shown. Enter ticks the folder the filter names.",
+								HelpText: "The filter only changes what is shown; a ticked folder stays shown. Separate several terms with commas. Enter ticks the folder each term names.",
 							}.Render(b),
 							b.DivClass("form-actions").R(
 								components.Button{Text: "Submit", Type: "submit"}.Render(b),

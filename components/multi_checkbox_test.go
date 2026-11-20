@@ -54,6 +54,7 @@ func TestMultiCheckbox_Render(t *testing.T) {
 		// Toolbar: the script-only parts start hidden
 		`<label class="mcb-filter-label mcb-js" for="folders-filter" hidden="hidden">Filter folders:</label>`,
 		`type="search"`, `id="folders-filter"`, `aria-controls="folders-grid"`,
+		`title="Separate several terms with commas"`, // the only mention of comma lists
 		`class="mcb-summary mcb-js"`, `aria-live="polite"`,
 		`title="Tick every folder the filter shows"`, `>Tick shown</button>`,
 		`title="Untick every folder"`, `>Clear</button>`,

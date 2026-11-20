@@ -37,16 +37,24 @@ type CheckOption struct {
 //     the label. It never changes what is ticked, and a ticked box stays shown
 //     whatever the filter says, so a choice cannot be hidden and then
 //     submitted by surprise.
+//   - The filter takes a comma-separated list of terms ("q1, acme"), and a box
+//     is shown when any one of them is in its label. Spaces around a term are
+//     ignored, and so are empty terms, so "q1," is just "q1" and "," alone is
+//     no filter at all. The box's tooltip says so.
 //   - Tick shown ticks every box the filter matches (all of them with no
 //     filter), adding to what is already ticked. Clear unticks every box.
 //   - The summary counts the ticked boxes and, with CountNoun set, totals
 //     their Counts ("2 folders ticked · 37 DAGs"). Past MaxCount it adds
 //     "(at most N)" and the class mcb-over. It is aria-live, so screen readers
 //     hear the count change.
-//   - Enter in the filter ticks the box it names exactly (value or label), or
-//     failing that its only match, and never submits the surrounding form.
-//     To make Enter also "go", add a keydown listener to .mcb-filter with
-//     addEventListener: it runs after this one, so it sees the new tick.
+//   - Enter in the filter ticks, for each term, the box it names exactly
+//     (value or label), or failing that its only match; a term with several
+//     matches and no exact one ticks nothing. So "sales/q1, acme/prod" ticks
+//     both. The whole text is tried as one term first, so a label that itself
+//     holds a comma ("Smith, Jo") is ticked by typing it in full rather than
+//     split. Enter never submits the surrounding form. To make Enter also
+//     "go", add a keydown listener to .mcb-filter with addEventListener: it
+//     runs after this one, so it sees the new ticks.
 //   - Every change, including the buttons', ends in one bubbling "change"
 //     event on the component's root element, so a caller needs one listener.
 //
@@ -73,8 +81,11 @@ type CheckOption struct {
 //
 // Two optional hooks, assigned on the instance (then call refresh()):
 //
-//	normalize = function (text) → text   the filter text as matched, e.g. strip a
-//	                                     pasted prefix; used by the filter and Enter
+//	normalize = function (text) → text   one filter term as matched, e.g. strip a
+//	                                     pasted prefix; used by the filter and Enter.
+//	                                     Called once per comma-separated term (and
+//	                                     on the whole text for Enter's first try),
+//	                                     so "repo/a, repo/b" strips both prefixes
 //	total     = function (values) → n    the summary's total in place of the summed
 //	                                     Counts, for totals that depend on more than
 //	                                     the ticked boxes (a "subfolders" toggle);
@@ -230,8 +241,12 @@ func (m MultiCheckbox) Render(b *element.Builder) (x any) {
 			b.LabelClass("mcb-filter-label mcb-js", "for", id+"-filter", "hidden", "hidden").T(orDefault(m.FilterLabel, "Filter:")),
 			b.Wrap(func() {
 				// No name: the filter text is a view setting, not form data.
+				// The title is the only place the comma lists are mentioned,
+				// so they can be found without reading the placeholder (which
+				// is the caller's, and gone once something is typed).
 				attrs := []string{"type", "search", "id", id + "-filter", "class", "mcb-filter mcb-js",
-					"hidden", "hidden", "autocomplete", "off", "aria-controls", id + "-grid"}
+					"hidden", "hidden", "autocomplete", "off", "aria-controls", id + "-grid",
+					"title", "Separate several terms with commas"}
 				if m.FilterPlaceholder != "" {
 					attrs = append(attrs, "placeholder", m.FilterPlaceholder)
 				}
@@ -398,9 +413,24 @@ func (m MultiCheckbox) styleRules(id string) string {
 // No innerHTML anywhere: setOptions builds nodes and sets textContent, so a
 // label from data is only ever text.
 //
+// The filter text is a comma-separated list of terms. terms() splits it,
+// normalizes and lowercases each part, and drops the empty ones; [] means no
+// filter. A box hits when any term is a substring of its label, so the list
+// is an OR. Enter resolves each term on its own (pickFor), after first trying
+// the whole text as a single term so a label containing a comma can still be
+// ticked by typing it in full:
+//
+//	"sales/q1, acme/prod, sales/"
+//	   │ whole text names a box? ── yes ──► tick that one box
+//	   no
+//	   ├─ "sales/q1"   exact label ──────► tick
+//	   ├─ "acme/prod"  exact value (beats the longer label that also holds it) ──► tick
+//	   └─ "sales/"     several matches, none exact ──► nothing
+//	all of a press's new ticks ──► one "change"
+//
 // Flow:
 //
-//	filter input ──► applyFilter (show = ticked || label matches; a note hides all)
+//	filter input ──► applyFilter (show = ticked || any term matches; a note hides all)
 //	box click ─────────────────────────────┐
 //	Tick shown / Clear / Enter / setValues ├─► "change" on root ─► renderSummary + save
 //	setOptions ────────────────────────────┘
@@ -443,12 +473,47 @@ const multiCheckboxJS = `(function (script) {
       var n = optOf(cb).querySelector('.mcb-name');
       return (n ? n.textContent : cb.value).toLowerCase();
     }
-    function needle() {
-      if (!filter) return '';
-      var t = typeof api.normalize === 'function' ? api.normalize(filter.value) : filter.value;
+    // norm is one term as matched: the caller's normalize hook, then trimmed
+    // and lowercased (labels are compared lowercased too).
+    function norm(text) {
+      var t = typeof api.normalize === 'function' ? api.normalize(text) : text;
       return String(t == null ? '' : t).trim().toLowerCase();
     }
-    function hits(cb, f) { return !f || nameOf(cb).indexOf(f) >= 0; }
+    // terms is the filter as a list of terms, split on commas; [] = no filter.
+    // Each part is normalized on its own, so a hook that strips a pasted
+    // prefix strips it from every term, not just the first.
+    function terms() {
+      var out = [];
+      if (!filter) return out;
+      var parts = filter.value.split(',');
+      for (var i = 0; i < parts.length; i++) {
+        var t = norm(parts[i]);
+        if (t) out.push(t);
+      }
+      return out;
+    }
+    // hits: does any term occur in the box's label? No terms matches everything.
+    function hits(cb, ts) {
+      if (!ts.length) return true;
+      var n = nameOf(cb);
+      for (var i = 0; i < ts.length; i++) {
+        if (n.indexOf(ts[i]) >= 0) return true;
+      }
+      return false;
+    }
+    // pickFor is the box one term names for Enter: an exact value or label,
+    // else its only match, else null (no match, or several and none exact).
+    // Disabled boxes are never picked.
+    function pickFor(f) {
+      var exact = null, only = null, matches = 0;
+      each(function (cb) {
+        if (exact || cb.disabled) return;
+        var n = nameOf(cb);
+        if (cb.value.toLowerCase() === f || n === f) { exact = cb; return; }
+        if (n.indexOf(f) >= 0) { matches++; only = cb; }
+      });
+      return exact || (matches === 1 ? only : null);
+    }
     function changed() { root.dispatchEvent(new Event('change', { bubbles: true })); }
     function asSet(list) {
       var s = Object.create(null);
@@ -458,9 +523,9 @@ const multiCheckboxJS = `(function (script) {
 
     // A ticked box is always shown, so a choice can't be hidden by the filter.
     function applyFilter() {
-      var f = needle(), total = 0, shown = 0;
+      var ts = terms(), total = 0, shown = 0;
       each(function (cb) {
-        var show = note === null && (cb.checked || hits(cb, f));
+        var show = note === null && (cb.checked || hits(cb, ts));
         optOf(cb).hidden = !show;
         total++;
         if (show) shown++;
@@ -578,25 +643,27 @@ const multiCheckboxJS = `(function (script) {
       filter.addEventListener('keydown', function (ev) {
         if (ev.key !== 'Enter' || ev.isComposing) return;
         ev.preventDefault();
-        var f = needle();
-        if (!f || note !== null) return;  // nothing to pick from while a note replaces the boxes
-        var exact = null, only = null, matches = 0;
-        each(function (cb) {
-          if (exact || cb.disabled) return;
-          if (cb.value.toLowerCase() === f || nameOf(cb) === f) { exact = cb; return; }
-          if (hits(cb, f)) { matches++; only = cb; }
+        var ts = terms();
+        if (!ts.length || note !== null) return;  // nothing to pick from while a note replaces the boxes
+        // The whole text as one term first: with no comma it is the only
+        // term anyway, and with one it lets a label that holds a comma be
+        // named in full. Only when it names nothing is the list split.
+        var whole = pickFor(norm(filter.value));
+        var picks = whole ? [whole] : ts.map(pickFor);
+        var any = false;
+        picks.forEach(function (cb) {
+          if (cb && !cb.checked) { cb.checked = true; any = true; }
         });
-        var pick = exact || (matches === 1 ? only : null);
-        if (pick && !pick.checked) { pick.checked = true; changed(); }
+        if (any) changed();  // one change for the whole press, however many were ticked
       });
     }
 
     var shownBtn = root.querySelector('.mcb-tick-shown');
     if (shownBtn) shownBtn.addEventListener('click', function () {
       if (note !== null) return;  // a note hides every box, so none is "shown"
-      var f = needle(), any = false;
+      var ts = terms(), any = false;
       each(function (cb) {
-        if (!cb.disabled && !cb.checked && hits(cb, f)) { cb.checked = true; any = true; }
+        if (!cb.disabled && !cb.checked && hits(cb, ts)) { cb.checked = true; any = true; }
       });
       if (any) changed();
     });
