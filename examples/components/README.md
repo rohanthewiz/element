@@ -26,6 +26,7 @@ Then visit: http://localhost:8080
 | `Alert`, `Badge`, `Button`, `ProgressBar` | Status and action elements with variant classes |
 | `Card`, `DefinitionList` | Content containers |
 | `FormField`, `SelectField`, `TextAreaField`, `CheckboxField`, `RadioGroup` | Form controls with labels, required markers, help text, and error display wired up with `aria-describedby`/`aria-invalid` |
+| `MultiCheckbox` | Filterable checkbox grid for picking many items from a long list: the filter never hides a ticked box, Tick shown / Clear, a live count (with optional per-item totals and a limit warning), Enter ticks the named item. Submits as `name=a&name=b`. A small inline script; without it, a plain checkbox grid |
 
 ## Usage Pattern
 

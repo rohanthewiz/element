@@ -412,6 +412,10 @@ The `components` package ships a set of reusable, dependency-free components:
 - **Forms** — `FormField`, `SelectField`, `TextAreaField`, `CheckboxField`,
   `RadioGroup`, `Button` — labels, required markers, help text, and errors
   wired up with `aria-describedby`/`aria-invalid`
+- **Picking many from a long list** — `MultiCheckbox`: a checkbox grid with a
+  filter that never hides a ticked box, Tick shown / Clear, and a live
+  "2 folders ticked · 37 DAGs" count. It carries a small inline script, and
+  without it falls back to a plain checkbox grid that still submits
 
 ```go
 import "github.com/rohanthewiz/element/components"
@@ -429,6 +433,16 @@ components.Table{
     },
     Striped: true,
     Hover:   true,
+}.Render(b)
+
+components.MultiCheckbox{
+    Name: "folder", Label: "Folders:", FilterLabel: "Filter folders:",
+    Noun: "folder", CountNoun: "DAG", MaxCount: 300,
+    Options: []components.CheckOption{
+        {Value: "sales/q1", Label: "sales/q1/", Count: 12},
+        {Value: "acme/prod", Label: "acme/prod/", Count: 1},
+    },
+    Selected: r.URL.Query()["folder"], // re-tick what was submitted
 }.Render(b)
 ```
 

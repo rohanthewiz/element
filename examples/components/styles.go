@@ -405,6 +405,34 @@ body {
 .form-check .form-check-input { width: auto; }
 .form-check-label { font-weight: 400; }
 
+/* Multi checkbox. Layout (grid, ellipsis, toolbar row) comes from the
+   component's own zero-specificity rules; this is the look. */
+.multi-checkbox .mcb-toolbar { margin-bottom: 0.6rem; }
+.mcb-filter-label, .mcb-label { font-weight: 600; white-space: nowrap; }
+.mcb-label { padding-top: 0.4rem; }
+.mcb-filter {
+    padding: 0.4rem 0.6rem; border: 1px solid #ddd; border-radius: 4px;
+    font: inherit; width: 14rem; max-width: 100%;
+}
+.mcb-filter:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 3px rgba(52,152,219,0.1); }
+.mcb-extra { display: inline-flex; align-items: center; gap: 0.3rem; font-weight: 600; }
+/* One line, so the buttons after it don't jump about as the count grows */
+.mcb-summary { color: #777; font-size: 0.9rem; white-space: nowrap; }
+.mcb-summary.mcb-over { color: #c0392b; font-weight: 600; }
+/* Tick shown / Clear: quiet, link-weight; they only move ticks about */
+.mcb-btn {
+    background: none; border: 1px solid #ddd; border-radius: 4px; color: #666;
+    font: inherit; font-size: 0.85rem; padding: 0.15rem 0.6rem; cursor: pointer;
+}
+.mcb-btn:hover, .mcb-btn:focus-visible { color: #3498db; border-color: #3498db; }
+.mcb-grid {
+    padding: 0.5rem 0.75rem; border: 1px solid #ddd; border-radius: 6px; background: #fff;
+}
+.mcb-opt { font-size: 0.9rem; }
+.mcb-opt:has(.mcb-cb:disabled) { color: #aaa; cursor: not-allowed; }
+.mcb-count { color: #888; }
+.mcb-empty { color: #888; font-style: italic; }
+
 .radio-group { border: none; padding: 0; }
 .radio-group legend { margin-bottom: 0.5rem; }
 .radio-group .radio-option { margin-bottom: 0.35rem; }

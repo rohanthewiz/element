@@ -22,6 +22,23 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
+// demoFolders are the MultiCheckbox demo's options: folder paths with a count
+// of what each holds, the shape the component was built for.
+var demoFolders = []components.CheckOption{
+	{Value: "exports/db_to_db/acme/emea/prod", Label: "exports/db_to_db/acme/emea/prod/", Count: 2},
+	{Value: "acme/prod", Label: "acme/prod/", Count: 1},
+	{Value: "acme/dev", Label: "acme/dev/", Count: 1},
+	{Value: "sales/q1", Label: "sales/q1/", Count: 12},
+	{Value: "sales/q2", Label: "sales/q2/", Count: 3},
+	{Value: "sales/q3", Label: "sales/q3/", Count: 7},
+	{Value: "sales/archive", Label: "sales/archive/", Count: 31, Title: "sales/archive/ · read-only", Disabled: true},
+	{Value: "finance/ledger/daily", Label: "finance/ledger/daily/", Count: 5},
+	{Value: "finance/ledger/monthly", Label: "finance/ledger/monthly/", Count: 2},
+	{Value: "hr/payroll", Label: "hr/payroll/", Count: 4},
+	{Value: "marketing/campaigns/2026/q4", Label: "marketing/campaigns/2026/q4/", Count: 9},
+	{Value: "ops/alerts", Label: "ops/alerts/", Count: 6},
+}
+
 // cellLink shows components rendering inside table cells
 type cellLink struct {
 	Href, Label string
@@ -193,6 +210,39 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 				section(b, "Progress",
 					components.ProgressBar{Value: 35, Label: "Storage used", ShowValue: true},
 					components.ProgressBar{Value: 80, Label: "Upload", ShowValue: true, Class: "progress-lg"},
+				),
+
+				// Multi checkbox — a filterable grid, in a GET form so a submit
+				// shows the ticked values in the URL (?folder=a&folder=b) and
+				// the page re-renders them through Selected.
+				section(b, "Multi Checkbox (filter, Tick shown, Clear)",
+					element.CompFunc(func(b *element.Builder) (x any) {
+						b.Form("action", "/", "method", "get").R(
+							components.MultiCheckbox{
+								ID: "demo-folders", Name: "folder",
+								Label: "Folders:", FilterLabel: "Filter folders:",
+								FilterPlaceholder: "try sales/ or acme/",
+								Noun:              "folder", CountNoun: "DAG", MaxCount: 40,
+								Columns:  4,
+								Options:  demoFolders,
+								Selected: r.URL.Query()["folder"],
+								// An extra toolbar control: it is the caller's,
+								// so it is submitted with the form as usual.
+								Extra: element.CompFunc(func(b *element.Builder) (x any) {
+									b.LabelClass("mcb-extra").R(
+										b.Input("type", "checkbox", "name", "nested", "value", "1"),
+										b.T(" include subfolders"),
+									)
+									return
+								}),
+								HelpText: "The filter only changes what is shown; a ticked folder stays shown. Enter ticks the folder the filter names.",
+							}.Render(b),
+							b.DivClass("form-actions").R(
+								components.Button{Text: "Submit", Type: "submit"}.Render(b),
+							),
+						)
+						return
+					}),
 				),
 
 				// Form controls
