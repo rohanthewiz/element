@@ -226,6 +226,10 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 								Columns:  4,
 								Options:  demoFolders,
 								Selected: r.URL.Query()["folder"],
+								// ▾ beside the filter: the filters used lately
+								// (Enter, Tick shown, or a box clicked while
+								// filtered), kept in this browser.
+								FilterHistoryKey: "demoFolderFilters",
 								// An extra toolbar control: it is the caller's,
 								// so it is submitted with the form as usual.
 								Extra: element.CompFunc(func(b *element.Builder) (x any) {
@@ -235,7 +239,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 									)
 									return
 								}),
-								HelpText: "The filter only changes what is shown; a ticked folder stays shown. Separate several terms with commas. Enter ticks the folder each term names.",
+								HelpText: "The filter only changes what is shown; a ticked folder stays shown. Separate several terms with commas. Enter ticks the folder each term names. ▾ lists the filters used lately.",
 							}.Render(b),
 							b.DivClass("form-actions").R(
 								components.Button{Text: "Submit", Type: "submit"}.Render(b),

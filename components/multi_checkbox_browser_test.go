@@ -178,6 +178,8 @@ func tail(s string, n int) string {
 //	   setNote, the normalize and total hooks, and a late data-max-count
 //	d  labels that hold commas ("Smith, Jo"), for comma-separated filter
 //	   terms that must not split a label typed in full
+//	e  FilterHistoryKey with FilterHistorySize 3, its storage seeded with one
+//	   usable entry among junk; a label holding markup ("x/<i>")
 func browserTestPage() string {
 	b := element.NewBuilder()
 	b.Html().R(
@@ -210,6 +212,13 @@ func browserTestPage() string {
 				ID: "d",
 				Options: []CheckOption{
 					{Value: "Smith, Jo"}, {Value: "Smith, Al"}, {Value: "Jo"}, {Value: "Al Doe"},
+				},
+			}.Render(b),
+			b.Script().T(`localStorage.setItem('mcb-test-e', JSON.stringify(['seeded', 7, '', ' , ', null]));`),
+			MultiCheckbox{
+				ID: "e", FilterHistoryKey: "mcb-test-e", FilterHistorySize: 3,
+				Options: []CheckOption{
+					{Value: "sales/q1"}, {Value: "sales/q2"}, {Value: "acme/prod"}, {Value: "x/<i>"},
 				},
 			}.Render(b),
 			b.Pre("id", "results").R(),
@@ -264,6 +273,7 @@ const mcbBrowserTestJS = `(function () {
     instanceB();
     instanceC();
     instanceD();
+    instanceE();
     check('` + browserTestSentinel + `', true);
   } catch (e) {
     check('script threw', false, String((e && e.stack) || e));
@@ -508,6 +518,185 @@ const mcbBrowserTestJS = `(function () {
     pressEnter(filter);
     check('D: Enter ticks each normalized term (exact, then only match)', same(api.values(), ['Jo', 'Al Doe']), api.values());
     api.normalize = null;
+  }
+
+  // E: the filter history. Checks run in order and build on the list the
+  // earlier ones leave; the expected list is spelled out at each step.
+  function instanceE() {
+    var E = document.getElementById('e'), api = E.mcb, KEY = 'mcb-test-e';
+    var filter = E.querySelector('.mcb-filter'), btn = E.querySelector('.mcb-history-btn');
+    var pop = E.querySelector('.mcb-history'), list = E.querySelector('.mcb-history-list');
+    var clearH = E.querySelector('.mcb-history-clear');
+    function stored() { return JSON.parse(localStorage.getItem(KEY) || 'null'); }
+    function entries() { return Array.prototype.map.call(list.children, function (n) { return n.textContent; }); }
+    function isOpen() { return !pop.hidden && getComputedStyle(pop).display !== 'none'; }
+    function focused() { return document.activeElement; }
+    function key(target, k, opts) {
+      var init = { key: k, bubbles: true, cancelable: true };
+      for (var o in opts || {}) init[o] = opts[o];
+      var e = new KeyboardEvent('keydown', init);
+      target.dispatchEvent(e);
+      return e.defaultPrevented;
+    }
+    // detail 1 is what a mouse click carries; element.click() has detail 0,
+    // as a click made with Enter or Space does.
+    function mouseClick(el) { el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 })); }
+    function press(el) { el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true })); }
+    function shown() { return shownIn(E); }
+    function type(v) { typeInto(filter, v); }
+    function cb(v) { return E.querySelector('.mcb-cb[value="' + v + '"]'); }
+    var changes = 0;
+    E.addEventListener('change', function () { changes++; });
+
+    check('E: an instance without FilterHistoryKey has no history parts',
+      !document.querySelector('#a .mcb-filter-wrap, #a .mcb-history-btn, #a .mcb-history'));
+
+    // Start-up and the seeded list
+    check('E: the wrap is revealed, the dropdown starts closed',
+      !E.querySelector('.mcb-filter-wrap').hidden && !isOpen() && btn.getAttribute('aria-expanded') === 'false');
+    check('E: stored junk is skipped; one usable entry enables the button',
+      !btn.disabled && btn.title === '` + historyBtnTitle + `', [btn.disabled, btn.title]);
+    mouseClick(btn);
+    check('E: a mouse click on the button opens the list, focus stays put',
+      isOpen() && same(entries(), ['seeded']) && btn.getAttribute('aria-expanded') === 'true' &&
+      !list.contains(focused()), [isOpen(), entries()]);
+    var fr = filter.getBoundingClientRect(), pr = pop.getBoundingClientRect();
+    check('E: the dropdown hangs under the filter',
+      getComputedStyle(pop).position === 'absolute' && pr.top >= fr.bottom - 1 && Math.abs(pr.left - fr.left) < 2,
+      [fr.left, fr.bottom, pr.left, pr.top]);
+    press(document.body);
+    check('E: a press outside closes it', !isOpen() && btn.getAttribute('aria-expanded') === 'false');
+    mouseClick(btn);
+    mouseClick(clearH);
+    check('E: Clear history empties storage, disables the button, closes, back to the filter',
+      stored() === null && btn.disabled && btn.title === 'No recent filters yet' && !isOpen() && focused() === filter,
+      [stored(), btn.disabled, btn.title, isOpen()]);
+    filter.focus();
+    check('E: ↓ in the filter with no history does nothing', !key(filter, 'ArrowDown') && !isOpen());
+
+    // What is remembered
+    type('sales');
+    check('E: typing alone is not remembered', stored() === null, stored());
+    type('  sales/q1 ');
+    pressEnter(filter);
+    check('E: Enter remembers the filter, trimmed, and enables the button',
+      same(stored(), ['sales/q1']) && !btn.disabled && btn.title === '` + historyBtnTitle + `', [stored(), btn.title]);
+    type('acme');
+    cb('acme/prod').click();
+    check('E: a box clicked while filtered remembers the filter', same(stored(), ['acme', 'sales/q1']), stored());
+    type('');
+    cb('acme/prod').click();
+    check('E: a box clicked with no filter remembers nothing', same(stored(), ['acme', 'sales/q1']), stored());
+    type('q2');
+    E.querySelector('.mcb-tick-shown').click();
+    check('E: Tick shown remembers the filter', same(stored(), ['q2', 'acme', 'sales/q1']), stored());
+    type('ACME , ');
+    pressEnter(filter);
+    check('E: the same terms move to the top, as last typed', same(stored(), ['ACME ,', 'q2', 'sales/q1']), stored());
+    type('x/');
+    pressEnter(filter);
+    check('E: the oldest is dropped past FilterHistorySize', same(stored(), ['x/', 'ACME ,', 'q2']), stored());
+    type(' , ');
+    pressEnter(filter);
+    check('E: a commas-only filter is not remembered', same(stored(), ['x/', 'ACME ,', 'q2']), stored());
+    type('<i>');
+    pressEnter(filter);
+    mouseClick(btn);
+    check('E: entries are text, newest first',
+      same(entries(), ['<i>', 'x/', 'ACME ,']) && !list.querySelector('i'), [entries(), list.innerHTML]);
+    check('E: entries are options, the one in the filter now selected',
+      list.getAttribute('role') === 'listbox' && list.children[0].getAttribute('role') === 'option' &&
+      list.children[0].getAttribute('aria-selected') === 'true' && list.children[1].getAttribute('aria-selected') === 'false');
+    press(document.body);
+
+    // Keys. Ticks cleared first, so what the filter shows afterwards is its doing.
+    E.querySelector('.mcb-clear').click();
+    filter.focus();
+    check('E: ↓ in the filter opens the list on its first entry',
+      key(filter, 'ArrowDown') && isOpen() && focused() === list.children[0], focused() && focused().className);
+    key(focused(), 'ArrowDown');
+    var second = focused() === list.children[1];
+    key(focused(), 'ArrowDown');
+    key(focused(), 'ArrowDown');
+    var toClear = focused() === clearH;
+    key(focused(), 'ArrowDown');
+    check('E: ↓ walks the entries, then Clear history, then round', second && toClear && focused() === list.children[0]);
+    key(focused(), 'ArrowUp');
+    var upWraps = focused() === clearH;
+    key(focused(), 'Home');
+    var home = focused() === list.children[0];
+    key(focused(), 'End');
+    check('E: ↑ rounds the top, Home and End go to the ends', upWraps && home && focused() === clearH);
+    list.children[1].focus();
+    changes = 0;
+    check('E: Enter on an entry is taken', key(focused(), 'Enter'));
+    check('E: it puts the entry in the filter, filters, closes, returns to the filter',
+      filter.value === 'x/' && same(shown(), ['x/<i>']) && !isOpen() && focused() === filter,
+      [filter.value, shown(), isOpen()]);
+    check('E: using an entry ticks nothing and fires no change', api.values().length === 0 && changes === 0,
+      [api.values(), changes]);
+    check('E: a used entry moves to the top', same(stored(), ['x/', '<i>', 'ACME ,']), stored());
+    mouseClick(btn);
+    mouseClick(list.children[2]);
+    check('E: a click on an entry uses it', filter.value === 'ACME ,' && same(shown(), ['acme/prod']) && !isOpen() &&
+      same(stored(), ['ACME ,', 'x/', '<i>']), [filter.value, shown(), stored()]);
+
+    // Forgetting one entry at a time
+    key(filter, 'ArrowDown');
+    key(focused(), 'ArrowDown');
+    check('E: Delete forgets the entry, focus stays at its place',
+      key(focused(), 'Delete') && same(stored(), ['ACME ,', '<i>']) && isOpen() && focused() === list.children[1] &&
+      same(entries(), ['ACME ,', '<i>']), [stored(), entries()]);
+    key(focused(), 'Backspace');
+    check('E: Backspace forgets too; past the end, focus moves up',
+      same(stored(), ['ACME ,']) && focused() === list.children[0], stored());
+    key(focused(), 'Backspace');
+    check('E: forgetting the last entry closes the list, back to the filter, button disabled',
+      stored() === null && !isOpen() && focused() === filter && btn.disabled, [stored(), isOpen()]);
+
+    // Closing
+    type('q1');
+    pressEnter(filter);
+    var escAbove = 0;
+    function onEsc(ev) { if (ev.key === 'Escape') escAbove++; }
+    document.addEventListener('keydown', onEsc);
+    key(filter, 'ArrowDown');
+    check('E: Escape closes, back to the filter, and goes no further',
+      key(focused(), 'Escape') && !isOpen() && focused() === filter && escAbove === 0, escAbove);
+    document.removeEventListener('keydown', onEsc);
+    key(filter, 'ArrowDown');
+    check('E: Tab closes onto the button', key(focused(), 'Tab') && !isOpen() && focused() === btn);
+    check('E: ↓ on the button opens on the first entry', key(btn, 'ArrowDown') && isOpen() && focused() === list.children[0]);
+    key(focused(), 'Tab', { shiftKey: true });
+    check('E: Shift+Tab closes onto the filter', !isOpen() && focused() === filter);
+    btn.click();
+    check('E: a keyboard click on the button opens on the first entry', isOpen() && focused() === list.children[0]);
+    mouseClick(btn);
+    check('E: the button toggles it closed', !isOpen());
+    filter.focus();
+    check('E: Shift+↓ in the filter is left to the text', !key(filter, 'ArrowDown', { shiftKey: true }) && !isOpen());
+    mouseClick(btn);
+    press(list.children[0]);
+    var openAfterEntryPress = isOpen();
+    press(filter);
+    check('E: a press on an entry keeps it open; one on the filter closes it', openAfterEntryPress && !isOpen());
+
+    // The normalize hook decides which texts are the same filter.
+    api.normalize = function (t) { t = String(t).trim(); return t.indexOf('x:') === 0 ? t.slice(2) : t; };
+    type('x:q1');
+    pressEnter(filter);
+    check('E: texts the normalize hook makes equal are one entry', same(stored(), ['x:q1']), stored());
+    api.normalize = null;
+
+    // Another tab's change shows up when the filter is focused.
+    mouseClick(btn);
+    mouseClick(clearH);
+    localStorage.setItem(KEY, JSON.stringify(['from another tab']));
+    filter.dispatchEvent(new FocusEvent('focus'));
+    check('E: focusing the filter re-reads storage', !btn.disabled, btn.disabled);
+    mouseClick(btn);
+    check('E: the list is read from storage when opened', same(entries(), ['from another tab']), entries());
+    press(document.body);
   }
 })();
 `

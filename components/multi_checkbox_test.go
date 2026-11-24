@@ -251,3 +251,59 @@ func TestMultiCheckbox_ExtraAndMessages(t *testing.T) {
 		}
 	}
 }
+
+// FilterHistoryKey adds the ▾ button and its (empty, closed) dropdown beside
+// the filter, in one positioned wrap, and the settings the script reads.
+func TestMultiCheckbox_FilterHistory(t *testing.T) {
+	got := renderMC(MultiCheckbox{ID: "f", FilterHistoryKey: "recentFilters", FilterHistorySize: 15})
+	markup := markupOf(got)
+
+	for _, want := range []string{
+		`data-history-key="recentFilters"`, `data-history-size="15"`,
+		// The wrap is script-only, and holds the filter as it is rendered without history
+		`<div class="mcb-filter-wrap mcb-js" hidden="hidden"><input type="search" id="f-filter" class="mcb-filter mcb-js"`,
+		// The button: named for screen readers, wired to the listbox it opens
+		`<button class="mcb-btn mcb-history-btn" type="button" id="f-history-btn" aria-haspopup="listbox" ` +
+			`aria-expanded="false" aria-controls="f-history-list" aria-label="Recent filters" title="` + historyBtnTitle + `">▾</button>`,
+		// The dropdown starts closed and empty; the script fills it from storage
+		`<div class="mcb-history" id="f-history" hidden="hidden">` +
+			`<div class="mcb-history-list" id="f-history-list" role="listbox" aria-label="Recent filters"></div>` +
+			`<button class="mcb-history-clear" type="button" title="Forget every recent filter">Clear history</button></div></div>`,
+	} {
+		if !strings.Contains(markup, want) {
+			t.Errorf("missing %q\ngot: %s", want, markup)
+		}
+	}
+	// Label, wrap, filter, summary and the two buttons.
+	if n := strings.Count(markup, `mcb-js`); n != 6 {
+		t.Errorf("want 6 script-only controls, got %d", n)
+	}
+	for _, want := range []string{
+		":where(#f .mcb-filter-wrap){position:relative;",
+		":where(#f .mcb-history){position:absolute;top:100%;",
+		":where(#f .mcb-history-btn:disabled){",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing rule %q", want)
+		}
+	}
+
+	// The size is left to the script's default unless set.
+	if got := renderMC(MultiCheckbox{ID: "f", FilterHistoryKey: "k"}); strings.Contains(markupOf(got), "data-history-size") {
+		t.Errorf("did not expect data-history-size without FilterHistorySize\ngot: %s", got)
+	}
+}
+
+// Without FilterHistoryKey there is no trace of the history: no button, no
+// wrap around the filter, no dropdown rules.
+func TestMultiCheckbox_NoFilterHistory(t *testing.T) {
+	got := renderMC(MultiCheckbox{ID: "f", StorageKey: "ticks"})
+	for _, unwanted := range []string{"data-history", "mcb-filter-wrap", "mcb-history"} {
+		if strings.Contains(markupOf(got), unwanted) {
+			t.Errorf("did not expect %q in the markup\ngot: %s", unwanted, got)
+		}
+	}
+	if css := (MultiCheckbox{}).styleRules("f"); strings.Contains(css, "mcb-history") || strings.Contains(css, "mcb-filter-wrap") {
+		t.Errorf("did not expect history rules:\n%s", css)
+	}
+}

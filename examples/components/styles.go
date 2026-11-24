@@ -425,6 +425,14 @@ body {
     font: inherit; font-size: 0.85rem; padding: 0.15rem 0.6rem; cursor: pointer;
 }
 .mcb-btn:hover, .mcb-btn:focus-visible { color: #3498db; border-color: #3498db; }
+.mcb-btn:disabled { color: #666; border-color: #ddd; }
+/* The recent-filters dropdown under the filter (FilterHistoryKey). The
+   component positions it; this matches it to the filter box. */
+.mcb-history { border-color: #ddd; border-radius: 4px; background: #fff; color: #333; }
+.mcb-history-item { font-size: 0.9rem; }
+.mcb-history-item:hover, .mcb-history-item:focus { background: #ebf5fb; color: #1f6391; }
+.mcb-history-item[aria-selected="true"] { font-weight: 600; }
+.mcb-history-clear { border-top-color: #eee; color: #777; font-size: 0.85rem; }
 .mcb-grid {
     padding: 0.5rem 0.75rem; border: 1px solid #ddd; border-radius: 6px; background: #fff;
 }
